@@ -1,10 +1,10 @@
-package com.jpromi.avion.darts;
+package com.jpromi.darts.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DartsApplicationTests {
+class DartsBackendApplicationTests {
 
 	@Test
 	void contextLoads() {
