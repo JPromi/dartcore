@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -25,6 +27,15 @@ public class DartGame {
 
     @Column(nullable = false)
     private GameType gameType;
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    private List<Account> players;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private PlayerGroup playerGroup;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private Location location;
 
     @Column(nullable = true)
     private Long startingPoints; // Only for X01

@@ -10,6 +10,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    /*
+    Features:
+    POST - login
+    DELETE, GET - logout
+    POST - register
+    POST - forgot password
+    POST - reset password
+    GET - session
+    GET - user
+    */
+
     @PostMapping("")
     public ResponseEntity<String> login() {
         return ResponseEntity.ok("Login");
