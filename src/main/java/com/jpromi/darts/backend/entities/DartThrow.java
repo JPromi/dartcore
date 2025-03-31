@@ -4,6 +4,7 @@ import com.jpromi.darts.backend.enums.ThrowMultiplier;
 import com.jpromi.darts.backend.enums.ThrowType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 
@@ -29,7 +30,7 @@ public class DartThrow {
     private ThrowMultiplier multiplier;
 
     @Column(nullable = false)
-    private ThrowType type = ThrowType.THROW;
+    private ThrowType type;
 
     @Column(nullable = true)
     private Integer score;
@@ -41,7 +42,8 @@ public class DartThrow {
     private Integer round;
 
     @Column(nullable = false)
-    private Boolean isUndo = false;
+    @ColumnDefault("false")
+    private Boolean isUndo;
 
     @Column(nullable = false)
     private LocalDateTime timestamp;

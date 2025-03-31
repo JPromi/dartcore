@@ -2,6 +2,7 @@ package com.jpromi.darts.backend.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,13 +34,14 @@ public class PlayerGroup {
 
     @Column(nullable = false)
     @ManyToMany(cascade = CascadeType.ALL)
-    private List<Account> members = new ArrayList<>();
+    private List<Account> members;
 
     @Column(nullable = false)
     @OneToMany(cascade = CascadeType.ALL)
-    private List<Location> locations = new ArrayList<>();
+    private List<Location> locations;
 
     @Column(nullable = false)
-    private Boolean isDeleted = false;
+    @ColumnDefault("false")
+    private Boolean isDeleted;
 
 }

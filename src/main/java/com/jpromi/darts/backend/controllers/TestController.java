@@ -3,11 +3,11 @@ package com.jpromi.darts.backend.controllers;
 import com.jpromi.darts.backend.entities.DartThrow;
 import com.jpromi.darts.backend.enums.ThrowMultiplier;
 import com.jpromi.darts.backend.enums.ThrowType;
+import com.jpromi.darts.backend.models.LoginRequest;
 import com.jpromi.darts.backend.services.CheckAchievementService;
+import com.password4j.Password;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,5 +29,10 @@ public class TestController {
         String condition = "ANY:T20;ANY:T20;ANY:T20";
 
         return checkAchievementService.checkAchievement(condition, dartThrows).toString();
+    }
+
+    @PostMapping("/argon2")
+    public String testArgon2(@RequestBody String request) {
+        return Password.hash(request).withArgon2().getResult();
     }
 }

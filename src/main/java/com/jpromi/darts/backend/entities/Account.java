@@ -2,6 +2,7 @@ package com.jpromi.darts.backend.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.UUID;
 
@@ -18,6 +19,7 @@ public class Account {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    @Builder.Default
     private UUID uuid = UUID.randomUUID();
 
     @Column(nullable = false)
@@ -30,10 +32,14 @@ public class Account {
     private String password;
 
     @Column(nullable = false)
-    private Boolean isTotpEnabled = false;
+    @ColumnDefault("false")
+    private Boolean isTotpEnabled;
 
     @Column(nullable = true)
     private String totpSecret;
+
+    @OneToMany()
+    private TotpFallback[] totpFallback;
 
     @Column(nullable = false)
     private String email;
@@ -48,8 +54,10 @@ public class Account {
     private File profilePicture;
 
     @Column(nullable = false)
-    private Boolean isDisabled = false;
+    @ColumnDefault("false")
+    private Boolean isDisabled;
 
     @Column(nullable = false)
-    private Boolean isDeleted = false;
+    @ColumnDefault("false")
+    private Boolean isDeleted;
 }
