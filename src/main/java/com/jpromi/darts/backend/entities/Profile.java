@@ -23,6 +23,7 @@ public class Profile {
     private String description;
 
     @Column(nullable = false)
+    @Builder.Default
     private ProfileVisibilityEnum visibility = ProfileVisibilityEnum.PRIVATE;
 
     @Column(nullable = true)
@@ -42,4 +43,13 @@ public class Profile {
 
     @Column(nullable = true)
     private String linkGithub;
+
+    @Column(nullable = true)
+    private String linkTwitch;
+
+    @Column(nullable = true)
+    private String country;
+
+    @Column(nullable = true)
+    private File banner;
 }
