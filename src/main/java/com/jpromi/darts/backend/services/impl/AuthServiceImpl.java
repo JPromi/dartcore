@@ -24,6 +24,9 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private SessionRepository sessionRepository;
 
+    @Autowired
+    private TotpServiceImpl totpService;
+
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
         LoginResponse loginResponse = LoginResponse.builder()
@@ -66,14 +69,13 @@ public class AuthServiceImpl implements AuthService {
             Account account = this.accountRepository.findById(session.getAccountId()).orElse(null);
             if(account != null) {
                 if(account.getIsTotpEnabled()) {
-
-//                    if(account.getTotpSecret().equals(totp)) {
-//                        session.setNeedsTotp(false);
-//                        this.sessionRepository.save(session);
-//                        loginResponse.setToken(session.getToken());
-//                    } else {
-//                        loginResponse.setError(ErrorCode.INVALID_TOTP);
-//                    }
+                    if(totpService.validateTotp(account.getTotpSecret(), totp)) {
+                        session.setNeedsTotp(false);
+                        this.sessionRepository.save(session);
+                        loginResponse.setToken(session.getToken());
+                    } else {
+                        loginResponse.setError(ErrorCode.INVALID_TOTP);
+                    }
                 } else {
                     loginResponse.setError(ErrorCode.TOTP_DISABLED);
                 }
