@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 public interface AuthService {
     LoginResponse login(LoginRequest loginRequest);
+    LoginResponse totp(String session, String totp);
     Boolean logout(String token);
     Session session(String token);
 }

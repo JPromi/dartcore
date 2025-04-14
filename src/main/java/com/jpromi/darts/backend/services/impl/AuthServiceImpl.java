@@ -12,6 +12,7 @@ import com.password4j.Password;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -30,12 +31,13 @@ public class AuthServiceImpl implements AuthService {
                 .totpRequired(false)
                 .build();
 
-        Account user = accountRepository.findByUsername(loginRequest.getUsername());
+        Optional<Account> accountCheck = accountRepository.findByUsernameAndIsDisabledFalseAndIsDeletedFalse(loginRequest.getUsername());
 
-        if (user != null) {
-            boolean passwordValidated = Password.check(loginRequest.getPassword(), user.getPassword()).withArgon2();
+        if (accountCheck.isPresent()) {
+            Account account = accountCheck.get();
+            boolean passwordValidated = Password.check(loginRequest.getPassword(), account.getPassword()).withArgon2();
             if (passwordValidated) {
-                Session session = this.createSession(user);
+                Session session = this.createSession(account);
                 sessionRepository.save(session);
 
                 loginResponse.setToken(session.getToken());
@@ -52,29 +54,64 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public LoginResponse totp(String sessionToken, String totp) {
+        LoginResponse loginResponse = LoginResponse.builder()
+                .token("")
+                .totpRequired(false)
+                .build();
+
+        Session session = this.sessionRepository.findByTokenAndIsActiveTrueAndNeedsTotpTrue(sessionToken);
+
+        if(session != null) {
+            Account account = this.accountRepository.findById(session.getAccountId()).orElse(null);
+            if(account != null) {
+                if(account.getIsTotpEnabled()) {
+
+//                    if(account.getTotpSecret().equals(totp)) {
+//                        session.setNeedsTotp(false);
+//                        this.sessionRepository.save(session);
+//                        loginResponse.setToken(session.getToken());
+//                    } else {
+//                        loginResponse.setError(ErrorCode.INVALID_TOTP);
+//                    }
+                } else {
+                    loginResponse.setError(ErrorCode.TOTP_DISABLED);
+                }
+            } else {
+                loginResponse.setError(ErrorCode.INVALID_LOGIN);
+            }
+        } else {
+            loginResponse.setError(ErrorCode.INVALID_SESSION);
+        }
+
+        return loginResponse;
+    }
+
+    @Override
     public Boolean logout(String token) {
-        return null;
+        Session session = this.sessionRepository.findByTokenAndIsActiveTrue(token);
+
+        if(session != null) {
+            session.setIsActive(false);
+            this.sessionRepository.save(session);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
     public Session session(String token) {
-        return null;
+        return this.sessionRepository.findByTokenAndIsActiveTrueAndNeedsTotpFalse(token);
     }
 
     private Session createSession(Account account) {
-        String token = "";
-        token = Password.hash(token).withArgon2().toString();
-        Session session = Session.builder()
+        return Session.builder()
                 .accountId(account.getId())
-                .token(null)
+                .token(this.generateToken())
                 .needsTotp(account.getIsTotpEnabled())
                 .isActive(true)
                 .build();
-
-        if(!account.getIsTotpEnabled()) {
-            session.setToken(this.generateToken());
-        }
-        return session;
     }
 
     private String generateToken() {

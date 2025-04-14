@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SessionRepository extends JpaRepository<Session, Long> {
     Session findByTokenAndIsActiveTrue(String token);
+    Session findByTokenAndIsActiveTrueAndNeedsTotpFalse(String token);
+    Session findByTokenAndIsActiveTrueAndNeedsTotpTrue(String token);
 }
