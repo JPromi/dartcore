@@ -34,7 +34,7 @@ public class AuthServiceImpl implements AuthService {
                 .totpRequired(false)
                 .build();
 
-        Optional<Account> accountCheck = accountRepository.findByUsernameAndIsDisabledFalseAndIsDeletedFalse(loginRequest.getUsername());
+        Optional<Account> accountCheck = accountRepository.findByUsernameAndIsDisabledFalseAndIsDeletedFalseAndIsEmailVerifiedTrue(loginRequest.getUsername());
 
         if (accountCheck.isPresent()) {
             Account account = accountCheck.get();
