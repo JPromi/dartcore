@@ -1,6 +1,7 @@
 package com.jpromi.darts.backend.controllers;
 
 
+import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.enums.ErrorCode;
 import com.jpromi.darts.backend.models.LoginRequest;
 import com.jpromi.darts.backend.models.LoginResponse;
@@ -53,6 +54,17 @@ public class AuthController {
             };
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(LoginResponse.builder().error(ErrorCode.INVALID_SESSION).build());
+        }
+    }
+
+    @GetMapping("/session")
+    public ResponseEntity<Session> session(@CookieValue("b2h.darts.session") String sessionCookie) {
+        if(sessionCookie != null) {
+            Session response = this.authService.session(sessionCookie);
+
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
 }
