@@ -50,6 +50,6 @@ public class Profile {
     @Column(nullable = true)
     private String country;
 
-    @Column(nullable = true)
+    @ManyToOne
     private File banner;
 }
