@@ -1,10 +1,13 @@
 package com.jpromi.darts.backend.controllers;
 
 
+import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.enums.ErrorCode;
 import com.jpromi.darts.backend.models.LoginRequest;
 import com.jpromi.darts.backend.models.LoginResponse;
+import com.jpromi.darts.backend.models.SessionAccountResponse;
+import com.jpromi.darts.backend.repositories.AccountRepository;
 import com.jpromi.darts.backend.services.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,6 +45,35 @@ public class AuthController {
         };
     }
 
+    @GetMapping("")
+    public ResponseEntity<LoginResponse> loginSession(@CookieValue("b2h.darts.session") String sessionCookie) {
+        if(sessionCookie != null) {
+            Session session = this.authService.generalSession(sessionCookie);
+            if (session != null) {
+                LoginResponse response = LoginResponse.builder()
+                        .token(session.getToken())
+                        .totpRequired(session.getNeedsTotp())
+                        .error(ErrorCode.NONE)
+                        .build();
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @DeleteMapping("")
+    public ResponseEntity<Void> logout(@CookieValue("b2h.darts.session") String sessionCookie) {
+        if(sessionCookie != null) {
+            this.authService.logout(sessionCookie);
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
     @PostMapping("/totp")
     public ResponseEntity<LoginResponse> totp(@CookieValue("b2h.darts.session") String sessionCookie, @RequestBody String request) {
         if(sessionCookie != null) {
@@ -58,11 +90,15 @@ public class AuthController {
     }
 
     @GetMapping("/session")
-    public ResponseEntity<Session> session(@CookieValue("b2h.darts.session") String sessionCookie) {
+    public ResponseEntity<SessionAccountResponse> session(@CookieValue("b2h.darts.session") String sessionCookie) {
         if(sessionCookie != null) {
-            Session response = this.authService.session(sessionCookie);
+            SessionAccountResponse response = this.authService.accountBySession(sessionCookie);
 
-            return ResponseEntity.ok(response);
+            if (response != null) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }

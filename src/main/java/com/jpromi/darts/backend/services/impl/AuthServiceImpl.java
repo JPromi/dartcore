@@ -5,6 +5,7 @@ import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.enums.ErrorCode;
 import com.jpromi.darts.backend.models.LoginRequest;
 import com.jpromi.darts.backend.models.LoginResponse;
+import com.jpromi.darts.backend.models.SessionAccountResponse;
 import com.jpromi.darts.backend.repositories.AccountRepository;
 import com.jpromi.darts.backend.repositories.SessionRepository;
 import com.jpromi.darts.backend.services.AuthService;
@@ -107,6 +108,46 @@ public class AuthServiceImpl implements AuthService {
         return this.sessionRepository.findByTokenAndIsActiveTrueAndNeedsTotpFalse(token);
     }
 
+    @Override
+    public Session generalSession(String token) {
+        return this.sessionRepository.findByTokenAndIsActiveTrue(token);
+    }
+
+    @Override
+    public SessionAccountResponse accountBySession(String token) {
+        Session session = this.session(token);
+        if (session != null) {
+            Account account = this.accountRepository.findById(session.getAccountId()).orElse(null);
+            if (account != null) {
+                return SessionAccountResponse.builder()
+                        .uuid(account.getUuid())
+                        .firstName(account.getFirstName())
+                        .lastName(account.getLastName())
+                        .email(account.getEmail())
+                        .username(account.getUsername())
+                        .avatar(account.getAvatar() != null ? account.getAvatar().getUrl() : null)
+                        .registrationTimestamp(account.getEmailVerificationTimestamp())
+                        .build();
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Boolean logoutBySession(String token) {
+        Session session = this.session(token);
+        if (session != null) {
+            session.setIsActive(false);
+            this.sessionRepository.save(session);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private Session createSession(Account account) {
         return Session.builder()
                 .accountId(account.getId())
@@ -117,7 +158,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String generateToken() {
-        String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456780!@#$%^&*()_+";
+        String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456780!$";
         StringBuilder token = new StringBuilder();
         Random random = new Random();
 

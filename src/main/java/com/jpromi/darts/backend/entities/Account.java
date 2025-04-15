@@ -53,7 +53,7 @@ public class Account {
     private String lastName;
 
     @ManyToOne
-    private File profilePicture;
+    private File avatar;
 
     @Column(nullable = false)
     @ColumnDefault("false")

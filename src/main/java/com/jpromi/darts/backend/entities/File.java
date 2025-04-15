@@ -36,4 +36,8 @@ public class File {
     @Column(nullable = false)
     @ColumnDefault("false")
     private Boolean isDeleted;
+
+    public String getUrl() {
+        return "/api/v1/file/" + uuid;
+    }
 }
