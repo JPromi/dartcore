@@ -28,16 +28,15 @@ public class File {
     private String type;
 
     @Column(nullable = false)
-    private String extension;
-
-    @Column(nullable = false)
     private String path;
 
     @Column(nullable = false)
     @ColumnDefault("false")
-    private Boolean isDeleted;
+    @Builder.Default
+    private Boolean isDeleted = false;
 
     public String getUrl() {
-        return "/api/v1/file/" + uuid;
+//        return "/api/v1/file/" + uuid;
+        return "https://placehold.co/600x600/EEE/31343C?font=poppins&text=Image";
     }
 }
