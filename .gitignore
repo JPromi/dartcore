@@ -38,3 +38,6 @@ out/
 
 ### Java ###
 /src/main/resources/application.properties
+
+### Darts ###
+/files
