@@ -31,8 +31,8 @@ public class DartGame {
     @ManyToMany(cascade = CascadeType.ALL)
     private List<Account> players;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    private PlayerGroup playerGroup;
+//    @OneToOne(cascade = CascadeType.ALL)
+//    private PlayerGroup playerGroup;
 
     @OneToOne(cascade = CascadeType.ALL)
     private Location location;

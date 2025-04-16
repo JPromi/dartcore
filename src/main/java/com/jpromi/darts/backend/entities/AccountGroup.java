@@ -1,10 +1,9 @@
 package com.jpromi.darts.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,12 +14,14 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-public class PlayerGroup {
+public class AccountGroup {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
+    @Builder.Default
     private UUID uuid = UUID.randomUUID();
 
     @Column(nullable = true)
@@ -29,19 +30,19 @@ public class PlayerGroup {
     @Column(nullable = true)
     private String description;
 
-    @Column(nullable = false)
-    private Boolean isPrivate = true;
+    @ManyToOne
+    private File avatar;
 
-    @Column(nullable = false)
-    @ManyToMany(cascade = CascadeType.ALL)
-    private List<Account> members;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "accountGroup")
+    private List<AccountGroupMember> members;
 
-    @Column(nullable = false)
-    @OneToMany(cascade = CascadeType.ALL)
-    private List<Location> locations;
+    @Column(nullable = true)
+    @Builder.Default
+    private Boolean isPublic = false;
 
-    @Column(nullable = false)
-    @ColumnDefault("false")
-    private Boolean isDeleted;
+    @Transient
+    public List<Account> getAccounts() {
+        return members.stream().map(AccountGroupMember::getAccount).toList();
+    }
 
 }
