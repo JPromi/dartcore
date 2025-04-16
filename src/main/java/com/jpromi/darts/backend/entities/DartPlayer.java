@@ -19,8 +19,11 @@ public class DartPlayer {
     @Column(nullable = false)
     private Long gameId;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Long accountId;
+
+    @Column(nullable = true)
+    private String guestName;
 
     @Column(nullable = true)
     private Integer leftGameAt;
