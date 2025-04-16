@@ -16,8 +16,9 @@ public class Session {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long accountId;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private Account account;
 
     @Column(nullable = false)
     @ColumnDefault("false")
