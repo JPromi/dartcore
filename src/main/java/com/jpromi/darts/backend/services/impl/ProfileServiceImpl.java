@@ -20,7 +20,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileResponse getProfile(String username) {
         Account account = accountRepository.findByUsername(username);
-        if (account != null) {
+        if (account != null && account.getProfile() != null) {
             ProfileResponse profileResponse = ProfileResponse.builder()
                     .uuid(account.getUuid())
                     .username(account.getUsername())

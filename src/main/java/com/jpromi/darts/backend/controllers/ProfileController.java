@@ -20,6 +20,11 @@ public class ProfileController {
     @GetMapping("/{username}")
     public ResponseEntity<ProfileResponse> getProfile(@PathVariable String username) {
         ProfileResponse profile = profileService.getProfile(username);
-        return ResponseEntity.ok(profile);
+
+        if(profile != null) {
+            return ResponseEntity.ok(profile);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
