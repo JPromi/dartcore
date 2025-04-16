@@ -1,8 +1,11 @@
 package com.jpromi.darts.backend.entities;
 
+import com.jpromi.darts.backend.services.UrlService;
+import com.jpromi.darts.backend.services.impl.UrlServiceImpl;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.UUID;
 
@@ -14,6 +17,7 @@ import java.util.UUID;
 @Getter
 @Setter
 public class File {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,8 +39,7 @@ public class File {
     @Builder.Default
     private Boolean isDeleted = false;
 
-    public String getUrl() {
-//        return "/api/v1/file/" + uuid;
-        return "https://placehold.co/600x600/EEE/31343C?font=poppins&text=Image";
+    public String getRealPath() {
+        return "/api/files" + path;
     }
 }

@@ -10,4 +10,5 @@ public interface FileRepository extends JpaRepository<File, Long> {
     Optional<File> findByIdAndIsDeletedFalse(Long id);
     Optional<File> findByUuidAndIsDeletedFalse(UUID uuid);
     Optional<File> findByPathAndIsDeletedFalse(String path);
+    Optional<File> findByUuidAndNameAndIsDeletedFalse(UUID uuid, String name);
 }

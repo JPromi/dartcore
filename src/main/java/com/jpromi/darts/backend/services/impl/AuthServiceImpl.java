@@ -11,6 +11,7 @@ import com.jpromi.darts.backend.repositories.SessionRepository;
 import com.jpromi.darts.backend.services.AuthService;
 import com.password4j.Password;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -27,6 +28,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private TotpServiceImpl totpService;
+
+    @Autowired
+    private UrlServiceImpl urlService;
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
@@ -125,7 +129,7 @@ public class AuthServiceImpl implements AuthService {
                         .lastName(account.getLastName())
                         .email(account.getEmail())
                         .username(account.getUsername())
-                        .avatar(account.getAvatar() != null ? account.getAvatar().getUrl() : null)
+                        .avatar(account.getAvatar() != null ? urlService.toPublicUrl(account.getAvatar().getRealPath()) : null)
                         .registrationTimestamp(account.getEmailVerificationTimestamp())
                         .build();
             } else {

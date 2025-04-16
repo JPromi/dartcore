@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -51,6 +52,20 @@ public class FileServiceImpl implements FileService {
         return new File(); // Placeholder return statement
     }
 
+    @Override
+    public java.io.File getFileByUuidAndName(String uuid, String name) {
+        Optional<File> fileOptional = fileRepository.findByUuidAndNameAndIsDeletedFalse(UUID.fromString(uuid), name);
+        if (fileOptional.isPresent()) {
+            File file = fileOptional.get();
+
+            java.io.File fileGet = _getFile(file.getPath());
+
+            return fileGet;
+        } else {
+            return null;
+        }
+    }
+
     private String _saveFile(java.io.File file, String uuid, String fileName) {
         try {
             Path path = Path.of(filePath);
@@ -71,6 +86,15 @@ public class FileServiceImpl implements FileService {
             return "/" + path.relativize(targetPath).toString().replace("\\", "/");
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
+        }
+    }
+
+    private java.io.File _getFile(String pathSingleFile) {
+        Path path = Path.of(filePath + pathSingleFile);
+        if (Files.exists(path)) {
+            return path.toFile();
+        } else {
             return null;
         }
     }
