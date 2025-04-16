@@ -17,9 +17,6 @@ public class Profile {
     private Long id;
 
     @Column(nullable = false)
-    private Long accountId;
-
-    @Column(nullable = false)
     private String description;
 
     @Column(nullable = false)
