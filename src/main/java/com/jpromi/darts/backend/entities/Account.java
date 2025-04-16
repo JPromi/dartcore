@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -84,5 +85,13 @@ public class Account {
 
     @Column(nullable = true)
     private LocalDateTime registrationTimestamp;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AccountGroupMember> groupMemberships;
+
+//    @Transient
+//    public List<AccountGroup> getGroups() {
+//        return groupMemberships.stream().map(AccountGroupMember::getAccountGroup).toList();
+//    }
 
 }

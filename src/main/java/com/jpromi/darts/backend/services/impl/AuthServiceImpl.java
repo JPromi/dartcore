@@ -71,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
         Session session = this.sessionRepository.findByTokenAndIsActiveTrueAndNeedsTotpTrue(sessionToken);
 
         if(session != null) {
-            Account account = this.accountRepository.findById(session.getAccountId()).orElse(null);
+            Account account = session.getAccount();
             if(account != null) {
                 if(account.getIsTotpEnabled()) {
                     if(totpService.validateTotp(account.getTotpSecret(), totp)) {
@@ -121,7 +121,7 @@ public class AuthServiceImpl implements AuthService {
     public SessionAccountResponse accountBySession(String token) {
         Session session = this.session(token);
         if (session != null) {
-            Account account = this.accountRepository.findById(session.getAccountId()).orElse(null);
+            Account account = session.getAccount();
             if (account != null) {
                 return SessionAccountResponse.builder()
                         .uuid(account.getUuid())
@@ -154,7 +154,7 @@ public class AuthServiceImpl implements AuthService {
 
     private Session createSession(Account account) {
         return Session.builder()
-                .accountId(account.getId())
+                .account(account)
                 .token(this.generateToken())
                 .needsTotp(account.getIsTotpEnabled())
                 .isActive(true)
