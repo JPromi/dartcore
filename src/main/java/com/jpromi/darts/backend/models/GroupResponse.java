@@ -3,6 +3,7 @@ package com.jpromi.darts.backend.models;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -14,5 +15,6 @@ public class GroupResponse {
     private String description;
     private String avatar;
     private Boolean isPublic;
+    private List<ProfileResponse> members;
 
 }

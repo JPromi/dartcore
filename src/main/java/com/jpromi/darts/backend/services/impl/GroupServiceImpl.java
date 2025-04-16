@@ -3,7 +3,9 @@ package com.jpromi.darts.backend.services.impl;
 import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.AccountGroup;
 import com.jpromi.darts.backend.entities.AccountGroupMember;
+import com.jpromi.darts.backend.mapper.ProfileResponseMapper;
 import com.jpromi.darts.backend.models.GroupResponse;
+import com.jpromi.darts.backend.models.ProfileResponse;
 import com.jpromi.darts.backend.repositories.AccountGroupRepository;
 import com.jpromi.darts.backend.repositories.AccountRepository;
 import com.jpromi.darts.backend.services.GroupService;
@@ -26,6 +28,9 @@ public class GroupServiceImpl implements GroupService {
     @Autowired
     private UrlService urlService;
 
+    @Autowired
+    private ProfileResponseMapper profileResponseMapper;
+
     @Override
     public List<GroupResponse> getGroupsByAccount(Long accountId) {
 
@@ -46,12 +51,20 @@ public class GroupServiceImpl implements GroupService {
 
         for (AccountGroupMember groupMember : accountGroups) {
             AccountGroup group = groupMember.getAccountGroup();
+
+            List<ProfileResponse> members = new ArrayList<>();
+            for (AccountGroupMember member : group.getMembers()) {
+                ProfileResponse profileResponse = profileResponseMapper.fromAccount(member.getAccount());
+                members.add(profileResponse);
+            }
+
             GroupResponse groupResponse = GroupResponse.builder()
                     .uuid(group.getUuid())
                     .name(group.getName())
                     .description(group.getDescription())
                     .avatar(group.getAvatar() != null ? urlService.toPublicUrl(group.getAvatar().getRealPath()) : null)
                     .isPublic(group.getIsPublic())
+                    .members(members)
                     .build();
             groupsResponse.add(groupResponse);
         }
