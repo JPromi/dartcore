@@ -1,7 +1,8 @@
 package com.jpromi.darts.backend.controllers;
 
 import com.jpromi.darts.backend.entities.Session;
-import com.jpromi.darts.backend.models.SessionAccountResponse;
+import com.jpromi.darts.backend.models.SettingAccountRequest;
+import com.jpromi.darts.backend.models.SettingAccountResponse;
 import com.jpromi.darts.backend.models.SettingProfileResponse;
 import com.jpromi.darts.backend.services.AuthService;
 import com.jpromi.darts.backend.services.SettingService;
@@ -47,6 +48,40 @@ public class SettingController {
             {
                 SettingProfileResponse profile = this.settingService.updateProfile(session.getAccount(), request);
                 return ResponseEntity.ok(profile);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @GetMapping("/account")
+    public ResponseEntity<SettingAccountResponse> getAccount(@CookieValue("b2h.darts.session") String sessionCookie) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if (session != null)
+            {
+                SettingAccountResponse account = this.settingService.getAccount(session.getAccount());
+                return ResponseEntity.ok(account);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @PutMapping("/account")
+    public ResponseEntity<SettingAccountResponse> updateAccount(@CookieValue("b2h.darts.session") String sessionCookie, @RequestBody SettingAccountRequest request) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if (session != null)
+            {
+                SettingAccountResponse account = this.settingService.updateAccount(session.getAccount(), request);
+                return ResponseEntity.ok(account);
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
