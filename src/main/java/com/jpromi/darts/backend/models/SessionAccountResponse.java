@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
@@ -15,5 +16,5 @@ public class SessionAccountResponse {
     private String firstName;
     private String lastName;
     private String avatar;
-    private LocalDateTime registrationTimestamp;
+    private OffsetDateTime registrationTimestamp;
 }

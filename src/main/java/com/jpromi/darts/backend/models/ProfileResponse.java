@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
@@ -19,7 +20,7 @@ public class ProfileResponse {
     private String banner;
     private Links links;
     private ProfileVisibilityEnum visibility;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Data
     public static class Links {

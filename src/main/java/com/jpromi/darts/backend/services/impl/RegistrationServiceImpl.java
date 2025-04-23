@@ -1,6 +1,7 @@
 package com.jpromi.darts.backend.services.impl;
 
 import com.jpromi.darts.backend.entities.Account;
+import com.jpromi.darts.backend.entities.Profile;
 import com.jpromi.darts.backend.models.RegisterRequest;
 import com.jpromi.darts.backend.repositories.AccountRepository;
 import com.jpromi.darts.backend.services.RegistrationService;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.password4j.Password;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 @Service
@@ -20,6 +22,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     @Override
     public Account register(RegisterRequest registerRequest) {
         String password = Password.hash(registerRequest.getPassword()).withArgon2().getResult();
+        Profile profile = Profile.builder().build();
         Account account = Account.builder()
                 .email(registerRequest.getEmail())
                 .username(registerRequest.getUsername())
@@ -28,7 +31,8 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .lastName(registerRequest.getLastName())
                 .isEmailVerified(false)
                 .emailVerificationToken(generateValidationToken())
-                .registrationTimestamp(LocalDateTime.now())
+                .registrationTimestamp(OffsetDateTime.now())
+                .profile(profile)
                 .build();
 
         accountRepository.save(account);
@@ -43,7 +47,7 @@ public class RegistrationServiceImpl implements RegistrationService {
             Account account = accountCheck.get();
             account.setEmailVerificationToken(null);
             account.setIsEmailVerified(true);
-            account.setEmailVerificationTimestamp(LocalDateTime.now());
+            account.setEmailVerificationTimestamp(OffsetDateTime.now());
 
             accountRepository.save(account);
             return true;

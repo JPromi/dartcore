@@ -38,4 +38,23 @@ public class ProfileResponseMapper {
         return profileResponse;
     }
 
+    public ProfileResponse fromAccountPrivate(Account account) {
+        ProfileResponse profileResponse = ProfileResponse.builder()
+                .uuid(account.getUuid())
+                .username(account.getUsername())
+                .description(null)
+                .country(null)
+                .avatar(urlService.toPublicUrl(account.getAvatar().getRealPath()))
+                .banner(null)
+                .createdAt(null)
+                .visibility(account.getProfile().getVisibility())
+                .build();
+
+        ProfileResponse.Links links = new ProfileResponse.Links();
+
+        profileResponse.setLinks(links);
+
+        return profileResponse;
+    }
+
 }

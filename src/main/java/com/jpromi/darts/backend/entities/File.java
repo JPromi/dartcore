@@ -7,6 +7,8 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
@@ -33,6 +35,16 @@ public class File {
 
     @Column(nullable = false)
     private String path;
+
+    @Column(nullable = false)
+    @ColumnDefault("true")
+    @Builder.Default
+    private Boolean isTmporary = true;
+
+    @Column(nullable = false)
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Builder.Default
+    private OffsetDateTime createdAt = OffsetDateTime.now();
 
     @Column(nullable = false)
     @ColumnDefault("false")
