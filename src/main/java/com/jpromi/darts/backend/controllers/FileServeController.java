@@ -43,7 +43,7 @@ public class FileServeController {
                     .contentType(MediaType.parseMediaType(contentType))
                     .body(resource);
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
