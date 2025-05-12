@@ -16,6 +16,7 @@ public class ProfileResponse {
     private String username;
     private String description;
     private String country;
+    private Integer age;
     private String avatar;
     private String banner;
     private Links links;

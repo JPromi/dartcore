@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -54,6 +55,9 @@ public class Account {
     @Column(nullable = true)
     private String lastName;
 
+    @Column(nullable = true)
+    private LocalDate dateOfBirth;
+
     @ManyToOne
     private File avatar;
 
@@ -94,5 +98,18 @@ public class Account {
 //    public List<AccountGroup> getGroups() {
 //        return groupMemberships.stream().map(AccountGroupMember::getAccountGroup).toList();
 //    }
+
+    @Transient
+    public Integer getAge() {
+        if (dateOfBirth == null) {
+            return null;
+        }
+        LocalDate now = LocalDate.now();
+        int age = now.getYear() - dateOfBirth.getYear();
+        if (now.getDayOfYear() < dateOfBirth.getDayOfYear()) {
+            age--;
+        }
+        return age;
+    }
 
 }

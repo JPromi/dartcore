@@ -18,6 +18,7 @@ public class ProfileResponseMapper {
                 .username(account.getUsername())
                 .description(account.getProfile().getDescription())
                 .country(account.getProfile().getCountry())
+                .age(account.getAge())
                 .avatar(urlService.toPublicUrl(account.getAvatar().getRealPath()))
                 .banner(urlService.toPublicUrl(account.getProfile().getBanner().getRealPath()))
                 .createdAt(account.getEmailVerificationTimestamp())
