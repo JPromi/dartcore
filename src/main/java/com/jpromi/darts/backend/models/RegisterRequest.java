@@ -2,6 +2,8 @@ package com.jpromi.darts.backend.models;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class RegisterRequest {
     private String username;
@@ -9,4 +11,5 @@ public class RegisterRequest {
     private String email;
     private String firstName;
     private String lastName;
+    private LocalDateTime dateOfBirth;
 }
