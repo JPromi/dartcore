@@ -46,7 +46,7 @@ public class AuthController {
     }
 
     @GetMapping("")
-    public ResponseEntity<LoginResponse> loginSession(@CookieValue("b2h.darts.session") String sessionCookie) {
+    public ResponseEntity<LoginResponse> loginSession(@CookieValue(value = "b2h.darts.session", defaultValue = "") String sessionCookie) {
         if(sessionCookie != null) {
             Session session = this.authService.generalSession(sessionCookie);
             if (session != null) {
