@@ -14,6 +14,7 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public String generateTemplate(String htmlContent, HashMap<String, String> variables) {
         htmlContent = htmlContent.replaceAll("\\{\\{\\s*(\\w+)\\s*\\}\\}", "{{$1}}");
+        htmlContent = htmlContent.replaceAll("<raw>.*?</raw>", "");
         for (String key : variables.keySet()) {
             htmlContent = htmlContent.replace("{{" + key + "}}", variables.get(key));
         }
@@ -36,5 +37,26 @@ public class TemplateServiceImpl implements TemplateService {
         String content = contentBuilder.toString();
 
         return generateTemplate(content, variables);
+    }
+
+    @Override
+    public String generatePlainText(String htmlContent, HashMap<String, String> variables) {
+        return htmlContent.replaceAll(".*<raw>(.*?)</raw>.*", "$1");
+    }
+
+    @Override
+    public String generatePlainTextFromFile(String filePath, HashMap<String, String> variables) {
+        StringBuilder contentBuilder = new StringBuilder();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                contentBuilder.append(line).append("\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String content = contentBuilder.toString();
+        return generatePlainText(content, variables);
     }
 }
