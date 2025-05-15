@@ -32,6 +32,7 @@ dependencies {
 	implementation 'org.springframework.security:spring-security-crypto'
 	implementation 'com.password4j:password4j:1.8.2'
 	implementation 'dev.samstevens.totp:totp:1.7.1'
+	implementation 'com.sun.mail:jakarta.mail:2.0.1'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
