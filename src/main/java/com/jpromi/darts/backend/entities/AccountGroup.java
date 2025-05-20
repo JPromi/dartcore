@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,12 +35,19 @@ public class AccountGroup {
     @ManyToOne
     private File avatar;
 
+    @ManyToOne
+    private File banner;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "accountGroup")
     private List<AccountGroupMember> members;
 
     @Column(nullable = true)
     @Builder.Default
     private Boolean isPublic = false;
+
+    @Column(nullable = true)
+    @Builder.Default
+    private OffsetDateTime createdAt = OffsetDateTime.now();
 
     @Transient
     public List<Account> getAccounts() {

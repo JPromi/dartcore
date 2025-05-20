@@ -3,22 +3,19 @@ package com.jpromi.darts.backend.models;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Data
 @Builder
-public class GroupResponse {
+public class GroupLightResponse {
 
     private UUID uuid;
     private String name;
-    private String description;
     private String avatar;
     private String banner;
+    private Long membersTotal;
     private Boolean isMember;
     private Boolean isPublic;
-    private List<ProfileLightResponse> members;
-    private OffsetDateTime createdAt;
 
 }

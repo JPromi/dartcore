@@ -3,8 +3,13 @@ package com.jpromi.darts.backend.services.impl;
 import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.AccountGroup;
 import com.jpromi.darts.backend.entities.AccountGroupMember;
+import com.jpromi.darts.backend.mapper.GroupLightResponseMapper;
+import com.jpromi.darts.backend.mapper.GroupResponseMapper;
+import com.jpromi.darts.backend.mapper.ProfileLightResponseMapper;
 import com.jpromi.darts.backend.mapper.ProfileResponseMapper;
+import com.jpromi.darts.backend.models.GroupLightResponse;
 import com.jpromi.darts.backend.models.GroupResponse;
+import com.jpromi.darts.backend.models.ProfileLightResponse;
 import com.jpromi.darts.backend.models.ProfileResponse;
 import com.jpromi.darts.backend.repositories.AccountGroupRepository;
 import com.jpromi.darts.backend.repositories.AccountRepository;
@@ -15,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class GroupServiceImpl implements GroupService {
@@ -29,10 +35,16 @@ public class GroupServiceImpl implements GroupService {
     private UrlService urlService;
 
     @Autowired
-    private ProfileResponseMapper profileResponseMapper;
+    private ProfileLightResponseMapper profileLightResponseMapper;
+
+    @Autowired
+    private GroupResponseMapper groupResponseMapper;
+
+    @Autowired
+    private GroupLightResponseMapper groupLightResponseMapper;
 
     @Override
-    public List<GroupResponse> getGroupsByAccount(Long accountId) {
+    public List<GroupLightResponse> getGroupsByAccount(Long accountId) {
 
         Account account = accountRepository.findById(accountId).orElse(null);
 
@@ -44,31 +56,29 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public List<GroupResponse> getGroupsByAccount(Account account) {
-        List<GroupResponse> groupsResponse = new ArrayList<>();
+    public List<GroupLightResponse> getGroupsByAccount(Account account) {
+        List<GroupLightResponse> groups = new ArrayList<>();
 
         List<AccountGroupMember> accountGroups = account.getGroupMemberships();
 
         for (AccountGroupMember groupMember : accountGroups) {
-            AccountGroup group = groupMember.getAccountGroup();
-
-            List<ProfileResponse> members = new ArrayList<>();
-            for (AccountGroupMember member : group.getMembers()) {
-                ProfileResponse profileResponse = profileResponseMapper.fromAccount(member.getAccount());
-                members.add(profileResponse);
-            }
-
-            GroupResponse groupResponse = GroupResponse.builder()
-                    .uuid(group.getUuid())
-                    .name(group.getName())
-                    .description(group.getDescription())
-                    .avatar(group.getAvatar() != null ? urlService.toPublicUrl(group.getAvatar().getRealPath()) : null)
-                    .isPublic(group.getIsPublic())
-                    .members(members)
-                    .build();
-            groupsResponse.add(groupResponse);
+            groups.add(groupLightResponseMapper.fromAccountGroup(groupMember.getAccountGroup(), account));
         }
 
-        return groupsResponse;
+        return groups;
+    }
+
+    @Override
+    public GroupResponse getGroupByUuid(UUID uuid, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(uuid);
+        if (group != null) {
+            if (account != null) {
+                return groupResponseMapper.fromAccountGroup(group, account);
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 }
