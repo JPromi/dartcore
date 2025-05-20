@@ -39,17 +39,31 @@ public class GroupResponseMapper {
                     .toList();
         }
 
-        return GroupResponse.builder()
-                .uuid(group.getUuid())
-                .name(group.getName())
-                .description(group.getDescription())
-                .avatar(urlService.toPublicUrl(group.getAvatar()))
-                .banner(urlService.toPublicUrl(group.getBanner()))
-                .isPublic(group.getIsPublic())
-                .isMember(isMember)
-                .members(members)
-                .createdAt(group.getCreatedAt())
-                .build();
+        if(isMember || group.getIsPublic()) {
+            return GroupResponse.builder()
+                    .uuid(group.getUuid())
+                    .name(group.getName())
+                    .description(group.getDescription())
+                    .avatar(urlService.toPublicUrl(group.getAvatar()))
+                    .banner(urlService.toPublicUrl(group.getBanner()))
+                    .isPublic(group.getIsPublic())
+                    .isMember(isMember)
+                    .members(members)
+                    .createdAt(group.getCreatedAt())
+                    .build();
+        } else {
+            return GroupResponse.builder()
+                    .uuid(group.getUuid())
+                    .name(group.getName())
+                    .description(null)
+                    .avatar(urlService.toPublicUrl(group.getAvatar()))
+                    .banner(urlService.toPublicUrl(group.getBanner()))
+                    .isPublic(group.getIsPublic())
+                    .isMember(isMember)
+                    .members(null)
+                    .createdAt(group.getCreatedAt())
+                    .build();
+        }
     }
 
 }

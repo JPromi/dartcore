@@ -3,19 +3,15 @@ package com.jpromi.darts.backend.services.impl;
 import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.AccountGroup;
 import com.jpromi.darts.backend.entities.AccountGroupMember;
-import com.jpromi.darts.backend.mapper.GroupLightResponseMapper;
-import com.jpromi.darts.backend.mapper.GroupResponseMapper;
-import com.jpromi.darts.backend.mapper.ProfileLightResponseMapper;
-import com.jpromi.darts.backend.mapper.ProfileResponseMapper;
-import com.jpromi.darts.backend.models.GroupLightResponse;
-import com.jpromi.darts.backend.models.GroupResponse;
-import com.jpromi.darts.backend.models.ProfileLightResponse;
-import com.jpromi.darts.backend.models.ProfileResponse;
+import com.jpromi.darts.backend.mapper.*;
+import com.jpromi.darts.backend.models.*;
 import com.jpromi.darts.backend.repositories.AccountGroupRepository;
 import com.jpromi.darts.backend.repositories.AccountRepository;
 import com.jpromi.darts.backend.services.GroupService;
 import com.jpromi.darts.backend.services.UrlService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -42,6 +38,9 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private GroupLightResponseMapper groupLightResponseMapper;
+
+    @Autowired
+    private PageResponseMapper pageResponseMapper;
 
     @Override
     public List<GroupLightResponse> getGroupsByAccount(Long accountId) {
@@ -80,5 +79,16 @@ public class GroupServiceImpl implements GroupService {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public PageResponse<GroupLightResponse> searchGroups(String query, Account account, Pageable pageable, Boolean isMember, Boolean isPublic) {
+        Page<AccountGroup> groups = accountGroupRepository.searchGroups(query, account.getId(), isMember, isPublic, pageable);
+
+        return pageResponseMapper.fromPage(groups.map(group -> groupLightResponseMapper.fromAccountGroup(group, account)));
+
+//        return groups.stream()
+//                .map(group -> groupLightResponseMapper.fromAccountGroup(group, account))
+//                .toList();
     }
 }

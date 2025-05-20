@@ -45,7 +45,7 @@ public class ProfileResponseMapper {
                 .username(account.getUsername())
                 .description(null)
                 .country(null)
-                .avatar(urlService.toPublicUrl(account.getAvatar().getRealPath()))
+                .avatar(urlService.toPublicUrl(account.getAvatar()))
                 .banner(null)
                 .createdAt(null)
                 .visibility(account.getProfile().getVisibility())

@@ -17,7 +17,7 @@ public class ProfileLightResponseMapper {
         return ProfileLightResponse.builder()
                 .uuid(account.getUuid())
                 .username(account.getUsername())
-                .avatar(urlService.toPublicUrl(account.getAvatar().getRealPath()))
+                .avatar(urlService.toPublicUrl(account.getAvatar()))
                 .visibility(account.getProfile().getVisibility())
                 .build();
     }

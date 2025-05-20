@@ -32,15 +32,27 @@ public class GroupLightResponseMapper {
             }
         }
 
-        return GroupLightResponse.builder()
-                .uuid(group.getUuid())
-                .name(group.getName())
-                .avatar(urlService.toPublicUrl(group.getAvatar()))
-                .banner(urlService.toPublicUrl(group.getBanner()))
-                .isPublic(group.getIsPublic())
-                .isMember(isMember)
-                .membersTotal(group.getMembers() != null ? group.getMembers().size() : 0L)
-                .build();
+        if (isMember || group.getIsPublic()) {
+            return GroupLightResponse.builder()
+                    .uuid(group.getUuid())
+                    .name(group.getName())
+                    .avatar(urlService.toPublicUrl(group.getAvatar()))
+                    .banner(urlService.toPublicUrl(group.getBanner()))
+                    .isPublic(group.getIsPublic())
+                    .isMember(isMember)
+                    .membersTotal(group.getMembers() != null ? group.getMembers().size() : 0L)
+                    .build();
+        } else {
+            return GroupLightResponse.builder()
+                    .uuid(group.getUuid())
+                    .name(group.getName())
+                    .avatar(urlService.toPublicUrl(group.getAvatar()))
+                    .banner(urlService.toPublicUrl(group.getBanner()))
+                    .isPublic(group.getIsPublic())
+                    .isMember(isMember)
+                    .membersTotal(0L)
+                    .build();
+        }
     }
 
 }
