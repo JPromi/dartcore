@@ -94,4 +94,20 @@ public class GroupController {
         }
     }
 
+    @DeleteMapping("/{uuid}")
+    public ResponseEntity<Void> deleteGroup(@CookieValue("b2h.darts.session") String sessionCookie, @PathVariable String uuid) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                this.groupService.deleteGroup(UUID.fromString(uuid), session.getAccount());
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
 }

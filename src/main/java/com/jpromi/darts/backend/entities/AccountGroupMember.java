@@ -23,10 +23,22 @@ public class AccountGroupMember {
     @JoinColumn(name = "account_id")
     private Account account;
 
-    @ManyToOne(cascade = CascadeType.ALL, optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "account_group_id")
     private AccountGroup accountGroup;
 
     private Boolean isOwner;
     private Boolean isAdmin;
+
+    @OneToOne
+    @JoinColumn(name = "invitation_account_id")
+    @JsonIgnore
+    private AccountGroupInvitationAccount invitationAccount;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "invitation_code_id")
+    @JsonIgnore
+    private AccountGroupInvitationCode invitationCode;
+
+
 }

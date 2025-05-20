@@ -1,9 +1,6 @@
 package com.jpromi.darts.backend.services.impl;
 
-import com.jpromi.darts.backend.entities.Account;
-import com.jpromi.darts.backend.entities.AccountGroup;
-import com.jpromi.darts.backend.entities.AccountGroupMember;
-import com.jpromi.darts.backend.entities.File;
+import com.jpromi.darts.backend.entities.*;
 import com.jpromi.darts.backend.mapper.*;
 import com.jpromi.darts.backend.models.*;
 import com.jpromi.darts.backend.repositories.AccountGroupRepository;
@@ -120,29 +117,48 @@ public class GroupServiceImpl implements GroupService {
             }
         }
 
-        // Members
+        // Member
+        group.setMembers(List.of(AccountGroupMember.builder().account(account).accountGroup(group).isOwner(true).build()));
         // remove duplicates
-        ArrayList<AccountGroupMember> members = new ArrayList<>();
+        ArrayList<AccountGroupInvitationAccount> invitaion = new ArrayList<>();
         if(groupRequest.getMembers() != null) {
             for (String member : groupRequest.getMembers()) {
-                Account memberAccount = accountRepository.findByUuidAndIsDisabledFalseAndIsDeletedFalseAndIsEmailVerifiedTrue(UUID.fromString(member));
-                if (memberAccount != null) {
-                    AccountGroupMember groupMember = AccountGroupMember.builder()
-                            .account(memberAccount)
+                Account invitaionAccount = accountRepository.findByUuidAndIsDisabledFalseAndIsDeletedFalseAndIsEmailVerifiedTrue(UUID.fromString(member));
+                if (invitaionAccount != null) {
+                    AccountGroupInvitationAccount groupInvitation = AccountGroupInvitationAccount.builder()
+                            .account(invitaionAccount)
+                            .inviter(account)
                             .accountGroup(group)
                             .build();
-                    members.add(groupMember);
+                    invitaion.add(groupInvitation);
                 }
             }
         }
-        members.add(AccountGroupMember.builder().account(account).accountGroup(group).isOwner(true).build());
         // remove duplicates
-        members = new ArrayList<>(new HashSet<>(members));
+        invitaion = new ArrayList<>(new HashSet<>(invitaion));
 
-        group.setMembers(members);
+        group.setInvitations(invitaion);
 
         accountGroupRepository.save(group);
 
         return groupResponseMapper.fromAccountGroup(group, account);
+    }
+
+    @Override
+    public Void deleteGroup(UUID uuid, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(uuid);
+        // check if is owner
+        if (group != null) {
+            AccountGroupMember groupMember = group.getMembers().stream()
+                    .filter(member -> member.getAccount().getId().equals(account.getId()))
+                    .findFirst()
+                    .orElse(null);
+            if (groupMember != null && groupMember.getIsOwner()) {
+                accountGroupRepository.delete(group);
+            } else {
+                throw new RuntimeException("You are not the owner of this group");
+            }
+        }
+        return null;
     }
 }

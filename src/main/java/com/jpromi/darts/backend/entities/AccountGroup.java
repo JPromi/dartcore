@@ -45,6 +45,12 @@ public class AccountGroup {
     @Builder.Default
     private Boolean isPublic = false;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "accountGroup")
+    private List<AccountGroupInvitationCode> invitationCodes;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "accountGroup")
+    private List<AccountGroupInvitationAccount> invitations;
+
     @Column(nullable = true)
     @Builder.Default
     private OffsetDateTime createdAt = OffsetDateTime.now();

@@ -16,5 +16,6 @@ public interface GroupService {
     List<GroupLightResponse> getGroupsByAccount(Account account);
     GroupResponse getGroupByUuid(UUID uuid, Account account);
     GroupResponse createGroup(GroupRequest groupRequest, Account account);
+    Void deleteGroup(UUID uuid, Account account);
     PageResponse<GroupLightResponse> searchGroups(String query, Account account, Pageable pageable, Boolean isMember, Boolean isPublic);
 }
