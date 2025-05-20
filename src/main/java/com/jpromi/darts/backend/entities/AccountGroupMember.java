@@ -26,4 +26,7 @@ public class AccountGroupMember {
     @ManyToOne(cascade = CascadeType.ALL, optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "account_group_id")
     private AccountGroup accountGroup;
+
+    private Boolean isOwner;
+    private Boolean isAdmin;
 }

@@ -1,10 +1,7 @@
 package com.jpromi.darts.backend.controllers;
 
 import com.jpromi.darts.backend.entities.Session;
-import com.jpromi.darts.backend.models.GroupLightResponse;
-import com.jpromi.darts.backend.models.GroupResponse;
-import com.jpromi.darts.backend.models.PageResponse;
-import com.jpromi.darts.backend.models.SessionAccountResponse;
+import com.jpromi.darts.backend.models.*;
 import com.jpromi.darts.backend.services.AuthService;
 import com.jpromi.darts.backend.services.GroupService;
 import org.apache.coyote.Response;
@@ -27,26 +24,6 @@ public class GroupController {
 
     @Autowired
     private AuthService authService;
-
-    @GetMapping("")
-    public ResponseEntity<List<GroupLightResponse>> getGroup(@CookieValue("b2h.darts.session") String sessionCookie) {
-        if(sessionCookie != null) {
-            Session session = this.authService.session(sessionCookie);
-
-            if(session != null) {
-                List<GroupLightResponse> groups = this.groupService.getGroupsByAccount(session.getAccount());
-                if(groups != null) {
-                    return ResponseEntity.ok(groups);
-                } else {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-                }
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-            }
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-    }
 
     @GetMapping("/search")
     public ResponseEntity<PageResponse<GroupLightResponse>> getGroupSearch(
@@ -88,6 +65,26 @@ public class GroupController {
                     return ResponseEntity.ok(group);
                 } else {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @PostMapping("")
+    public ResponseEntity<GroupResponse> createGroup(@CookieValue("b2h.darts.session") String sessionCookie, @RequestBody GroupRequest group) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                GroupResponse createdGroup = this.groupService.createGroup(group, session.getAccount());
+                if(createdGroup != null) {
+                    return ResponseEntity.status(HttpStatus.CREATED).body(createdGroup);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
                 }
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);

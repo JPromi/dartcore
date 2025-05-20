@@ -3,10 +3,12 @@ package com.jpromi.darts.backend.services.impl;
 import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.AccountGroup;
 import com.jpromi.darts.backend.entities.AccountGroupMember;
+import com.jpromi.darts.backend.entities.File;
 import com.jpromi.darts.backend.mapper.*;
 import com.jpromi.darts.backend.models.*;
 import com.jpromi.darts.backend.repositories.AccountGroupRepository;
 import com.jpromi.darts.backend.repositories.AccountRepository;
+import com.jpromi.darts.backend.services.FileService;
 import com.jpromi.darts.backend.services.GroupService;
 import com.jpromi.darts.backend.services.UrlService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,6 +44,9 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private PageResponseMapper pageResponseMapper;
+
+    @Autowired
+    private FileService fileService;
 
     @Override
     public List<GroupLightResponse> getGroupsByAccount(Long accountId) {
@@ -86,9 +92,57 @@ public class GroupServiceImpl implements GroupService {
         Page<AccountGroup> groups = accountGroupRepository.searchGroups(query, account.getId(), isMember, isPublic, pageable);
 
         return pageResponseMapper.fromPage(groups.map(group -> groupLightResponseMapper.fromAccountGroup(group, account)));
+    }
 
-//        return groups.stream()
-//                .map(group -> groupLightResponseMapper.fromAccountGroup(group, account))
-//                .toList();
+    @Override
+    public GroupResponse createGroup(GroupRequest groupRequest, Account account) {
+        AccountGroup group = AccountGroup.builder()
+                .name(groupRequest.getName())
+                .description(groupRequest.getDescription())
+                .isPublic(groupRequest.getIsPublic())
+                .build();
+
+        // Avatar
+        if(groupRequest.getAvatar() != null) {
+            File banner = fileService.getFileByUuid(group.getAvatar().getUuid());
+            if(banner != null) {
+                banner.setIsTmporary(false);
+                group.setAvatar(banner);
+            }
+        }
+
+        // Banner
+        if(groupRequest.getBanner() != null) {
+            File banner = fileService.getFileByUuid(group.getBanner().getUuid());
+            if(banner != null) {
+                banner.setIsTmporary(false);
+                group.setBanner(banner);
+            }
+        }
+
+        // Members
+        // remove duplicates
+        ArrayList<AccountGroupMember> members = new ArrayList<>();
+        if(groupRequest.getMembers() != null) {
+            for (String member : groupRequest.getMembers()) {
+                Account memberAccount = accountRepository.findByUuidAndIsDisabledFalseAndIsDeletedFalseAndIsEmailVerifiedTrue(UUID.fromString(member));
+                if (memberAccount != null) {
+                    AccountGroupMember groupMember = AccountGroupMember.builder()
+                            .account(memberAccount)
+                            .accountGroup(group)
+                            .build();
+                    members.add(groupMember);
+                }
+            }
+        }
+        members.add(AccountGroupMember.builder().account(account).accountGroup(group).isOwner(true).build());
+        // remove duplicates
+        members = new ArrayList<>(new HashSet<>(members));
+
+        group.setMembers(members);
+
+        accountGroupRepository.save(group);
+
+        return groupResponseMapper.fromAccountGroup(group, account);
     }
 }
