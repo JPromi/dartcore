@@ -1,8 +1,10 @@
 package com.jpromi.darts.backend.services.impl;
 
 import com.jpromi.darts.backend.entities.*;
+import com.jpromi.darts.backend.enums.InvitationStatusAccountEnum;
 import com.jpromi.darts.backend.mapper.*;
 import com.jpromi.darts.backend.models.*;
+import com.jpromi.darts.backend.repositories.AccountGroupInvitationAccountRepository;
 import com.jpromi.darts.backend.repositories.AccountGroupRepository;
 import com.jpromi.darts.backend.repositories.AccountRepository;
 import com.jpromi.darts.backend.services.FileService;
@@ -44,6 +46,9 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private AccountGroupInvitationAccountRepository accountGroupInvitationAccountRepository;
 
     @Override
     public List<GroupLightResponse> getGroupsByAccount(Long accountId) {
@@ -158,6 +163,53 @@ public class GroupServiceImpl implements GroupService {
             } else {
                 throw new RuntimeException("You are not the owner of this group");
             }
+        }
+        return null;
+    }
+
+    @Override
+    public List<GroupInvitationResponse> getAccountInvitations(Account account, InvitationStatusAccountEnum status) {
+        List<AccountGroupInvitationAccount> invitations = accountGroupInvitationAccountRepository.findByAccountAndStatus(account, status);
+        return invitations.stream()
+                .map(invitation -> GroupInvitationResponse.builder()
+                        .uuid(invitation.getUuid())
+                        .group(groupLightResponseMapper.fromAccountGroup(invitation.getAccountGroup(), account))
+                        .status(invitation.getStatus())
+                        .inviter(profileLightResponseMapper.fromAccount(invitation.getInviter()))
+                        .createdAt(invitation.getCreatedAt())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public Long countAccountInvitations(Account account, InvitationStatusAccountEnum status) {
+        return accountGroupInvitationAccountRepository.countByAccountAndStatus(account, status);
+    }
+
+    @Override
+    public Void responseInvitation(UUID uuid, Account account, InvitationStatusAccountEnum status) {
+        AccountGroupInvitationAccount invitation = accountGroupInvitationAccountRepository.findByUuidAndAccount(uuid, account);
+        if (invitation != null) {
+            if(invitation.getStatus() == InvitationStatusAccountEnum.PENDING) {
+                AccountGroup group = invitation.getAccountGroup();
+                if (status == InvitationStatusAccountEnum.ACCEPTED) {
+                    AccountGroupMember groupMember = AccountGroupMember.builder()
+                            .account(account)
+                            .accountGroup(group)
+                            .isOwner(false)
+                            .isAdmin(invitation.getIsAdmin())
+                            .build();
+                    group.getMembers().add(groupMember);
+                    accountGroupRepository.save(group);
+                }
+
+                invitation.setStatus(status);
+                accountGroupInvitationAccountRepository.save(invitation);
+            } else {
+                throw new RuntimeException("Invitation already answered");
+            }
+        } else {
+            throw new RuntimeException("Invitation not found");
         }
         return null;
     }

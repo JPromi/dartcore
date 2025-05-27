@@ -1,6 +1,7 @@
 package com.jpromi.darts.backend.controllers;
 
 import com.jpromi.darts.backend.entities.Session;
+import com.jpromi.darts.backend.enums.InvitationStatusAccountEnum;
 import com.jpromi.darts.backend.models.*;
 import com.jpromi.darts.backend.services.AuthService;
 import com.jpromi.darts.backend.services.GroupService;
@@ -101,6 +102,62 @@ public class GroupController {
 
             if(session != null) {
                 this.groupService.deleteGroup(UUID.fromString(uuid), session.getAccount());
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @GetMapping("invitation")
+    public ResponseEntity<List<GroupInvitationResponse>> getAccountInvitations(@CookieValue("b2h.darts.session") String sessionCookie) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                List<GroupInvitationResponse> invitations = this.groupService.getAccountInvitations(session.getAccount(), InvitationStatusAccountEnum.PENDING);
+                return ResponseEntity.ok(invitations);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @GetMapping("invitation/count")
+    public ResponseEntity<Long> countAccountInvitations(@CookieValue("b2h.darts.session") String sessionCookie) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                Long invitations = this.groupService.countAccountInvitations(session.getAccount(), InvitationStatusAccountEnum.PENDING);
+                return ResponseEntity.ok(invitations);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @PutMapping("invitation/{uuid}")
+    public ResponseEntity<Void> responseInvitation(
+            @CookieValue("b2h.darts.session") String sessionCookie,
+            @PathVariable String uuid,
+            @RequestBody InvitationStatusAccountEnum status
+    ) {
+        if(!(status == InvitationStatusAccountEnum.ACCEPTED || status == InvitationStatusAccountEnum.REJECTED)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                this.groupService.responseInvitation(UUID.fromString(uuid), session.getAccount(), status);
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);

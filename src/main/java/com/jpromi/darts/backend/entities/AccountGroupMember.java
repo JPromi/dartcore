@@ -11,6 +11,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(
+        uniqueConstraints = @UniqueConstraint(columnNames = {"account_id", "account_group_id"})
+)
 @Getter
 @Setter
 public class AccountGroupMember {

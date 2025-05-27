@@ -20,6 +20,10 @@ public class AccountGroupInvitationAccount {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
+    @Builder.Default
+    private UUID uuid = UUID.randomUUID();
+
     @ManyToOne
     @JoinColumn(name = "account_id")
     private Account account;
