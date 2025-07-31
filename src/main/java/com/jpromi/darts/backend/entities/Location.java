@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,6 +18,10 @@ public class Location {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true)
+    @Builder.Default
+    private UUID uuid = UUID.randomUUID();
 
     @Column(nullable = true)
     private String name;

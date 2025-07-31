@@ -20,11 +20,9 @@ public class DartThrow {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long gameId;
-
-    @Column(nullable = false)
-    private Long accountId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
+    private DartPlayer player;
 
     @Column(nullable = true)
     private ThrowMultiplier multiplier;

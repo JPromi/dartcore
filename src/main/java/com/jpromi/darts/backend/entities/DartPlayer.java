@@ -16,15 +16,21 @@ public class DartPlayer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long gameId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
+    private DartGame game;
 
-    @Column(nullable = true)
-    private Long accountId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
+    private Account account;
 
     @Column(nullable = true)
     private String guestName;
 
     @Column(nullable = true)
     private Integer leftGameAt;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Long orderIndex = 99L;
 }

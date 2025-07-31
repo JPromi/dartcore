@@ -1,11 +1,11 @@
 package com.jpromi.darts.backend.entities;
 
-import com.jpromi.darts.backend.enums.GameType;
+import com.jpromi.darts.backend.enums.DartThrowMultiplierEnum;
+import com.jpromi.darts.backend.enums.GameTypeEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,24 +26,40 @@ public class DartGame {
     private UUID uuid = UUID.randomUUID();
 
     @Column(nullable = false)
-    private GameType gameType;
+    private GameTypeEnum gameType;
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    private List<Account> players;
-
-//    @OneToOne(cascade = CascadeType.ALL)
-//    private PlayerGroup playerGroup;
+    @OneToMany
+    private List<DartPlayer> players;
 
     @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(nullable = true)
     private Location location;
 
+    @ManyToOne
+    @JoinColumn(nullable = true)
+    private AccountGroup group;
+
     @Column(nullable = true)
-    private Long startingPoints; // Only for X01
+    private Long gameTypeClassicPoints;
 
-    @Column(nullable = false)
-    private LocalDateTime gameStarted;
+    @Column(nullable = true)
+    @Builder.Default
+    private DartThrowMultiplierEnum gameTypeClassicInType = null;
 
-    @Column(nullable = false)
-    private LocalDateTime gameEnded;
+    @Column(nullable = true)
+    @Builder.Default
+    private DartThrowMultiplierEnum gameTypeClassicOutType = DartThrowMultiplierEnum.DOUBLE;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
+    private Account creator;
+
+    @Builder.Default
+    private LocalDateTime startTime = LocalDateTime.now();
+
+    @Builder.Default
+    private LocalDateTime endTime = null;
+
+    @Builder.Default
+    private Boolean isCancelled = false;
 }

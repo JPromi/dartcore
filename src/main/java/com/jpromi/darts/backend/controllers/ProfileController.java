@@ -2,6 +2,7 @@ package com.jpromi.darts.backend.controllers;
 
 import com.jpromi.darts.backend.entities.Profile;
 import com.jpromi.darts.backend.entities.Session;
+import com.jpromi.darts.backend.models.ProfileLightResponse;
 import com.jpromi.darts.backend.models.ProfileResponse;
 import com.jpromi.darts.backend.models.SessionAccountResponse;
 import com.jpromi.darts.backend.services.AuthService;
@@ -41,5 +42,17 @@ public class ProfileController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ProfileLightResponse> searchProfiles(
+            @CookieValue("b2h.darts.session") String sessionCookie,
+            @RequestParam(value = "q", required = false, defaultValue = "") String query,
+            @RequestParam(value = "isFriend", required = false, defaultValue = "") Boolean isFriend,
+            @RequestParam(value = "group", required = false, defaultValue = "") String inGroup,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "36") int size
+    ) {
+        return null;
     }
 }

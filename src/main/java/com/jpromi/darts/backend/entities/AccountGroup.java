@@ -41,6 +41,9 @@ public class AccountGroup {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "accountGroup")
     private List<AccountGroupMember> members;
 
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<Location> locations;
+
     @Column(nullable = true)
     @Builder.Default
     private Boolean isPublic = false;

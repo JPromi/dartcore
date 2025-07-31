@@ -1,7 +1,7 @@
 package com.jpromi.darts.backend.enums;
 
-public enum GameType {
+public enum GameTypeEnum {
+    CLASSIC,
     CRICKET,
-    X01,
     TRAINING
 }
