@@ -1,16 +1,25 @@
 package com.jpromi.darts.backend.controllers;
 
+import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.Profile;
 import com.jpromi.darts.backend.entities.Session;
+import com.jpromi.darts.backend.models.PageResponse;
 import com.jpromi.darts.backend.models.ProfileLightResponse;
 import com.jpromi.darts.backend.models.ProfileResponse;
 import com.jpromi.darts.backend.models.SessionAccountResponse;
+import com.jpromi.darts.backend.repositories.AccountRepository;
 import com.jpromi.darts.backend.services.AuthService;
 import com.jpromi.darts.backend.services.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController("ProfileController")
 @RequestMapping("/api/profile/")
@@ -21,6 +30,9 @@ public class ProfileController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private AccountRepository accountRepository;
 
     @GetMapping("/{username}")
     public ResponseEntity<ProfileResponse> getProfile(@CookieValue("b2h.darts.session") String sessionCookie, @PathVariable String username) {
@@ -45,14 +57,28 @@ public class ProfileController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ProfileLightResponse> searchProfiles(
+    public ResponseEntity<PageResponse<ProfileLightResponse>> searchProfiles(
             @CookieValue("b2h.darts.session") String sessionCookie,
             @RequestParam(value = "q", required = false, defaultValue = "") String query,
-            @RequestParam(value = "isFriend", required = false, defaultValue = "") Boolean isFriend,
-            @RequestParam(value = "group", required = false, defaultValue = "") String inGroup,
+            // @RequestParam(value = "isFriend", required = false, defaultValue = "") Boolean isFriend,
+            @RequestParam(value = "isPlayable", required = false, defaultValue = "false") Boolean isPlayable,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "36") int size
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size
     ) {
-        return null;
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if (session != null) {
+                PageResponse<ProfileLightResponse> profiles = profileService.searchProfile(query, session.getAccount(), isPlayable, pageable);
+
+                return ResponseEntity.ok(profiles);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
     }
 }

@@ -19,11 +19,22 @@ public class ProfileResponseMapper {
                 .description(account.getProfile().getDescription())
                 .country(account.getProfile().getCountry())
                 .age(account.getAge())
-                .avatar(urlService.toPublicUrl(account.getAvatar().getRealPath()))
-                .banner(urlService.toPublicUrl(account.getProfile().getBanner().getRealPath()))
                 .createdAt(account.getEmailVerificationTimestamp())
                 .visibility(account.getProfile().getVisibility())
                 .build();
+
+        // img
+        if (account.getAvatar() != null) {
+            profileResponse.setAvatar(urlService.toPublicUrl(account.getAvatar().getRealPath()));
+        } else {
+            profileResponse.setAvatar(null);
+        }
+
+        if (account.getProfile().getBanner() != null) {
+            profileResponse.setBanner(urlService.toPublicUrl(account.getProfile().getBanner().getRealPath()));
+        } else {
+            profileResponse.setBanner(null);
+        }
 
         ProfileResponse.Links links = new ProfileResponse.Links();
         links.setX(account.getProfile().getLinkX());
