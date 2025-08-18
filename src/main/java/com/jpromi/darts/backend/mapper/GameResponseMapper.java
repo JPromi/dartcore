@@ -22,7 +22,7 @@ public class GameResponseMapper {
                 .groupUuid(dartGame.getGroup() != null ? dartGame.getGroup().getUuid() : null)
                 .finishedAt(dartGame.getEndTime())
                 .startedAt(dartGame.getStartTime())
-                .isAbort(dartGame.getIsCancelled())
+                .isCancelled(dartGame.getIsCancelled())
                 .build();
 
         // set Players

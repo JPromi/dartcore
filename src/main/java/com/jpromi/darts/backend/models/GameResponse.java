@@ -35,7 +35,7 @@ public class GameResponse {
     @Builder.Default
     private LocalDateTime finishedAt = null;
     @Builder.Default
-    private Boolean isAbort = false;
+    private Boolean isCancelled = false;
 
     @Data
     @Builder
