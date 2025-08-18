@@ -16,8 +16,8 @@ public class DartPlayer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "game_id")
     private DartGame game;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,7 +30,7 @@ public class DartPlayer {
     @Column(nullable = true)
     private Integer leftGameAt;
 
-    @Column(nullable = false)
+    /* @Column(nullable = false)
     @Builder.Default
-    private Long orderIndex = 99L;
+    private Long orderIndex = 99L; */
 }

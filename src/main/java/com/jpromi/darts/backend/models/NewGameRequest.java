@@ -5,6 +5,7 @@ import com.jpromi.darts.backend.enums.GameTypeEnum;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,7 +14,7 @@ import java.util.UUID;
 public class NewGameRequest {
     private UUID groupUuid = null;
     private UUID locationUuid = null;
-    private List<NewGamePlayerRequest> players = null;
+    private List<NewGamePlayerRequest> players = new ArrayList<>();
     private GameTypeEnum gameType = GameTypeEnum.CLASSIC;
     private Long gameTypeClassicPoints = null;
     private DartThrowMultiplierEnum gameTypeClassicInType = null;

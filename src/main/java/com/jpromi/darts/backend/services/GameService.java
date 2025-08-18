@@ -1,8 +1,12 @@
 package com.jpromi.darts.backend.services;
 
 import com.jpromi.darts.backend.entities.Account;
+import com.jpromi.darts.backend.entities.DartGame;
 import com.jpromi.darts.backend.models.NewGameRequest;
 
+import java.util.UUID;
+
 public interface GameService {
-    String newGame(NewGameRequest newGameRequest, Account account);
+    DartGame newGame(NewGameRequest newGameRequest, Account account);
+    DartGame getGameByUuid(UUID uuid);
 }

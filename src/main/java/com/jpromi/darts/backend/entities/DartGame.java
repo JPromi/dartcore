@@ -6,16 +6,18 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Entity
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Entity
 public class DartGame {
 
     @Id
@@ -23,13 +25,15 @@ public class DartGame {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    @Builder.Default
     private UUID uuid = UUID.randomUUID();
 
     @Column(nullable = false)
     private GameTypeEnum gameType;
 
-    @OneToMany
-    private List<DartPlayer> players;
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<DartPlayer> players = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(nullable = true)
@@ -57,9 +61,20 @@ public class DartGame {
     @Builder.Default
     private LocalDateTime startTime = LocalDateTime.now();
 
+    @Column(nullable = true)
     @Builder.Default
     private LocalDateTime endTime = null;
 
+    @Column(nullable = true)
     @Builder.Default
     private Boolean isCancelled = false;
+
+    public void addPlayer(DartPlayer p) {
+        players.add(p);
+        p.setGame(this);
+    }
+    public void removePlayer(DartPlayer p) {
+        players.remove(p);
+        p.setGame(null);
+    }
 }

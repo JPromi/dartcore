@@ -3,5 +3,5 @@ package com.jpromi.darts.backend.enums;
 public enum GameTypeEnum {
     CLASSIC,
     CRICKET,
-    TRAINING
+    COUNT_UP
 }
