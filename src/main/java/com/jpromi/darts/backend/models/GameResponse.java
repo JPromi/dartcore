@@ -31,27 +31,37 @@ public class GameResponse {
     @Builder.Default
     private DartThrowMultiplierEnum gameTypeClassicOutType = null;
     @Builder.Default
-    private LocalDateTime startedAt = null;
+    private Integer round = 0;
     @Builder.Default
-    private LocalDateTime finishedAt = null;
+    private LocalDateTime startTime = null;
+    @Builder.Default
+    private LocalDateTime endTime = null;
     @Builder.Default
     private Boolean isCancelled = false;
 
     @Data
     @Builder
     public static class GamePlayerResponse {
-        private UUID accountUuid;
+        private UUID playerUuid;
         private String name;
-        private String avatarUrl;
+        private String avatar;
         private Integer score;
+        private Integer average;
+        private Integer highscore;
+        private Integer orderIndex;
 
         @Builder.Default
         private Boolean isCurrentPlayer = false;
         @Builder.Default
         private Boolean isWinner = false;
+        @Builder.Default
+        private Boolean isEliminated = false;
 
         @Builder.Default
         private List<GameThrowResponse> trows = new ArrayList<>();
+
+        @Builder.Default
+        private List<GameThrowResponse> hints = new ArrayList<>();
 
         @Data
         @Builder

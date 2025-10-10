@@ -4,6 +4,7 @@ import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.DartGame;
 import com.jpromi.darts.backend.entities.DartPlayer;
 import com.jpromi.darts.backend.enums.GameTypeEnum;
+import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.NewGamePlayerRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
 import com.jpromi.darts.backend.repositories.AccountGroupRepository;
@@ -59,14 +60,15 @@ public class GameServiceImpl implements GameService {
 
             // set players
             if (newGameRequest.getPlayers() != null && !newGameRequest.getPlayers().isEmpty()) {
-                newGameRequest.getPlayers().forEach(playerRequest -> {
-                    System.out.println("Adding player: " + playerRequest);
+                for (int i = 0; i < newGameRequest.getPlayers().size(); i++) {
+                    NewGamePlayerRequest playerRequest = newGameRequest.getPlayers().get(i);
                     // if name isset
                     if (playerRequest.getName() != null ) {
                         // Player is guest
                         DartPlayer player = DartPlayer.builder()
                                 .guestName(playerRequest.getName())
                                 .game(dartGame)
+                                .orderIndex(i)
                                 .build();
                         dartGame.addPlayer(player);
                     } else if (playerRequest.getAccountUuid() != null) {
@@ -76,13 +78,14 @@ public class GameServiceImpl implements GameService {
                             DartPlayer player = DartPlayer.builder()
                                     .account(playerAccount)
                                     .game(dartGame)
+                                    .orderIndex(i)
                                     .build();
                             dartGame.addPlayer(player);
                         } else {
                             throw new IllegalArgumentException("Player account not found for UUID: " + playerRequest.getAccountUuid());
                         }
                     }
-                });
+                }
             }
 
             // save
@@ -101,5 +104,16 @@ public class GameServiceImpl implements GameService {
         } else {
             throw new IllegalArgumentException("Game UUID cannot be null or empty");
         }
+    }
+
+    public Void addThrow(UUID gameUuid, GameThrowRequest request) {
+        DartGame game = this.getGameByUuid(gameUuid);
+        if (game != null && request != null) {
+            // find player
+            System.out.println("throws: " + game.getThrowsList());
+        } else {
+            throw new IllegalArgumentException("Game or request cannot be null");
+        }
+        return null;
     }
 }

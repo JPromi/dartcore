@@ -15,15 +15,17 @@ public class GamePlayerResponseMapper {
 
     public GameResponse.GamePlayerResponse fromDartPlayer(DartPlayer dartPlayer) {
         GameResponse.GamePlayerResponse response = GameResponse.GamePlayerResponse.builder()
+                .playerUuid(dartPlayer.getUuid())
                 .build();
 
         // set Player name
         if (dartPlayer.getAccount() != null) {
-            response.setAccountUuid(dartPlayer.getAccount().getUuid());
             response.setName(dartPlayer.getAccount().getUsername());
-            response.setAvatarUrl(urlService.toPublicUrl(dartPlayer.getAccount().getAvatar()));
+            response.setAvatar(urlService.toPublicUrl(dartPlayer.getAccount().getAvatar()));
+            response.setOrderIndex(dartPlayer.getOrderIndex());
         } else {
             response.setName(dartPlayer.getGuestName());
+            response.setOrderIndex(dartPlayer.getOrderIndex() != null ? dartPlayer.getOrderIndex() : 99);
         }
 
         return response;

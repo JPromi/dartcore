@@ -24,6 +24,10 @@ public class DartThrow {
     @JoinColumn(nullable = false)
     private DartPlayer player;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "game_id", nullable = false)
+    private DartGame game;
+
     @Column(nullable = true)
     private ThrowMultiplier multiplier;
 

@@ -20,8 +20,8 @@ public class GameResponseMapper {
                 .gameTypeClassicOutType(dartGame.getGameTypeClassicOutType())
                 .gameTypeClassicPoints(dartGame.getGameTypeClassicPoints())
                 .groupUuid(dartGame.getGroup() != null ? dartGame.getGroup().getUuid() : null)
-                .finishedAt(dartGame.getEndTime())
-                .startedAt(dartGame.getStartTime())
+                .endTime(dartGame.getEndTime())
+                .startTime(dartGame.getStartTime())
                 .isCancelled(dartGame.getIsCancelled())
                 .build();
 

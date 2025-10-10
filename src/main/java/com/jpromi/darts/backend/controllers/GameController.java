@@ -1,10 +1,12 @@
 package com.jpromi.darts.backend.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jpromi.darts.backend.entities.DartGame;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.enums.InvitationStatusAccountEnum;
 import com.jpromi.darts.backend.mapper.GameResponseMapper;
 import com.jpromi.darts.backend.models.GameResponse;
+import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.GroupInvitationResponse;
 import com.jpromi.darts.backend.models.NewGameRequest;
 import com.jpromi.darts.backend.services.AuthService;
@@ -12,9 +14,12 @@ import com.jpromi.darts.backend.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.*;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController("GameController")
@@ -72,4 +77,25 @@ public class GameController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
+
+    // WS
+    private final SimpMessagingTemplate messaging;
+    public GameController(SimpMessagingTemplate messaging){ this.messaging = messaging; }
+
+
+    @MessageMapping("/game/{gameUuid}/throw")
+    public void addThrow(
+            @DestinationVariable UUID gameUuid,
+            @Header("simpSessionAttributes") Map<String, Object> attrs,
+            @Payload GameThrowRequest body
+    ) {
+        String sessionCookie = (String) attrs.get("sessionCookie");
+        Session session = authService.session(sessionCookie);
+        if (session == null) throw new IllegalArgumentException("Session invalid");
+        System.out.println("GameController.addThrow: " + gameUuid + " - " + body);
+
+        messaging.convertAndSend("/response/game/" + gameUuid + "/throw",
+                Map.of("ok", true, "uuid", gameUuid.toString(), "game", ""));
+    }
+
 }

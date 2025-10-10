@@ -35,6 +35,10 @@ public class DartGame {
     @Builder.Default
     private List<DartPlayer> players = new ArrayList<>();
 
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<DartThrow> throwsList = new ArrayList<>();
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(nullable = true)
     private Location location;
