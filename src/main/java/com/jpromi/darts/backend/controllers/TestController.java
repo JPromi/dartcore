@@ -50,9 +50,9 @@ public class TestController {
     @GetMapping("/ach")
     public String test() {
         List<DartThrow> dartThrows = List.of(
-                new DartThrow(null, null, null, ThrowMultiplier.TRIPLE, ThrowType.THROW, 20, 1500, 1, false, LocalDateTime.now()),
-                new DartThrow(null, null, null, ThrowMultiplier.TRIPLE, ThrowType.THROW, 20, 1200, 1, false, LocalDateTime.now()),
-                new DartThrow(null, null, null, ThrowMultiplier.TRIPLE, ThrowType.THROW, 20, 1800, 1, false, LocalDateTime.now())
+                new DartThrow(null, null, null, ThrowMultiplier.TRIPLE, ThrowType.THROW, 20, 1, false, LocalDateTime.now()),
+                new DartThrow(null, null, null, ThrowMultiplier.TRIPLE, ThrowType.THROW, 20, 1, false, LocalDateTime.now()),
+                new DartThrow(null, null, null, ThrowMultiplier.TRIPLE, ThrowType.THROW, 20, 1, false, LocalDateTime.now())
         );
         String condition = "ANY:T20;ANY:T20;ANY:T20";
 

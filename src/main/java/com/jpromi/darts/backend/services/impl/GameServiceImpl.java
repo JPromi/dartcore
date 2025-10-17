@@ -3,14 +3,12 @@ package com.jpromi.darts.backend.services.impl;
 import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.DartGame;
 import com.jpromi.darts.backend.entities.DartPlayer;
+import com.jpromi.darts.backend.entities.DartThrow;
 import com.jpromi.darts.backend.enums.GameTypeEnum;
 import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.NewGamePlayerRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
-import com.jpromi.darts.backend.repositories.AccountGroupRepository;
-import com.jpromi.darts.backend.repositories.AccountRepository;
-import com.jpromi.darts.backend.repositories.DartGameRepository;
-import com.jpromi.darts.backend.repositories.DartPlayerRepository;
+import com.jpromi.darts.backend.repositories.*;
 import com.jpromi.darts.backend.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +22,9 @@ public class GameServiceImpl implements GameService {
 
     @Autowired
     private DartGameRepository dartGameRepository;
+
+    @Autowired
+    private DartThrowRepository dartThrowRepository;
 
     @Autowired
     private DartPlayerRepository dartPlayerRepository;
@@ -106,14 +107,67 @@ public class GameServiceImpl implements GameService {
         }
     }
 
+    @Override
     public Void addThrow(UUID gameUuid, GameThrowRequest request) {
         DartGame game = this.getGameByUuid(gameUuid);
         if (game != null && request != null) {
-            // find player
-            System.out.println("throws: " + game.getThrowsList());
+            if (request.getIsUndo()) {
+                List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalse(game);
+
+                if (!gameThrowsActive.isEmpty()) {
+                    DartThrow lastThrow = gameThrowsActive.getLast();
+                    lastThrow.setIsUndo(true);
+                    dartThrowRepository.save(lastThrow);
+                }
+            } else {
+                List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalse(game);
+
+                DartThrow dartThrow = DartThrow.builder()
+                        .player(getCurrentPlayer(game, gameThrowsActive)) // fix this
+                        .game(game)
+                        .type(request.getType())
+                        .round(getThrowRound(game.getGameType(), gameThrowsActive.size()))
+                        .multiplier(request.getMultiplier())
+                        .score(request.getPoint())
+                        .build();
+
+                dartThrowRepository.save(dartThrow);
+            }
+
         } else {
             throw new IllegalArgumentException("Game or request cannot be null");
         }
         return null;
+    }
+
+    private Integer getRoundSize(GameTypeEnum gameType) {
+        switch (gameType) {
+            default:
+                return 3;
+        }
+    }
+
+    private Integer getThrowRound(GameTypeEnum gameType, Integer throwCount) {
+        if (throwCount == 0) {
+            return 0;
+        } else {
+            return throwCount / getRoundSize(gameType);
+        }
+    }
+
+    private DartPlayer getCurrentPlayer(DartGame game, List<DartThrow> gameThrowsActive) {
+        // set player
+        if (gameThrowsActive.isEmpty()) {
+            // find first player that not left game
+            for (DartPlayer player : game.getPlayers()) {
+                if (player.getLeftGameAt().describeConstable().isEmpty()) {
+                    return player;
+                }
+            }
+
+            throw new IllegalArgumentException("No active player found in this game");
+        } else {
+            return null; // TODO: implement current player logic
+        }
     }
 }

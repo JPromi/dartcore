@@ -10,11 +10,8 @@ import java.util.UUID;
 @Data
 @Builder
 public class GameThrowRequest {
-    private UUID playerUuid;
     private ThrowType type;
     private Integer point;
     private ThrowMultiplier multiplier;
-    private Integer distance;
-    private Integer round;
-    private Integer throwPosition;
+    private Boolean isUndo;
 }

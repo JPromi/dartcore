@@ -37,16 +37,15 @@ public class DartThrow {
     @Column(nullable = true)
     private Integer score;
 
-    @Column(nullable = true)
-    private Integer distanceMm;
-
     @Column(nullable = false)
     private Integer round;
 
     @Column(nullable = false)
     @ColumnDefault("false")
-    private Boolean isUndo;
+    @Builder.Default
+    private Boolean isUndo = false;
 
     @Column(nullable = false)
-    private LocalDateTime timestamp;
+    @Builder.Default
+    private LocalDateTime timestamp = LocalDateTime.now();
 }

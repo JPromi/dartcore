@@ -94,7 +94,10 @@ public class GameController {
         if (session == null) throw new IllegalArgumentException("Session invalid");
         System.out.println("GameController.addThrow: " + gameUuid + " - " + body);
 
-        messaging.convertAndSend("/response/game/" + gameUuid + "/throw",
+        // logic
+        gameService.addThrow(gameUuid, body);
+
+        messaging.convertAndSend("/response/game/" + gameUuid,
                 Map.of("ok", true, "uuid", gameUuid.toString(), "game", ""));
     }
 
