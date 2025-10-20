@@ -2,7 +2,7 @@ package com.jpromi.darts.backend.models;
 
 import com.jpromi.darts.backend.enums.DartThrowMultiplierEnum;
 import com.jpromi.darts.backend.enums.GameTypeEnum;
-import com.jpromi.darts.backend.enums.ThrowMultiplier;
+import com.jpromi.darts.backend.enums.DartThrowMultiplierEnum;
 import com.jpromi.darts.backend.enums.ThrowType;
 import lombok.Builder;
 import lombok.Data;
@@ -45,9 +45,9 @@ public class GameResponse {
         private UUID playerUuid;
         private String name;
         private String avatar;
-        private Integer score;
-        private Integer average;
-        private Integer highscore;
+        private Long score;
+        private Double average;
+        private Long highscore;
         private Integer orderIndex;
 
         @Builder.Default
@@ -67,7 +67,7 @@ public class GameResponse {
         @Builder
         public static class GameThrowResponse {
             private Integer score;
-            private ThrowMultiplier multiplier;
+            private DartThrowMultiplierEnum multiplier;
             private Integer round;
             private ThrowType type;
             private LocalDateTime timestamp;

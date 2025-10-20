@@ -4,7 +4,7 @@ import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.AccountGroup;
 import com.jpromi.darts.backend.entities.AccountGroupMember;
 import com.jpromi.darts.backend.entities.DartThrow;
-import com.jpromi.darts.backend.enums.ThrowMultiplier;
+import com.jpromi.darts.backend.enums.DartThrowMultiplierEnum;
 import com.jpromi.darts.backend.enums.ThrowType;
 import com.jpromi.darts.backend.models.LoginRequest;
 import com.jpromi.darts.backend.repositories.AccountGroupMemberRepository;
@@ -50,9 +50,9 @@ public class TestController {
     @GetMapping("/ach")
     public String test() {
         List<DartThrow> dartThrows = List.of(
-                new DartThrow(null, null, null, ThrowMultiplier.TRIPLE, ThrowType.THROW, 20, 1, false, LocalDateTime.now()),
-                new DartThrow(null, null, null, ThrowMultiplier.TRIPLE, ThrowType.THROW, 20, 1, false, LocalDateTime.now()),
-                new DartThrow(null, null, null, ThrowMultiplier.TRIPLE, ThrowType.THROW, 20, 1, false, LocalDateTime.now())
+                new DartThrow(null, null, null, DartThrowMultiplierEnum.TRIPLE, ThrowType.THROW, 20, 1, false, false, LocalDateTime.now()),
+                new DartThrow(null, null, null, DartThrowMultiplierEnum.TRIPLE, ThrowType.THROW, 20, 1, false, false, LocalDateTime.now()),
+                new DartThrow(null, null, null, DartThrowMultiplierEnum.TRIPLE, ThrowType.THROW, 20, 1, false, false, LocalDateTime.now())
         );
         String condition = "ANY:T20;ANY:T20;ANY:T20";
 

@@ -1,19 +1,21 @@
 package com.jpromi.darts.backend.services.impl;
 
-import com.jpromi.darts.backend.entities.Account;
-import com.jpromi.darts.backend.entities.DartGame;
-import com.jpromi.darts.backend.entities.DartPlayer;
-import com.jpromi.darts.backend.entities.DartThrow;
+import com.jpromi.darts.backend.entities.*;
+import com.jpromi.darts.backend.enums.DartThrowMultiplierEnum;
 import com.jpromi.darts.backend.enums.GameTypeEnum;
+import com.jpromi.darts.backend.mapper.GamePlayerResponseMapper;
+import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.NewGamePlayerRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
 import com.jpromi.darts.backend.repositories.*;
 import com.jpromi.darts.backend.services.GameService;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -33,6 +35,12 @@ public class GameServiceImpl implements GameService {
 
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private GamePlayerResponseMapper gamePlayerResponseMapper;
+
+    @Autowired
+    private TmpGamePlayerStatsRepository tmpGamePlayerStatsRepository;
 
     @Override
     public DartGame newGame(NewGameRequest newGameRequest, Account account) {
@@ -131,6 +139,71 @@ public class GameServiceImpl implements GameService {
                         .score(request.getPoint())
                         .build();
 
+                // get player stats
+                TmpGamePlayerStats playerStats = tmpGamePlayerStatsRepository.findByPlayerId(dartThrow.getPlayer().getId()).orElse(
+                        TmpGamePlayerStats.builder()
+                                .playerId(dartThrow.getPlayer().getId())
+                                .gameId(dartThrow.getGame().getId())
+                                .totalScore(game.getGameTypeClassicPoints())
+                                .highscore(0L)
+                                .build()
+                );
+
+                // check if throw counts
+                switch (game.getGameType()) {
+                    case CLASSIC:
+                        // check in type
+                        if (dartThrow.getRound().equals(0) && gameThrowsActive.isEmpty()) {
+                            System.out.println("in1");
+                            if (!(game.getGameTypeClassicInType() == null || dartThrow.getMultiplier().equals(game.getGameTypeClassicInType()))) {
+                                System.out.println("in2");
+                                dartThrow.setIsNotCountable(true);
+                            }
+                        }
+
+                        // check score
+                        Long newScore = playerStats.getTotalScore() - calculatePoints(dartThrow.getScore(), dartThrow.getMultiplier());
+
+                        if (newScore < 0) {
+                            System.out.println("under");
+                            dartThrow.setIsNotCountable(true);
+                        } else if (newScore.equals(0)) {
+                            System.out.println("equals");
+                            // check out type
+                            if (!(game.getGameTypeClassicOutType().describeConstable().isEmpty() || dartThrow.getMultiplier().equals(game.getGameTypeClassicOutType()))) {
+                                dartThrow.setIsNotCountable(true);
+                            }
+                        }
+
+                        if (
+                            game.getGameTypeClassicOutType() != null && (
+                                (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.TRIPLE) && newScore < 3) ||
+                                (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.DOUBLE) && newScore < 2)
+                            )
+                        ) {
+                            System.out.println("trapped into this weard thing");
+                            dartThrow.setIsNotCountable(true);
+                        }
+
+                        if (
+                            (game.getGameTypeClassicOutType() == null && newScore.equals(0L)) ||
+                            (game.getGameTypeClassicOutType().equals(dartThrow.getMultiplier()) && newScore.equals(0L))
+                        ) {
+                            // winner
+                            game.setEndTime(LocalDateTime.now());
+                        }
+
+                        if (!dartThrow.getIsNotCountable()) {
+                            playerStats.setTotalScore(newScore);
+                        }
+                        break;
+                }
+
+                if (game.getEndTime() != null) {
+                    dartGameRepository.save(game);
+                }
+
+                tmpGamePlayerStatsRepository.save(playerStats);
                 return dartThrowRepository.save(dartThrow);
             }
 
@@ -138,6 +211,20 @@ public class GameServiceImpl implements GameService {
             throw new IllegalArgumentException("Game or request cannot be null");
         }
         return null;
+    }
+
+    @Override
+    public GameResponse.GamePlayerResponse getPlayerResponse(Long dartPlayerId) {
+        GameResponse.GamePlayerResponse response = GameResponse.GamePlayerResponse.builder().build();
+
+        Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(dartPlayerId);
+        if (statsOpt.isPresent()) {
+            TmpGamePlayerStats stats = statsOpt.get();
+            response.setScore(stats.getTotalScore());
+            response.setHighscore(stats.getHighscore());
+        }
+
+        return response;
     }
 
     private Integer getRoundSize(GameTypeEnum gameType) {
@@ -185,74 +272,77 @@ public class GameServiceImpl implements GameService {
         return currentRound;
     }
 
-    private DartPlayer getCurrentPlayer(List<DartPlayer> players, List<DartThrow> gameThrowsActive, Integer roundSize) {
+    private DartPlayer getCurrentPlayer(List<DartPlayer> players,
+                                        List<DartThrow> gameThrowsActive,
+                                        Integer roundSize) {
 
-        // set player
         if (gameThrowsActive.isEmpty()) {
-            // find first player that not left game
+            // first active player
             for (DartPlayer player : players) {
-                if (player.getLeftGameAt() == null) {
-                    return player;
-                }
+                if (player.getLeftGameAt() == null) return player;
             }
-
             throw new IllegalArgumentException("No active player found in this game");
-        } else {
-            Long lastPlayerId = null;
-            Integer throwCount = 0;
+        }
 
-            // reverse list
-            Collections.reverse(gameThrowsActive);
+        Long lastPlayerId = null;
+        int throwCount = 0;
 
-            // calculate throws
-            for (DartThrow dartThrow : gameThrowsActive) {
-                if (lastPlayerId == null) {
-                    lastPlayerId = dartThrow.getPlayer().getId();
-                    throwCount += 1;
-                } else {
-                    if (lastPlayerId.equals(dartThrow.getPlayer().getId())) {
-                        throwCount += 1;
+        // reverse list to start from last throw
+        Collections.reverse(gameThrowsActive);
 
-                        if (throwCount >= roundSize) {
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
-                }
+        for (DartThrow dartThrow : gameThrowsActive) {
+            if (lastPlayerId == null) {
+                lastPlayerId = dartThrow.getPlayer().getId();
             }
 
-            // get player
-            if (throwCount < roundSize) {
-                // same player
-                for (DartPlayer player : players) {
-                    if (player.getId().equals(lastPlayerId)) {
-                        return player;
-                    }
-                }
+            // If throw is not countable, skip
+            if (Boolean.TRUE.equals(dartThrow.getIsNotCountable())) {
+                throwCount = roundSize;
+                break;
+            }
+
+            if (lastPlayerId.equals(dartThrow.getPlayer().getId())) {
+                throwCount++;
+                if (throwCount >= roundSize) break;
             } else {
-                // next player
-                Boolean returnNext = false;
-                for (DartPlayer player : players) {
-                    if (returnNext) {
-                        if (player.getLeftGameAt() == null) {
-                            return player;
-                        }
-                    }
-                    if (player.getId().equals(lastPlayerId)) {
-                        returnNext = true;
-                    }
-                }
+                break;
+            }
+        }
 
-                // if no next player, return first active player
-                for (DartPlayer player : players) {
-                    if (player.getLeftGameAt() == null) {
-                        return player;
-                    }
-                }
+        // samre player
+        if (throwCount < roundSize) {
+            for (DartPlayer player : players) {
+                if (player.getId().equals(lastPlayerId)) return player;
+            }
+        } else {
+            // next active player
+            boolean returnNext = false;
+            for (DartPlayer player : players) {
+                if (returnNext && player.getLeftGameAt() == null) return player;
+                if (player.getId().equals(lastPlayerId)) returnNext = true;
             }
 
-            throw  new IllegalArgumentException("No active player found in this game");
+            // if last player, return first active player
+            for (DartPlayer player : players) {
+                if (player.getLeftGameAt() == null) return player;
+            }
+        }
+
+        throw new IllegalArgumentException("No active player found in this game");
+    }
+
+
+    private Integer calculatePoints(Integer points, DartThrowMultiplierEnum multiplier) {
+        if (points == null || multiplier == null) return 0;
+        switch (multiplier) {
+            case SINGLE:
+                return points;
+            case DOUBLE:
+                return points * 2;
+            case TRIPLE:
+                return points * 3;
+            default:
+                return points;
         }
     }
 }

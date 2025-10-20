@@ -2,6 +2,7 @@ package com.jpromi.darts.backend.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jpromi.darts.backend.entities.DartGame;
+import com.jpromi.darts.backend.entities.DartThrow;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.enums.InvitationStatusAccountEnum;
 import com.jpromi.darts.backend.mapper.GameResponseMapper;
@@ -102,15 +103,25 @@ public class GameController {
         // logic
         ReentrantLock lock = gameLockRegistry.get(gameUuid);
         lock.lock();
+        DartThrow dartThrow = null;
         try {
-            gameService.addThrow(gameUuid, body);
+            dartThrow = gameService.addThrow(gameUuid, body);
         } finally {
             lock.unlock();
             gameLockRegistry.cleanup(gameUuid, lock);
+            if (dartThrow != null) {
+                sendThrowUpdate(dartThrow, gameUuid);
+            }
         }
+    }
 
-        messaging.convertAndSend("/response/game/" + gameUuid,
-                Map.of("ok", true, "uuid", gameUuid.toString(), "game", ""));
+    private Void sendThrowUpdate(DartThrow dartThrow, UUID gameUuid) {
+
+        messaging.convertAndSend("/response/game/" + gameUuid + "/player",
+                gameService.getPlayerResponse(dartThrow.getPlayer().getId())
+        );
+
+        return null;
     }
 
 }

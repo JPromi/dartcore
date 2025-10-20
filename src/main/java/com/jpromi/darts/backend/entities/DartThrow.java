@@ -1,6 +1,6 @@
 package com.jpromi.darts.backend.entities;
 
-import com.jpromi.darts.backend.enums.ThrowMultiplier;
+import com.jpromi.darts.backend.enums.DartThrowMultiplierEnum;
 import com.jpromi.darts.backend.enums.ThrowType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,7 +29,7 @@ public class DartThrow {
     private DartGame game;
 
     @Column(nullable = true)
-    private ThrowMultiplier multiplier;
+    private DartThrowMultiplierEnum multiplier;
 
     @Column(nullable = false)
     private ThrowType type;
@@ -44,6 +44,11 @@ public class DartThrow {
     @ColumnDefault("false")
     @Builder.Default
     private Boolean isUndo = false;
+
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    @Builder.Default
+    private Boolean isNotCountable = false;
 
     @Column(nullable = false)
     @Builder.Default

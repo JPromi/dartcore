@@ -2,7 +2,7 @@ package com.jpromi.darts.backend.services.impl;
 
 import com.jpromi.darts.backend.entities.Achievement;
 import com.jpromi.darts.backend.entities.DartThrow;
-import com.jpromi.darts.backend.enums.ThrowMultiplier;
+import com.jpromi.darts.backend.enums.DartThrowMultiplierEnum;
 import com.jpromi.darts.backend.enums.ThrowType;
 import com.jpromi.darts.backend.services.CheckAchievementService;
 import org.springframework.stereotype.Service;
@@ -55,13 +55,13 @@ public class CheckAchievementServiceImpl implements CheckAchievementService {
         }
     }
 
-    private String convertMultiplier(ThrowMultiplier multiplier) {
+    private String convertMultiplier(DartThrowMultiplierEnum multiplier) {
         switch (multiplier) {
-            case ThrowMultiplier.SINGLE:
+            case DartThrowMultiplierEnum.SINGLE:
                 return "S";
-            case ThrowMultiplier.DOUBLE:
+            case DartThrowMultiplierEnum.DOUBLE:
                 return "D";
-            case ThrowMultiplier.TRIPLE:
+            case DartThrowMultiplierEnum.TRIPLE:
                 return "T";
             default:
                 return "S";
