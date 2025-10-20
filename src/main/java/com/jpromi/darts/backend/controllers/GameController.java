@@ -9,6 +9,7 @@ import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.GroupInvitationResponse;
 import com.jpromi.darts.backend.models.NewGameRequest;
+import com.jpromi.darts.backend.registry.GameLockRegistry;
 import com.jpromi.darts.backend.services.AuthService;
 import com.jpromi.darts.backend.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 @RestController("GameController")
 @RequestMapping("/api/game")
@@ -41,6 +43,9 @@ public class GameController {
 
     @Autowired
     private GameResponseMapper gameResponseMapper;
+
+    @Autowired
+    private GameLockRegistry gameLockRegistry;
 
     @PostMapping("")
     public ResponseEntity<UUID> newGame(@CookieValue("b2h.darts.session") String sessionCookie, @RequestBody NewGameRequest gameRequest) {
@@ -95,7 +100,14 @@ public class GameController {
         System.out.println("GameController.addThrow: " + gameUuid + " - " + body);
 
         // logic
-        gameService.addThrow(gameUuid, body);
+        ReentrantLock lock = gameLockRegistry.get(gameUuid);
+        lock.lock();
+        try {
+            gameService.addThrow(gameUuid, body);
+        } finally {
+            lock.unlock();
+            gameLockRegistry.cleanup(gameUuid, lock);
+        }
 
         messaging.convertAndSend("/response/game/" + gameUuid,
                 Map.of("ok", true, "uuid", gameUuid.toString(), "game", ""));

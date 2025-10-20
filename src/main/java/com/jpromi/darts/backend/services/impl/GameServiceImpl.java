@@ -108,7 +108,7 @@ public class GameServiceImpl implements GameService {
 
     @Transactional
     @Override
-    public Void addThrow(UUID gameUuid, GameThrowRequest request) {
+    public DartThrow addThrow(UUID gameUuid, GameThrowRequest request) {
         DartGame game = this.getGameByUuid(gameUuid);
         if (game != null && request != null) {
             if (request.getIsUndo()) {
@@ -131,7 +131,7 @@ public class GameServiceImpl implements GameService {
                         .score(request.getPoint())
                         .build();
 
-                dartThrowRepository.save(dartThrow);
+                return dartThrowRepository.save(dartThrow);
             }
 
         } else {
@@ -147,62 +147,42 @@ public class GameServiceImpl implements GameService {
         }
     }
 
-    private Integer getThrowRound(GameTypeEnum gameType, List<DartPlayer> players, List<DartThrow> gameThrowsActive) {
-        if (gameThrowsActive.isEmpty()) {
-            return 0;
-        } else {
-            Integer roundSize = getRoundSize(gameType);
-            Long lastActivePlayerId = null;
+    private Integer getThrowRound(GameTypeEnum gameType,
+                                  List<DartPlayer> players,
+                                  List<DartThrow> gameThrowsActive) {
+        if (gameThrowsActive == null || gameThrowsActive.isEmpty()) return 0;
 
-            // reverse list
-            Collections.reverse(players);
+        gameThrowsActive.sort(Comparator
+                .comparing(DartThrow::getTimestamp).reversed());
 
-            // search last active player in game
-            for (DartPlayer dartPlayer : players) {
-                if (dartPlayer.getLeftGameAt() == null) {
-                    lastActivePlayerId = dartPlayer.getId();
-                    break;
-                }
-            }
-
-            // check throw
-            Integer throwCount = 0;
-            Integer round = 0;
-            Long lastPlayerId = null;
-
-            for (DartThrow dartThrow : gameThrowsActive) {
-                System.out.println(dartThrow);
-                if (lastPlayerId == null) {
-                    lastPlayerId = dartThrow.getPlayer().getId();
-                    throwCount += 1;
-                } else {
-                    if (lastPlayerId.equals(dartThrow.getPlayer().getId())) {
-                        throwCount += 1;
-                        round = dartThrow.getRound();
-
-                        if (throwCount >= roundSize) {
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            if (throwCount >= roundSize) {
-                System.out.println("Round is full");
-                System.out.println(lastActivePlayerId.toString() + " == " + lastPlayerId.toString());
-                if (lastActivePlayerId.equals(lastPlayerId)) {
-                    System.out.println("Next round");
-                    return round + 1;
-                } else {
-                    System.out.println("Same round");
-                    return round;
-                }
-            } else {
-                return round;
-            }
+        // get last active player
+        Long lastActivePlayerId = null;
+        for (int i = players.size() - 1; i >= 0; i--) {
+            DartPlayer p = players.get(i);
+            if (p.getLeftGameAt() == null) { lastActivePlayerId = p.getId(); break; }
         }
+        if (lastActivePlayerId == null) return 0; // niemand aktiv
+
+        // Current round and player
+        DartThrow latest = gameThrowsActive.get(0);
+        int roundSize = getRoundSize(gameType);
+        int currentRound = latest.getRound();
+        Long currentPlayerId = latest.getPlayer().getId();
+
+        // count throws in current round for current player
+        int throwCount = 0;
+        for (DartThrow t : gameThrowsActive) {
+            if (t.getRound() != currentRound) break;
+            if (!t.getPlayer().getId().equals(currentPlayerId)) break;
+            throwCount++;
+            if (throwCount == roundSize) break;
+        }
+
+        // if current player has thrown all throws in this round and is last active player, next round
+        if (throwCount == roundSize && currentPlayerId.equals(lastActivePlayerId)) {
+            return currentRound + 1;
+        }
+        return currentRound;
     }
 
     private DartPlayer getCurrentPlayer(List<DartPlayer> players, List<DartThrow> gameThrowsActive, Integer roundSize) {
