@@ -12,10 +12,9 @@ import com.jpromi.darts.backend.repositories.*;
 import com.jpromi.darts.backend.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -107,6 +106,7 @@ public class GameServiceImpl implements GameService {
         }
     }
 
+    @Transactional
     @Override
     public Void addThrow(UUID gameUuid, GameThrowRequest request) {
         DartGame game = this.getGameByUuid(gameUuid);
@@ -123,10 +123,10 @@ public class GameServiceImpl implements GameService {
                 List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalse(game);
 
                 DartThrow dartThrow = DartThrow.builder()
-                        .player(getCurrentPlayer(game, gameThrowsActive)) // fix this
+                        .player(getCurrentPlayer(game.getPlayers(), gameThrowsActive, getRoundSize(game.getGameType()))) // fix this
                         .game(game)
                         .type(request.getType())
-                        .round(getThrowRound(game.getGameType(), gameThrowsActive.size()))
+                        .round(getThrowRound(game.getGameType(), game.getPlayers(), gameThrowsActive))
                         .multiplier(request.getMultiplier())
                         .score(request.getPoint())
                         .build();
@@ -147,27 +147,132 @@ public class GameServiceImpl implements GameService {
         }
     }
 
-    private Integer getThrowRound(GameTypeEnum gameType, Integer throwCount) {
-        if (throwCount == 0) {
+    private Integer getThrowRound(GameTypeEnum gameType, List<DartPlayer> players, List<DartThrow> gameThrowsActive) {
+        if (gameThrowsActive.isEmpty()) {
             return 0;
         } else {
-            return throwCount / getRoundSize(gameType);
+            Integer roundSize = getRoundSize(gameType);
+            Long lastActivePlayerId = null;
+
+            // reverse list
+            Collections.reverse(players);
+
+            // search last active player in game
+            for (DartPlayer dartPlayer : players) {
+                if (dartPlayer.getLeftGameAt() == null) {
+                    lastActivePlayerId = dartPlayer.getId();
+                    break;
+                }
+            }
+
+            // check throw
+            Integer throwCount = 0;
+            Integer round = 0;
+            Long lastPlayerId = null;
+
+            for (DartThrow dartThrow : gameThrowsActive) {
+                System.out.println(dartThrow);
+                if (lastPlayerId == null) {
+                    lastPlayerId = dartThrow.getPlayer().getId();
+                    throwCount += 1;
+                } else {
+                    if (lastPlayerId.equals(dartThrow.getPlayer().getId())) {
+                        throwCount += 1;
+                        round = dartThrow.getRound();
+
+                        if (throwCount >= roundSize) {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            if (throwCount >= roundSize) {
+                System.out.println("Round is full");
+                System.out.println(lastActivePlayerId.toString() + " == " + lastPlayerId.toString());
+                if (lastActivePlayerId.equals(lastPlayerId)) {
+                    System.out.println("Next round");
+                    return round + 1;
+                } else {
+                    System.out.println("Same round");
+                    return round;
+                }
+            } else {
+                return round;
+            }
         }
     }
 
-    private DartPlayer getCurrentPlayer(DartGame game, List<DartThrow> gameThrowsActive) {
+    private DartPlayer getCurrentPlayer(List<DartPlayer> players, List<DartThrow> gameThrowsActive, Integer roundSize) {
+
         // set player
         if (gameThrowsActive.isEmpty()) {
             // find first player that not left game
-            for (DartPlayer player : game.getPlayers()) {
-                if (player.getLeftGameAt().describeConstable().isEmpty()) {
+            for (DartPlayer player : players) {
+                if (player.getLeftGameAt() == null) {
                     return player;
                 }
             }
 
             throw new IllegalArgumentException("No active player found in this game");
         } else {
-            return null; // TODO: implement current player logic
+            Long lastPlayerId = null;
+            Integer throwCount = 0;
+
+            // reverse list
+            Collections.reverse(gameThrowsActive);
+
+            // calculate throws
+            for (DartThrow dartThrow : gameThrowsActive) {
+                if (lastPlayerId == null) {
+                    lastPlayerId = dartThrow.getPlayer().getId();
+                    throwCount += 1;
+                } else {
+                    if (lastPlayerId.equals(dartThrow.getPlayer().getId())) {
+                        throwCount += 1;
+
+                        if (throwCount >= roundSize) {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // get player
+            if (throwCount < roundSize) {
+                // same player
+                for (DartPlayer player : players) {
+                    if (player.getId().equals(lastPlayerId)) {
+                        return player;
+                    }
+                }
+            } else {
+                // next player
+                Boolean returnNext = false;
+                for (DartPlayer player : players) {
+                    if (returnNext) {
+                        if (player.getLeftGameAt() == null) {
+                            return player;
+                        }
+                    }
+                    if (player.getId().equals(lastPlayerId)) {
+                        returnNext = true;
+                    }
+                }
+
+                // if no next player, return first active player
+                for (DartPlayer player : players) {
+                    if (player.getLeftGameAt() == null) {
+                        return player;
+                    }
+                }
+            }
+
+            throw  new IllegalArgumentException("No active player found in this game");
         }
     }
 }

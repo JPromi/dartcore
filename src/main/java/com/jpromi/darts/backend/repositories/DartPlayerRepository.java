@@ -11,6 +11,6 @@ import java.util.UUID;
 
 @Repository
 public interface DartPlayerRepository extends JpaRepository<DartPlayer, Long> {
-    List<DartPlayer> findByGameAndLeftGameAtEmptyOrderByOrderIndex(DartGame game);
-    Optional<DartPlayer> findByGameOrderByOrderIndex(DartGame game, UUID uuid);
+    List<DartPlayer> findByGameAndLeftGameAtNullOrderByOrderIndex(DartGame game);
+    Optional<DartPlayer> findByGameOrderByOrderIndex(DartGame game);
 }
