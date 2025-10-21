@@ -237,8 +237,12 @@ public class GameServiceImpl implements GameService {
                         tmpGamePlayerStatsRepository.save(stats);
                     }
 
-                    dartThrowRepository.save(lastThrow);
+                    return dartThrowRepository.save(lastThrow);
+                } else {
+                    return null;
                 }
+
+
             } else {
                 List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalseForUpdate(game);
 
@@ -317,7 +321,6 @@ public class GameServiceImpl implements GameService {
         } else {
             throw new IllegalArgumentException("Game has already ended or invalid request");
         }
-        throw new IllegalArgumentException("Game has already ended or invalid request");
     }
 
     @Override
