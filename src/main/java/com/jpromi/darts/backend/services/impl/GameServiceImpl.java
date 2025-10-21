@@ -154,9 +154,7 @@ public class GameServiceImpl implements GameService {
                     case CLASSIC:
                         // check in type
                         if (dartThrow.getRound().equals(0) && gameThrowsActive.isEmpty()) {
-                            System.out.println("in1");
                             if (!(game.getGameTypeClassicInType() == null || dartThrow.getMultiplier().equals(game.getGameTypeClassicInType()))) {
-                                System.out.println("in2");
                                 dartThrow.setIsNotCountable(true);
                             }
                         }
@@ -165,10 +163,8 @@ public class GameServiceImpl implements GameService {
                         Long newScore = playerStats.getTotalScore() - calculatePoints(dartThrow.getScore(), dartThrow.getMultiplier());
 
                         if (newScore < 0) {
-                            System.out.println("under");
                             dartThrow.setIsNotCountable(true);
                         } else if (newScore.equals(0)) {
-                            System.out.println("equals");
                             // check out type
                             if (!(game.getGameTypeClassicOutType().describeConstable().isEmpty() || dartThrow.getMultiplier().equals(game.getGameTypeClassicOutType()))) {
                                 dartThrow.setIsNotCountable(true);
@@ -181,7 +177,6 @@ public class GameServiceImpl implements GameService {
                                 (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.DOUBLE) && newScore < 2)
                             )
                         ) {
-                            System.out.println("trapped into this weard thing");
                             dartThrow.setIsNotCountable(true);
                         }
 
