@@ -118,13 +118,23 @@ public class GameServiceImpl implements GameService {
     @Override
     public DartThrow addThrow(UUID gameUuid, GameThrowRequest request) {
         DartGame game = this.getGameByUuid(gameUuid);
-        if (game != null && request != null) {
+        if (game != null && request != null && game.getEndTime() == null) {
             if (request.getIsUndo()) {
                 List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalse(game);
 
                 if (!gameThrowsActive.isEmpty()) {
                     DartThrow lastThrow = gameThrowsActive.getLast();
                     lastThrow.setIsUndo(true);
+
+                    // update tmp player stats
+                    Optional<TmpGamePlayerStats> playerStats = tmpGamePlayerStatsRepository.findByPlayerId(lastThrow.getPlayer().getId());
+
+                    if (playerStats.isPresent() && !Boolean.TRUE.equals(lastThrow.getIsNotCountable())) {
+                        TmpGamePlayerStats stats = playerStats.get();
+                        stats.setTotalScore(stats.getTotalScore() + calculatePoints(lastThrow.getScore(), lastThrow.getMultiplier()));
+                        tmpGamePlayerStatsRepository.save(stats);
+                    }
+
                     dartThrowRepository.save(lastThrow);
                 }
             } else {
@@ -182,7 +192,7 @@ public class GameServiceImpl implements GameService {
 
                         if (
                             (game.getGameTypeClassicOutType() == null && newScore.equals(0L)) ||
-                            (game.getGameTypeClassicOutType().equals(dartThrow.getMultiplier()) && newScore.equals(0L))
+                            (game.getGameTypeClassicOutType() != null && dartThrow.getMultiplier() != null && game.getGameTypeClassicOutType().equals(dartThrow.getMultiplier()) && newScore.equals(0L))
                         ) {
                             // winner
                             game.setEndTime(LocalDateTime.now());
@@ -203,9 +213,9 @@ public class GameServiceImpl implements GameService {
             }
 
         } else {
-            throw new IllegalArgumentException("Game or request cannot be null");
+            throw new IllegalArgumentException("Game has already ended or invalid request");
         }
-        return null;
+        throw new IllegalArgumentException("Game has already ended or invalid request");
     }
 
     @Override
