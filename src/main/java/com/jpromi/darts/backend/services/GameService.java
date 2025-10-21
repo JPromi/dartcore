@@ -16,4 +16,5 @@ public interface GameService {
     DartGame getGameByUuid(UUID uuid);
     DartThrow addThrow(UUID gameUuid, GameThrowRequest request);
     GameResponse.GamePlayerResponse getPlayerResponse(Long dartPlayerId);
+    GameResponse getGameResponseByUuid(UUID gameUuid);
 }

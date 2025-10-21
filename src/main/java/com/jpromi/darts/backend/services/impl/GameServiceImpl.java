@@ -10,7 +10,6 @@ import com.jpromi.darts.backend.models.NewGamePlayerRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
 import com.jpromi.darts.backend.repositories.*;
 import com.jpromi.darts.backend.services.GameService;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,13 +113,59 @@ public class GameServiceImpl implements GameService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public GameResponse getGameResponseByUuid(UUID gameUuid) {
+        if (gameUuid != null) {
+            DartGame game = this.dartGameRepository.findByUuid(gameUuid).orElse(null);
+
+            if (game != null) {
+                GameResponse response = GameResponse.builder()
+                        .uuid(game.getUuid())
+                        .startTime(game.getStartTime())
+                        .endTime(game.getEndTime())
+                        .gameType(game.getGameType())
+                        .gameTypeClassicInType(game.getGameTypeClassicInType())
+                        .gameTypeClassicOutType(game.getGameTypeClassicOutType())
+                        .gameTypeClassicPoints(game.getGameTypeClassicPoints())
+                        .players(new ArrayList<>())
+                        .round(game.getThrowsList().isEmpty() ? 0 : getThrowRound(game.getGameType(), game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game)))
+                        .build();
+
+                // player
+                // Hibernate.initialize(game.getPlayers());
+                for (DartPlayer player : game.getPlayers()) {
+                    GameResponse.GamePlayerResponse playerResponse = gamePlayerResponseMapper.fromDartPlayer(player);
+                    // get tmp stats
+                    Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(player.getId());
+                    if (statsOpt.isPresent()) {
+                        TmpGamePlayerStats stats = statsOpt.get();
+                        playerResponse.setScore(stats.getTotalScore());
+                        playerResponse.setHighscore(stats.getHighscore());
+                    } else {
+                        playerResponse.setScore(game.getGameTypeClassicPoints());
+                        playerResponse.setHighscore(0L);
+                    }
+                    playerResponse.setIsCurrentPlayer(getCurrentPlayer(game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game), getRoundSize(game.getGameType())).getId().equals(player.getId()));
+                    response.getPlayers().add(playerResponse);
+                }
+
+                return response;
+            } else {
+                throw new IllegalArgumentException("Game not found for UUID: " + gameUuid);
+            }
+        } else {
+            throw new IllegalArgumentException("Game UUID cannot be null or empty");
+        }
+    }
+
     @Transactional
     @Override
     public DartThrow addThrow(UUID gameUuid, GameThrowRequest request) {
         DartGame game = this.getGameByUuid(gameUuid);
         if (game != null && request != null && game.getEndTime() == null) {
             if (request.getIsUndo()) {
-                List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalse(game);
+                List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalseForUpdate(game);
 
                 if (!gameThrowsActive.isEmpty()) {
                     DartThrow lastThrow = gameThrowsActive.getLast();
@@ -138,7 +183,7 @@ public class GameServiceImpl implements GameService {
                     dartThrowRepository.save(lastThrow);
                 }
             } else {
-                List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalse(game);
+                List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalseForUpdate(game);
 
                 DartThrow dartThrow = DartThrow.builder()
                         .player(getCurrentPlayer(game.getPlayers(), gameThrowsActive, getRoundSize(game.getGameType()))) // fix this

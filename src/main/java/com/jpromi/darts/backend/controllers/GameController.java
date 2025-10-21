@@ -70,9 +70,9 @@ public class GameController {
             Session session = this.authService.session(sessionCookie);
 
             if (session != null) {
-                DartGame game = this.gameService.getGameByUuid(gameUuid);
+                GameResponse game = this.gameService.getGameResponseByUuid(gameUuid);
                 if (game != null) {
-                    return ResponseEntity.ok(gameResponseMapper.fromDartGame(game));
+                    return ResponseEntity.ok(game);
                 } else {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
                 }
