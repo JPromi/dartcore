@@ -142,6 +142,11 @@ public class GameServiceImpl implements GameService {
                 for (DartPlayer player : game.getPlayers()) {
                     GameResponse.GamePlayerResponse playerResponse = gamePlayerResponseMapper.fromDartPlayer(player);
                     List<GameResponse.GamePlayerResponse.GameThrowResponse> throwsResponses = new ArrayList<>();
+
+                    if (player.getLeftGameAt() != null) {
+                        playerResponse.setIsEliminated(true);
+                    }
+
                     // get tmp stats
                     Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(player.getId());
                     if (statsOpt.isPresent()) {
@@ -253,6 +258,7 @@ public class GameServiceImpl implements GameService {
                         .round(getThrowRound(game.getGameType(), game.getPlayers(), gameThrowsActive))
                         .multiplier(request.getMultiplier())
                         .score(request.getPoint())
+                        .type(request.getType())
                         .build();
 
                 // get player stats
