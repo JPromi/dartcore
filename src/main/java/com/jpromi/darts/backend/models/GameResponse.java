@@ -58,7 +58,7 @@ public class GameResponse {
         private Boolean isEliminated = false;
 
         @Builder.Default
-        private List<GameThrowResponse> trows = new ArrayList<>();
+        private List<GameThrowResponse> throwList = new ArrayList<>();
 
         @Builder.Default
         private List<GameThrowResponse> hints = new ArrayList<>();
