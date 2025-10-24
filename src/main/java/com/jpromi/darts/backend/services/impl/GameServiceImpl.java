@@ -117,113 +117,114 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional(readOnly = true)
     public GameResponse getGameResponseByUuid(UUID gameUuid) {
-        if (gameUuid != null) {
-            DartGame game = this.dartGameRepository.findByUuid(gameUuid).orElse(null);
+        DartGame game = this.dartGameRepository.findByUuid(gameUuid).orElse(null);
+        return this.getGameResponseByUuid(game);
+    }
 
-            if (game != null) {
-                GameResponse response = GameResponse.builder()
-                        .uuid(game.getUuid())
-                        .startTime(game.getStartTime())
-                        .endTime(game.getEndTime())
-                        .gameType(game.getGameType())
-                        .gameTypeClassicInType(game.getGameTypeClassicInType())
-                        .gameTypeClassicOutType(game.getGameTypeClassicOutType())
-                        .gameTypeClassicPoints(game.getGameTypeClassicPoints())
-                        .players(new ArrayList<>())
-                        .round(game.getThrowsList().isEmpty() ? 0 : getThrowRound(game.getGameType(), game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game)))
-                        .build();
+    @Override
+    @Transactional(readOnly = true)
+    public GameResponse getGameResponseByUuid(DartGame game) {
+        if (game != null) {
+            GameResponse response = GameResponse.builder()
+                    .uuid(game.getUuid())
+                    .startTime(game.getStartTime())
+                    .endTime(game.getEndTime())
+                    .gameType(game.getGameType())
+                    .gameTypeClassicInType(game.getGameTypeClassicInType())
+                    .gameTypeClassicOutType(game.getGameTypeClassicOutType())
+                    .gameTypeClassicPoints(game.getGameTypeClassicPoints())
+                    .players(new ArrayList<>())
+                    .round(game.getThrowsList().isEmpty() ? 0 : getThrowRound(game.getGameType(), game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game)))
+                    .build();
 
-                Integer roundSize = getRoundSize(game.getGameType());
+            Integer roundSize = getRoundSize(game.getGameType());
 
-                List<DartThrow> dartThrowsReversed = dartThrowRepository.findByGameAndIsUndoFalse(game).reversed();
+            List<DartThrow> dartThrowsReversed = dartThrowRepository.findByGameAndIsUndoFalse(game).reversed();
 
-                // player
-                // Hibernate.initialize(game.getPlayers());
-                for (DartPlayer player : game.getPlayers()) {
-                    GameResponse.GamePlayerResponse playerResponse = gamePlayerResponseMapper.fromDartPlayer(player);
-                    List<GameResponse.GamePlayerResponse.GameThrowResponse> throwsResponses = new ArrayList<>();
+            // player
+            // Hibernate.initialize(game.getPlayers());
+            for (DartPlayer player : game.getPlayers()) {
+                GameResponse.GamePlayerResponse playerResponse = gamePlayerResponseMapper.fromDartPlayer(player);
+                List<GameResponse.GamePlayerResponse.GameThrowResponse> throwsResponses = new ArrayList<>();
 
-                    if (player.getLeftGameAt() != null) {
-                        playerResponse.setIsEliminated(true);
+                if (player.getLeftGameAt() != null) {
+                    playerResponse.setIsEliminated(true);
+                }
+
+                // get tmp stats
+                Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(player.getId());
+                if (statsOpt.isPresent()) {
+                    TmpGamePlayerStats stats = statsOpt.get();
+                    playerResponse.setScore(stats.getTotalScore());
+                    playerResponse.setHighscore(stats.getHighscore());
+                } else {
+                    playerResponse.setScore(game.getGameTypeClassicPoints());
+                    playerResponse.setHighscore(0L);
+                }
+
+                // get last throws
+                Integer foundInRound = null;
+                Boolean notCountableFound = false;
+                for (DartThrow dartThrow : dartThrowsReversed) {
+                    if (dartThrow.getPlayer().getId().equals(player.getId())) {
+                        if (foundInRound == null) {
+                            foundInRound = dartThrow.getRound();
+                        } else if (!foundInRound.equals(dartThrow.getRound())) {
+                            break; // we have all throws for the last round
+                        }
+
+                        if (Boolean.TRUE.equals(dartThrow.getIsNotCountable())) {
+                            notCountableFound = true;
+                        }
+
+                        throwsResponses.add(GameResponse.GamePlayerResponse.GameThrowResponse.builder()
+                                .type(dartThrow.getType())
+                                .multiplier(dartThrow.getMultiplier())
+                                .score(dartThrow.getScore())
+                                .timestamp(dartThrow.getTimestamp())
+                                .round(dartThrow.getRound())
+                                .build()
+                        );
                     }
+                }
 
-                    // get tmp stats
-                    Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(player.getId());
-                    if (statsOpt.isPresent()) {
-                        TmpGamePlayerStats stats = statsOpt.get();
-                        playerResponse.setScore(stats.getTotalScore());
-                        playerResponse.setHighscore(stats.getHighscore());
-                    } else {
-                        playerResponse.setScore(game.getGameTypeClassicPoints());
-                        playerResponse.setHighscore(0L);
-                    }
+                Collections.reverse(throwsResponses);
 
-                    // get last throws
-                    Integer foundInRound = null;
-                    Boolean notCountableFound = false;
-                    for (DartThrow dartThrow : dartThrowsReversed) {
-                        if (dartThrow.getPlayer().getId().equals(player.getId())) {
-                            if (foundInRound == null) {
-                                foundInRound = dartThrow.getRound();
-                            } else if (!foundInRound.equals(dartThrow.getRound())) {
-                                break; // we have all throws for the last round
-                            }
+                if (notCountableFound) {
 
-                            if (Boolean.TRUE.equals(dartThrow.getIsNotCountable())) {
-                                notCountableFound = true;
-                            }
-
+                    if (throwsResponses.size() < roundSize) {
+                        // fill up with not countable throws
+                        for (int i = throwsResponses.size(); i < roundSize; i++) {
                             throwsResponses.add(GameResponse.GamePlayerResponse.GameThrowResponse.builder()
-                                    .type(dartThrow.getType())
-                                    .multiplier(dartThrow.getMultiplier())
-                                    .score(dartThrow.getScore())
-                                    .timestamp(dartThrow.getTimestamp())
-                                    .round(dartThrow.getRound())
+                                    .type(ThrowType.ABORT)
+                                    .multiplier(null)
+                                    .score(0)
+                                    .timestamp(null)
+                                    .round(foundInRound)
                                     .build()
                             );
                         }
                     }
-
-                    Collections.reverse(throwsResponses);
-
-                    if (notCountableFound) {
-
-                        if (throwsResponses.size() < roundSize) {
-                            // fill up with not countable throws
-                            for (int i = throwsResponses.size(); i < roundSize; i++) {
-                                throwsResponses.add(GameResponse.GamePlayerResponse.GameThrowResponse.builder()
-                                        .type(ThrowType.ABORT)
-                                        .multiplier(null)
-                                        .score(0)
-                                        .timestamp(null)
-                                        .round(foundInRound)
-                                        .build()
-                                );
-                            }
-                        }
-                    }
-
-                    playerResponse.setIsCurrentPlayer(getCurrentPlayer(game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game), getRoundSize(game.getGameType())).getId().equals(player.getId()));
-
-                    if(!(throwsResponses.size() >= roundSize && playerResponse.getIsCurrentPlayer())) {
-                        playerResponse.setThrowList(throwsResponses);
-                    }
-
-                    response.getPlayers().add(playerResponse);
                 }
 
-                return response;
-            } else {
-                throw new IllegalArgumentException("Game not found for UUID: " + gameUuid);
+                playerResponse.setIsCurrentPlayer(getCurrentPlayer(game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game), getRoundSize(game.getGameType())).getId().equals(player.getId()));
+
+                if(!(throwsResponses.size() >= roundSize && playerResponse.getIsCurrentPlayer())) {
+                    playerResponse.setThrowList(throwsResponses);
+                }
+
+                response.getPlayers().add(playerResponse);
             }
+
+            return response;
         } else {
-            throw new IllegalArgumentException("Game UUID cannot be null or empty");
+            throw new IllegalArgumentException("Game not found for UUID");
         }
     }
 
     @Transactional
     @Override
-    public DartThrow addThrow(UUID gameUuid, GameThrowRequest request) {
+    public DartGame addThrow(UUID gameUuid, GameThrowRequest request) {
         DartGame game = this.getGameByUuid(gameUuid);
         if (game != null && request != null && game.getEndTime() == null) {
             if (request.getIsUndo()) {
@@ -242,7 +243,8 @@ public class GameServiceImpl implements GameService {
                         tmpGamePlayerStatsRepository.save(stats);
                     }
 
-                    return dartThrowRepository.save(lastThrow);
+                    DartThrow throwSave = dartThrowRepository.save(lastThrow);
+                    return throwSave.getGame();
                 } else {
                     return null;
                 }
@@ -321,26 +323,13 @@ public class GameServiceImpl implements GameService {
                 }
 
                 tmpGamePlayerStatsRepository.save(playerStats);
-                return dartThrowRepository.save(dartThrow);
+                DartThrow throwSave = dartThrowRepository.save(dartThrow);
+                return throwSave.getGame();
             }
 
         } else {
             throw new IllegalArgumentException("Game has already ended or invalid request");
         }
-    }
-
-    @Override
-    public GameResponse.GamePlayerResponse getPlayerResponse(Long dartPlayerId) {
-        GameResponse.GamePlayerResponse response = GameResponse.GamePlayerResponse.builder().build();
-
-        Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(dartPlayerId);
-        if (statsOpt.isPresent()) {
-            TmpGamePlayerStats stats = statsOpt.get();
-            response.setScore(stats.getTotalScore());
-            response.setHighscore(stats.getHighscore());
-        }
-
-        return response;
     }
 
     private Integer getRoundSize(GameTypeEnum gameType) {

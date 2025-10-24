@@ -103,24 +103,21 @@ public class GameController {
         // logic
         ReentrantLock lock = gameLockRegistry.get(gameUuid);
         lock.lock();
-        DartThrow dartThrow = null;
+        DartGame game = null;
         try {
-            dartThrow = gameService.addThrow(gameUuid, body);
+            game = gameService.addThrow(gameUuid, body);
         } finally {
             lock.unlock();
             gameLockRegistry.cleanup(gameUuid, lock);
-            if (dartThrow != null) {
-                sendThrowUpdate(dartThrow, gameUuid);
+            if (game != null) {
+                sendGameUpdate(game);
             }
         }
     }
 
-    private Void sendThrowUpdate(DartThrow dartThrow, UUID gameUuid) {
-
-        messaging.convertAndSend("/response/game/" + gameUuid + "/player",
-                gameService.getPlayerResponse(dartThrow.getPlayer().getId())
-        );
-
+    private Void sendGameUpdate(DartGame game) {
+        GameResponse gameDto = gameService.getGameResponseByUuid(game);
+        messaging.convertAndSend("/response/game/" + game.getUuid(),gameDto);
         return null;
     }
 

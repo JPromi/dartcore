@@ -6,6 +6,7 @@ import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.services.UrlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class GamePlayerResponseMapper {

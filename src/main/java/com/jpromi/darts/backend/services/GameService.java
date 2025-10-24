@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface GameService {
     DartGame newGame(NewGameRequest newGameRequest, Account account);
     DartGame getGameByUuid(UUID uuid);
-    DartThrow addThrow(UUID gameUuid, GameThrowRequest request);
-    GameResponse.GamePlayerResponse getPlayerResponse(Long dartPlayerId);
+    DartGame addThrow(UUID gameUuid, GameThrowRequest request);
     GameResponse getGameResponseByUuid(UUID gameUuid);
+    GameResponse getGameResponseByUuid(DartGame game);
 }
