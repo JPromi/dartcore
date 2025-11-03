@@ -13,6 +13,7 @@ import java.util.List;
 
 @Repository
 public interface DartThrowRepository extends JpaRepository<DartThrow, Long> {
+    Boolean existsByGameAndIsUndoFalse(DartGame game);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from DartThrow t where t.game = :game and t.isUndo = false")
     List<DartThrow> findByGameAndIsUndoFalseForUpdate(@Param("game") DartGame game);

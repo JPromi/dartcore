@@ -125,6 +125,9 @@ public class GameServiceImpl implements GameService {
     @Transactional(readOnly = true)
     public GameResponse getGameResponseByUuid(DartGame game) {
         if (game != null) {
+
+            Boolean hasActiveThrows = dartThrowRepository.existsByGameAndIsUndoFalse(game);
+
             GameResponse response = GameResponse.builder()
                     .uuid(game.getUuid())
                     .startTime(game.getStartTime())
@@ -134,18 +137,12 @@ public class GameServiceImpl implements GameService {
                     .gameTypeClassicOutType(game.getGameTypeClassicOutType())
                     .gameTypeClassicPoints(game.getGameTypeClassicPoints())
                     .players(new ArrayList<>())
-                    .round(game.getThrowsList().isEmpty() ? 0 : getThrowRound(game.getGameType(), game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game)))
+                    .round(!hasActiveThrows ? 0 : getThrowRound(game.getGameType(), game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game)))
                     .build();
 
             Integer roundSize = getRoundSize(game.getGameType());
 
             List<DartThrow> dartThrowsReversed = dartThrowRepository.findByGameAndIsUndoFalse(game).reversed();
-
-            if (game.getEndTime() != null) {
-                Long winnerPlayerId = game.getThrowsList().getLast().getPlayer().getId();
-            } else {
-                Long winnerPlayerId = -1L;
-            }
 
             // player
             // Hibernate.initialize(game.getPlayers());
@@ -157,11 +154,7 @@ public class GameServiceImpl implements GameService {
                     playerResponse.setIsEliminated(true);
                 }
 
-                if (game.getEndTime() != null && player.getId().equals(game.getThrowsList().getLast().getPlayer().getId())) {
-                    playerResponse.setIsWinner(true);
-                } else {
-                    playerResponse.setIsWinner(false);
-                }
+                // playerResponse.setIsWinner(player.getIsWinner());
 
                 // get tmp stats
                 Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(player.getId());
@@ -219,7 +212,9 @@ public class GameServiceImpl implements GameService {
                     }
                 }
 
-                playerResponse.setIsCurrentPlayer(getCurrentPlayer(game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game), getRoundSize(game.getGameType())).getId().equals(player.getId()));
+                if (game.getEndTime() == null) {
+                    playerResponse.setIsCurrentPlayer(getCurrentPlayer(game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game), getRoundSize(game.getGameType())).getId().equals(player.getId()));
+                }
 
                 if(!(throwsResponses.size() >= roundSize && playerResponse.getIsCurrentPlayer())) {
                     playerResponse.setThrowList(throwsResponses);
@@ -322,6 +317,7 @@ public class GameServiceImpl implements GameService {
                         ) {
                             // winner
                             game.setEndTime(LocalDateTime.now());
+                            dartThrow.getPlayer().setIsWinner(true);
                             playerStats.setTotalScore(newScore);
                         }
 
