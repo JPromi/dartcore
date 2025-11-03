@@ -17,6 +17,6 @@ public class NewGameRequest {
     private List<NewGamePlayerRequest> players = new ArrayList<>();
     private GameTypeEnum gameType = GameTypeEnum.CLASSIC;
     private Long gameTypeClassicPoints = null;
-    private DartThrowMultiplierEnum gameTypeClassicInType = null;
-    private DartThrowMultiplierEnum gameTypeClassicOutType = null;
+    private DartThrowMultiplierEnum gameTypeClassicIn = null;
+    private DartThrowMultiplierEnum gameTypeClassicOut = null;
 }

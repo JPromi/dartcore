@@ -59,8 +59,8 @@ public class GameServiceImpl implements GameService {
             switch (dartGame.getGameType()) {
                 case CLASSIC:
                     dartGame.setGameTypeClassicPoints(newGameRequest.getGameTypeClassicPoints());
-                    dartGame.setGameTypeClassicInType(newGameRequest.getGameTypeClassicInType());
-                    dartGame.setGameTypeClassicOutType(newGameRequest.getGameTypeClassicOutType());
+                    dartGame.setGameTypeClassicInType(newGameRequest.getGameTypeClassicIn());
+                    dartGame.setGameTypeClassicOutType(newGameRequest.getGameTypeClassicOut());
                     break;
             }
 
