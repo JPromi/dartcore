@@ -141,6 +141,12 @@ public class GameServiceImpl implements GameService {
 
             List<DartThrow> dartThrowsReversed = dartThrowRepository.findByGameAndIsUndoFalse(game).reversed();
 
+            if (game.getEndTime() != null) {
+                Long winnerPlayerId = game.getThrowsList().getLast().getPlayer().getId();
+            } else {
+                Long winnerPlayerId = -1L;
+            }
+
             // player
             // Hibernate.initialize(game.getPlayers());
             for (DartPlayer player : game.getPlayers()) {
@@ -149,6 +155,12 @@ public class GameServiceImpl implements GameService {
 
                 if (player.getLeftGameAt() != null) {
                     playerResponse.setIsEliminated(true);
+                }
+
+                if (game.getEndTime() != null && player.getId().equals(game.getThrowsList().getLast().getPlayer().getId())) {
+                    playerResponse.setIsWinner(true);
+                } else {
+                    playerResponse.setIsWinner(false);
                 }
 
                 // get tmp stats
@@ -310,6 +322,7 @@ public class GameServiceImpl implements GameService {
                         ) {
                             // winner
                             game.setEndTime(LocalDateTime.now());
+                            playerStats.setTotalScore(newScore);
                         }
 
                         if (!dartThrow.getIsNotCountable()) {
