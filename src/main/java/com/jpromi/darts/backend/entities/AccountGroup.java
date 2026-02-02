@@ -26,7 +26,7 @@ public class AccountGroup {
     @Builder.Default
     private UUID uuid = UUID.randomUUID();
 
-    @Column(nullable = true)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @Column(nullable = true)

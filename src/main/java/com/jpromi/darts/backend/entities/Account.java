@@ -26,7 +26,7 @@ public class Account {
     @Builder.Default
     private UUID uuid = UUID.randomUUID();
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String username;
 
     @OneToOne(cascade = CascadeType.ALL)
