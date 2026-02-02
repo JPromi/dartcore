@@ -28,12 +28,7 @@ public class RegistrationController {
 
     @PutMapping("/validate")
     public ResponseEntity<String> validate(@RequestBody String token) {
-        Boolean isValid = registrationService.validate(token);
-
-        if (isValid) {
-            return ResponseEntity.ok("");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("");
-        }
+        String username = registrationService.validate(token);
+        return ResponseEntity.ok("\"" + username + "\"");
     }
 }

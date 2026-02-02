@@ -10,8 +10,11 @@ import com.jpromi.darts.backend.services.RegistrationService;
 import com.jpromi.darts.backend.services.TemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import com.password4j.Password;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -82,7 +85,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     @Override
-    public Boolean validate(String token) {
+    public String validate(String token) {
         Optional<Account> accountCheck = accountRepository.findByEmailVerificationTokenAndIsEmailVerifiedFalseAndIsDeletedFalseAndIsDisabledFalse(token);
         if (accountCheck.isPresent()) {
             Account account = accountCheck.get();
@@ -91,9 +94,9 @@ public class RegistrationServiceImpl implements RegistrationService {
             account.setEmailVerificationTimestamp(OffsetDateTime.now());
 
             accountRepository.save(account);
-            return true;
+            return account.getUsername();
         } else {
-            return false;
+            throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Invalid verification token");
         }
     }
 

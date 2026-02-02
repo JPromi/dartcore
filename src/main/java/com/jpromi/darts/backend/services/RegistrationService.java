@@ -5,5 +5,5 @@ import com.jpromi.darts.backend.models.RegisterRequest;
 
 public interface RegistrationService {
     public Account register(RegisterRequest register);
-    public Boolean validate(String token);
+    public String validate(String token);
 }
