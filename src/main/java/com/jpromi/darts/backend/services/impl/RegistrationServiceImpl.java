@@ -10,11 +10,13 @@ import com.jpromi.darts.backend.services.RegistrationService;
 import com.jpromi.darts.backend.services.TemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import com.password4j.Password;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -51,7 +53,24 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .profile(profile)
                 .build();
 
-        accountRepository.save(account);
+
+
+        try {
+            accountRepository.save(account);
+        } catch (DataIntegrityViolationException ex) {
+            // Unique-Constraint / FK / etc.
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "User with the same username already exists",
+                    ex
+            );
+        } catch (Exception ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "An error occurred while validating the account",
+                    ex
+            );
+        }
 
         EmailObject mailObject = EmailObject.builder()
                 .to(new ArrayList<>(List.of(registerRequest.getEmail())))
