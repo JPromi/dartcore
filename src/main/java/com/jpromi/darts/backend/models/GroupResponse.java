@@ -18,6 +18,8 @@ public class GroupResponse {
     private String banner;
     private Boolean isMember;
     private Boolean isPublic;
+    private Boolean isAdmin;
+    private Boolean isOwner;
     private List<ProfileLightResponse> members;
     private OffsetDateTime createdAt;
 

@@ -22,10 +22,18 @@ public class GroupResponseMapper {
 
     public GroupResponse fromAccountGroup(AccountGroup group, Account account) {
         Boolean isMember = false;
+        Boolean isAdmin = false;
+        Boolean isOwner = false;
         if (account != null) {
             for (AccountGroupMember member : group.getMembers()) {
                 if (member.getAccount().getId().equals(account.getId())) {
                     isMember = true;
+
+                    if (member.getIsOwner()) {
+                        isOwner = true;
+                    } else if (member.getIsAdmin()) {
+                        isAdmin = true;
+                    }
                     break;
                 }
             }
@@ -49,6 +57,8 @@ public class GroupResponseMapper {
                     .isPublic(group.getIsPublic())
                     .isMember(isMember)
                     .members(members)
+                    .isAdmin(isAdmin)
+                    .isOwner(isOwner)
                     .createdAt(group.getCreatedAt())
                     .build();
         } else {
@@ -61,6 +71,8 @@ public class GroupResponseMapper {
                     .isPublic(group.getIsPublic())
                     .isMember(isMember)
                     .members(null)
+                    .isAdmin(null)
+                    .isOwner(null)
                     .createdAt(group.getCreatedAt())
                     .build();
         }
