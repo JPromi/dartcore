@@ -20,10 +20,12 @@ public class FileController {
     @Autowired
     private FileResponseMapper fileResponseMapper;
 
+    private static final String NAME_PREFIX = "dcn_";
+
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<FileResponse> uploadFile(@RequestPart("file") MultipartFile file) {
         try {
-            java.io.File tempFile = java.io.File.createTempFile("b2h-darts_", file.getOriginalFilename());
+            java.io.File tempFile = java.io.File.createTempFile(NAME_PREFIX, file.getOriginalFilename());
             file.transferTo(tempFile);
 
             File savedFile = fileService.saveFile(tempFile);
@@ -42,7 +44,7 @@ public class FileController {
             return ResponseEntity.badRequest().body(null);
         }
         try {
-            java.io.File tempFile = java.io.File.createTempFile("b2h-darts_", file.getOriginalFilename());
+            java.io.File tempFile = java.io.File.createTempFile(NAME_PREFIX, file.getOriginalFilename());
             file.transferTo(tempFile);
 
             // scale image

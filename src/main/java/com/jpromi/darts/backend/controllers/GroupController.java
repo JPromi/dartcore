@@ -28,7 +28,7 @@ public class GroupController {
 
     @GetMapping("/search")
     public ResponseEntity<PageResponse<GroupLightResponse>> getGroupSearch(
-            @CookieValue("b2h.darts.session") String sessionCookie,
+            @CookieValue("dcn.session") String sessionCookie,
             @RequestParam(value = "q", required = false, defaultValue = "") String query,
             @RequestParam(value = "isMember", required = false, defaultValue = "") Boolean isMember,
             @RequestParam(value = "isPublic", required = false, defaultValue = "") Boolean isPublic,
@@ -56,7 +56,7 @@ public class GroupController {
     }
 
     @GetMapping("/{uuid}")
-    public ResponseEntity<GroupResponse> getGroupByUuid(@CookieValue("b2h.darts.session") String sessionCookie, @PathVariable String uuid) {
+    public ResponseEntity<GroupResponse> getGroupByUuid(@CookieValue("dcn.session") String sessionCookie, @PathVariable String uuid) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
@@ -76,7 +76,7 @@ public class GroupController {
     }
 
     @PostMapping("")
-    public ResponseEntity<GroupResponse> createGroup(@CookieValue("b2h.darts.session") String sessionCookie, @RequestBody GroupRequest group) {
+    public ResponseEntity<GroupResponse> createGroup(@CookieValue("dcn.session") String sessionCookie, @RequestBody GroupRequest group) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
@@ -96,7 +96,7 @@ public class GroupController {
     }
 
     @DeleteMapping("/{uuid}")
-    public ResponseEntity<Void> deleteGroup(@CookieValue("b2h.darts.session") String sessionCookie, @PathVariable String uuid) {
+    public ResponseEntity<Void> deleteGroup(@CookieValue("dcn.session") String sessionCookie, @PathVariable String uuid) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
@@ -112,7 +112,7 @@ public class GroupController {
     }
 
     @GetMapping("invitation")
-    public ResponseEntity<List<GroupInvitationResponse>> getAccountInvitations(@CookieValue("b2h.darts.session") String sessionCookie) {
+    public ResponseEntity<List<GroupInvitationResponse>> getAccountInvitations(@CookieValue("dcn.session") String sessionCookie) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
@@ -128,7 +128,7 @@ public class GroupController {
     }
 
     @GetMapping("invitation/count")
-    public ResponseEntity<Long> countAccountInvitations(@CookieValue("b2h.darts.session") String sessionCookie) {
+    public ResponseEntity<Long> countAccountInvitations(@CookieValue("dcn.session") String sessionCookie) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
@@ -145,7 +145,7 @@ public class GroupController {
 
     @PutMapping("invitation/{uuid}")
     public ResponseEntity<Void> responseInvitation(
-            @CookieValue("b2h.darts.session") String sessionCookie,
+            @CookieValue("dcn.session") String sessionCookie,
             @PathVariable String uuid,
             @RequestBody InvitationStatusAccountEnum status
     ) {

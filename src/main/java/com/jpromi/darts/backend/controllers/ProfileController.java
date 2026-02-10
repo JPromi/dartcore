@@ -35,7 +35,7 @@ public class ProfileController {
     private AccountRepository accountRepository;
 
     @GetMapping("/{username}")
-    public ResponseEntity<ProfileResponse> getProfile(@CookieValue("b2h.darts.session") String sessionCookie, @PathVariable String username) {
+    public ResponseEntity<ProfileResponse> getProfile(@CookieValue("dcn.session") String sessionCookie, @PathVariable String username) {
 
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
@@ -58,7 +58,7 @@ public class ProfileController {
 
     @GetMapping("/search")
     public ResponseEntity<PageResponse<ProfileLightResponse>> searchProfiles(
-            @CookieValue("b2h.darts.session") String sessionCookie,
+            @CookieValue("dcn.session") String sessionCookie,
             @RequestParam(value = "q", required = false, defaultValue = "") String query,
             // @RequestParam(value = "isFriend", required = false, defaultValue = "") Boolean isFriend,
             @RequestParam(value = "isPlayable", required = false, defaultValue = "false") Boolean isPlayable,

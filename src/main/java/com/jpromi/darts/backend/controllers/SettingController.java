@@ -22,7 +22,7 @@ public class SettingController {
     private AuthService authService;
 
     @GetMapping("/profile")
-    public ResponseEntity<SettingProfileResponse> getProfile(@CookieValue("b2h.darts.session") String sessionCookie) {
+    public ResponseEntity<SettingProfileResponse> getProfile(@CookieValue("dcn.session") String sessionCookie) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
@@ -40,7 +40,7 @@ public class SettingController {
 
 
     @PutMapping("/profile")
-    public ResponseEntity<SettingProfileResponse> updateProfile(@CookieValue("b2h.darts.session") String sessionCookie, @RequestBody SettingProfileResponse request) {
+    public ResponseEntity<SettingProfileResponse> updateProfile(@CookieValue("dcn.session") String sessionCookie, @RequestBody SettingProfileResponse request) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
@@ -57,7 +57,7 @@ public class SettingController {
     }
 
     @GetMapping("/account")
-    public ResponseEntity<SettingAccountResponse> getAccount(@CookieValue("b2h.darts.session") String sessionCookie) {
+    public ResponseEntity<SettingAccountResponse> getAccount(@CookieValue("dcn.session") String sessionCookie) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
@@ -74,7 +74,7 @@ public class SettingController {
     }
 
     @PutMapping("/account")
-    public ResponseEntity<SettingAccountResponse> updateAccount(@CookieValue("b2h.darts.session") String sessionCookie, @RequestBody SettingAccountRequest request) {
+    public ResponseEntity<SettingAccountResponse> updateAccount(@CookieValue("dcn.session") String sessionCookie, @RequestBody SettingAccountRequest request) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 

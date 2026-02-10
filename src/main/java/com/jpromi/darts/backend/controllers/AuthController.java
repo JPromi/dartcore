@@ -46,7 +46,7 @@ public class AuthController {
     }
 
     @GetMapping("")
-    public ResponseEntity<LoginResponse> loginSession(@CookieValue(value = "b2h.darts.session", defaultValue = "") String sessionCookie) {
+    public ResponseEntity<LoginResponse> loginSession(@CookieValue(value = "dcn.session", defaultValue = "") String sessionCookie) {
         if(sessionCookie != null) {
             Session session = this.authService.generalSession(sessionCookie);
             if (session != null) {
@@ -65,7 +65,7 @@ public class AuthController {
     }
 
     @DeleteMapping("")
-    public ResponseEntity<Void> logout(@CookieValue("b2h.darts.session") String sessionCookie) {
+    public ResponseEntity<Void> logout(@CookieValue("dcn.session") String sessionCookie) {
         if(sessionCookie != null) {
             this.authService.logout(sessionCookie);
             return ResponseEntity.ok().build();
@@ -75,7 +75,7 @@ public class AuthController {
     }
 
     @PostMapping("/totp")
-    public ResponseEntity<LoginResponse> totp(@CookieValue("b2h.darts.session") String sessionCookie, @RequestBody String request) {
+    public ResponseEntity<LoginResponse> totp(@CookieValue("dcn.session") String sessionCookie, @RequestBody String request) {
         if(sessionCookie != null) {
             LoginResponse response = this.authService.totp(sessionCookie, request);
 
@@ -90,7 +90,7 @@ public class AuthController {
     }
 
     @GetMapping("/session")
-    public ResponseEntity<SessionAccountResponse> session(@CookieValue("b2h.darts.session") String sessionCookie) {
+    public ResponseEntity<SessionAccountResponse> session(@CookieValue("dcn.session") String sessionCookie) {
         if(sessionCookie != null) {
             SessionAccountResponse response = this.authService.accountBySession(sessionCookie);
 

@@ -49,7 +49,7 @@ public class GameController {
     private GameLockRegistry gameLockRegistry;
 
     @PostMapping("")
-    public ResponseEntity<UUID> newGame(@CookieValue("b2h.darts.session") String sessionCookie, @RequestBody NewGameRequest gameRequest) {
+    public ResponseEntity<UUID> newGame(@CookieValue("dcn.session") String sessionCookie, @RequestBody NewGameRequest gameRequest) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
@@ -65,7 +65,7 @@ public class GameController {
     }
 
     @GetMapping("/{gameUuid}")
-    public ResponseEntity<GameResponse> getGame(@CookieValue("b2h.darts.session") String sessionCookie, @PathVariable UUID gameUuid) {
+    public ResponseEntity<GameResponse> getGame(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID gameUuid) {
         if (sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 

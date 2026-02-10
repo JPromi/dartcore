@@ -30,7 +30,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
         Cookie[] cookies = servletReq.getServletRequest().getCookies();
         if (cookies != null) {
             for (Cookie c : cookies) {
-                if ("b2h.darts.session".equals(c.getName())) {
+                if ("dcn.session".equals(c.getName())) {
                     sessionCookie = c.getValue();
                     break;
                 }
