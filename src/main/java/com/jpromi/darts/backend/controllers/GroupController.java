@@ -95,6 +95,47 @@ public class GroupController {
         }
     }
 
+    @GetMapping("/{uuid}/members")
+    public ResponseEntity<List<GroupMemberAdminResponse>> getGroupMembers(@CookieValue("dcn.session") String sessionCookie, @PathVariable String uuid) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                GroupResponse group = this.groupService.getGroupByUuid(UUID.fromString(uuid), session.getAccount());
+                if(group != null) {
+                    List<GroupMemberAdminResponse> members = this.groupService.getGroupMembersSettings(UUID.fromString(uuid), session.getAccount());
+                    return ResponseEntity.ok(members);
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @PostMapping("/{uuid}/invite")
+    public ResponseEntity<Void> inviteToGroup(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID uuid, @RequestBody UUID invitationPlayerUuid) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                this.groupService.inviteAccountToGroup(
+                        uuid,
+                        invitationPlayerUuid,
+                        session.getAccount()
+                );
+                return ResponseEntity.status(HttpStatus.OK).body(null);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
     @DeleteMapping("/{uuid}")
     public ResponseEntity<Void> deleteGroup(@CookieValue("dcn.session") String sessionCookie, @PathVariable String uuid) {
         if(sessionCookie != null) {

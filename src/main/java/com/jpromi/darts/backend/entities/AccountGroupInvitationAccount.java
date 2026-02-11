@@ -40,6 +40,7 @@ public class AccountGroupInvitationAccount {
     @Builder.Default
     private Boolean isAdmin = false;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private InvitationStatusAccountEnum status = InvitationStatusAccountEnum.PENDING;

@@ -13,12 +13,12 @@ import com.jpromi.darts.backend.services.UrlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class GroupServiceImpl implements GroupService {
@@ -34,6 +34,9 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private ProfileLightResponseMapper profileLightResponseMapper;
+
+    @Autowired
+    private GroupMemberAdminResponseMapper groupMemberAdminResponseMapper;
 
     @Autowired
     private GroupResponseMapper groupResponseMapper;
@@ -150,6 +153,65 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    public Void inviteAccountToGroup(UUID groupUuid, UUID accountUuid, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        Account invitationAccount = accountRepository.findByUuidAndIsDisabledFalseAndIsDeletedFalseAndIsEmailVerifiedTrue(accountUuid);
+
+        // check if is owner or admin
+        if (group != null && invitationAccount != null) {
+            checkPermission(group, account, "admin");
+
+            if (isGroupMember(group, invitationAccount) || isGroupInvited(group, invitationAccount)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account already member or invited");
+            } else {
+                AccountGroupInvitationAccount groupInvitation = AccountGroupInvitationAccount.builder()
+                        .account(invitationAccount)
+                        .inviter(account)
+                        .accountGroup(group)
+                        .build();
+                accountGroupInvitationAccountRepository.save(groupInvitation);
+                return null;
+            }
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public List<GroupMemberAdminResponse> getGroupMembersSettings(UUID groupUuid, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+
+        // check if is owner or admin
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            // accounts
+            List<GroupMemberAdminResponse> members = new ArrayList<>();
+            group.getMembers().forEach(member -> {
+                members.add(groupMemberAdminResponseMapper.fromAccountGroupMember(member));
+            });
+
+            // invitations
+            group.getInvitations().forEach(invitation -> {
+                if (!invitation.getStatus().equals(InvitationStatusAccountEnum.ACCEPTED)) {
+                    members.add(groupMemberAdminResponseMapper.fromAccount(invitation.getAccount(), invitation.getStatus()));
+                }
+            });
+
+            // order by status and username
+            members.sort(
+                    Comparator.comparing(GroupMemberAdminResponse::getStatus,
+                                    Comparator.nullsLast(Comparator.naturalOrder()))
+                            .thenComparing(GroupMemberAdminResponse::getUsername)
+            );
+
+            return members;
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
     public Void deleteGroup(UUID uuid, Account account) {
         AccountGroup group = accountGroupRepository.findByUuid(uuid);
         // check if is owner
@@ -161,7 +223,7 @@ public class GroupServiceImpl implements GroupService {
             if (groupMember != null && groupMember.getIsOwner()) {
                 accountGroupRepository.delete(group);
             } else {
-                throw new RuntimeException("You are not the owner of this group");
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             }
         }
         return null;
@@ -212,5 +274,39 @@ public class GroupServiceImpl implements GroupService {
             throw new RuntimeException("Invitation not found");
         }
         return null;
+    }
+
+    private void checkPermission(AccountGroup group, Account account, String permission) {
+        // permission: "admin", "owner"
+
+        Boolean isAdmin = group.getMembers().stream()
+                .filter(member -> member.getAccount().getId().equals(account.getId()))
+                .anyMatch(member -> (member.getIsAdmin() != null && member.getIsAdmin()));
+        Boolean isOwner = group.getMembers().stream()
+                .filter(member -> member.getAccount().getId().equals(account.getId()))
+                .anyMatch(member -> (member.getIsOwner() != null && member.getIsOwner()));
+
+        if (permission.equals("admin") && !isAdmin && !isOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        } else if (permission.equals("owner") && !isOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+    }
+
+    private Boolean isGroupMember(AccountGroup group, Account account) {
+        if (account == null) {
+            return false;
+        }
+        return group.getMembers().stream()
+                .filter(member -> member.getAccount().getId().equals(account.getId()))
+                .findFirst()
+                .orElse(null) != null;
+    }
+
+    private Boolean isGroupInvited(AccountGroup group, Account account) {
+        return group.getInvitations().stream()
+                .filter(invitation -> invitation.getAccount().getId().equals(account.getId()))
+                .findFirst()
+                .orElse(null) != null;
     }
 }

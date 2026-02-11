@@ -30,8 +30,13 @@ public class AccountGroupMember {
     @JoinColumn(name = "account_group_id")
     private AccountGroup accountGroup;
 
-    private Boolean isOwner;
-    private Boolean isAdmin;
+    @Builder.Default
+    @Column(nullable = false, columnDefinition="boolean default false")
+    private Boolean isOwner = false;
+
+    @Builder.Default
+    @Column(nullable = false, columnDefinition="boolean default false")
+    private Boolean isAdmin = false;
 
     @OneToOne
     @JoinColumn(name = "invitation_account_id")
