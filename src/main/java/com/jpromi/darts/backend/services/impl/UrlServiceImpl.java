@@ -28,4 +28,13 @@ public class UrlServiceImpl implements UrlService {
             return toPublicUrl(file.getRealPath());
         }
     }
+
+    @Override
+    public String toPublicUrl(File file, String defaultUrl) {
+        if (file == null) {
+            return apiDomain + "/api" + defaultUrl;
+        } else {
+            return toPublicUrl(file.getRealPath());
+        }
+    }
 }

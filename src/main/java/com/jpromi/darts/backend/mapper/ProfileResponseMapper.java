@@ -24,17 +24,9 @@ public class ProfileResponseMapper {
                 .build();
 
         // img
-        if (account.getAvatar() != null) {
-            profileResponse.setAvatar(urlService.toPublicUrl(account.getAvatar().getRealPath()));
-        } else {
-            profileResponse.setAvatar(null);
-        }
+        profileResponse.setAvatar(urlService.toPublicUrl(account.getAvatar(), "/static/files/placeholder/user.svg"));
 
-        if (account.getProfile().getBanner() != null) {
-            profileResponse.setBanner(urlService.toPublicUrl(account.getProfile().getBanner().getRealPath()));
-        } else {
-            profileResponse.setBanner(null);
-        }
+        profileResponse.setBanner(urlService.toPublicUrl(account.getProfile().getBanner()));
 
         ProfileResponse.Links links = new ProfileResponse.Links();
         links.setX(account.getProfile().getLinkX());
@@ -56,7 +48,7 @@ public class ProfileResponseMapper {
                 .username(account.getUsername())
                 .description(null)
                 .country(null)
-                .avatar(urlService.toPublicUrl(account.getAvatar()))
+                .avatar(urlService.toPublicUrl(account.getAvatar(), "/static/files/placeholder/user.svg"))
                 .banner(null)
                 .createdAt(null)
                 .visibility(account.getProfile().getVisibility())

@@ -22,11 +22,12 @@ public class GamePlayerResponseMapper {
         // set Player name
         if (dartPlayer.getAccount() != null) {
             response.setName(dartPlayer.getAccount().getUsername());
-            response.setAvatar(urlService.toPublicUrl(dartPlayer.getAccount().getAvatar()));
+            response.setAvatar(urlService.toPublicUrl(dartPlayer.getAccount().getAvatar(), "/static/files/placeholder/user.svg"));
             response.setOrderIndex(dartPlayer.getOrderIndex());
         } else {
             response.setName(dartPlayer.getGuestName());
             response.setOrderIndex(dartPlayer.getOrderIndex() != null ? dartPlayer.getOrderIndex() : 99);
+            response.setAvatar(urlService.toPublicUrl(null, "/static/files/placeholder/user.svg"));
         }
 
         return response;
