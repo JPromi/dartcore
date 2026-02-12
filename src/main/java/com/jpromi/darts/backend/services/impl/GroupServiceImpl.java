@@ -305,7 +305,10 @@ public class GroupServiceImpl implements GroupService {
 
     private Boolean isGroupInvited(AccountGroup group, Account account) {
         return group.getInvitations().stream()
-                .filter(invitation -> invitation.getAccount().getId().equals(account.getId()))
+                .filter(invitation ->
+                        invitation.getAccount().getId().equals(account.getId()) &&
+                        invitation.getStatus() != InvitationStatusAccountEnum.REJECTED
+                )
                 .findFirst()
                 .orElse(null) != null;
     }
