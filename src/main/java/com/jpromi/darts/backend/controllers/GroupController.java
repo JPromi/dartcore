@@ -116,6 +116,26 @@ public class GroupController {
         }
     }
 
+    @PutMapping("/{uuid}/members/{memberUuid}")
+    public ResponseEntity<Void> updateGroupMemberSettings(
+            @CookieValue("dcn.session") String sessionCookie,
+            @PathVariable UUID uuid,
+            @PathVariable UUID memberUuid,
+            @RequestBody GroupMemberAdminRequest request) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                    this.groupService.updateGroupMemberSettings(uuid, memberUuid, request, session.getAccount());
+                    return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
     @PostMapping("/{uuid}/invite")
     public ResponseEntity<Void> inviteToGroup(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID uuid, @RequestBody UUID invitationPlayerUuid) {
         if(sessionCookie != null) {
