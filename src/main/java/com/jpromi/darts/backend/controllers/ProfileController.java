@@ -63,7 +63,9 @@ public class ProfileController {
             // @RequestParam(value = "isFriend", required = false, defaultValue = "") Boolean isFriend,
             @RequestParam(value = "isPlayable", required = false, defaultValue = "false") Boolean isPlayable,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "10") int size
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size,
+            @RequestParam(value = "inGroup", required = false, defaultValue = "") UUID inGroup,
+            @RequestParam(value = "notInGroup", required = false, defaultValue = "") UUID notInGroup
     ) {
         Pageable pageable = Pageable.ofSize(size).withPage(page);
 
@@ -71,7 +73,8 @@ public class ProfileController {
             Session session = this.authService.session(sessionCookie);
 
             if (session != null) {
-                PageResponse<ProfileLightResponse> profiles = profileService.searchProfile(query, session.getAccount(), isPlayable, pageable);
+                PageResponse<ProfileLightResponse> profiles = null;
+                    profiles = profileService.searchProfile(query, session.getAccount(), isPlayable, inGroup, notInGroup, pageable);
 
                 return ResponseEntity.ok(profiles);
             } else {

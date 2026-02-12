@@ -71,4 +71,50 @@ WHERE a.username ILIKE CONCAT('%', :q, '%')
             Pageable pageable
     );
 
+    @Query("""
+    SELECT a
+    FROM AccountGroup g
+    JOIN g.members gmViewer
+    JOIN g.members gm
+    JOIN gm.account a
+    WHERE g.uuid = :groupUuid
+      AND gmViewer.account.id = :viewerId
+      AND LOWER(a.username) LIKE LOWER(CONCAT('%', :q, '%'))
+    """)
+    Page<Account> searchByUsernameInGroup(
+            @Param("q") String query,
+            @Param("viewerId") Long viewerId,
+            @Param("groupUuid") UUID groupUuid,
+            Pageable pageable
+    );
+
+
+    @Query("""
+    SELECT a
+    FROM Account a
+    WHERE LOWER(a.username) LIKE LOWER(CONCAT('%', :q, '%'))
+      AND a.id <> :viewerId
+      AND NOT EXISTS (
+          SELECT 1
+          FROM AccountGroup g
+          JOIN g.members gm
+          WHERE g.uuid = :groupUuid
+            AND gm.account.id = a.id
+      )
+     AND NOT EXISTS (
+         SELECT 1
+         FROM AccountGroup g2
+         JOIN g2.invitations i
+         WHERE g2.uuid = :groupUuid
+           AND i.account.id = a.id
+           AND i.status <> "REJECTED"
+     )
+    """)
+    Page<Account> searchByUsernameNotInGroup(
+            @Param("q") String query,
+            @Param("viewerId") Long viewerId,
+            @Param("groupUuid") UUID groupUuid,
+            Pageable pageable
+    );
+
 }

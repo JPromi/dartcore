@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
@@ -57,9 +58,16 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public PageResponse<ProfileLightResponse> searchProfile(String query, Account viewer, boolean isPlayable, Pageable pageable) {
-        Page<Account> accounts = accountRepository.searchByUsername(query, viewer != null ? viewer.getId() : null, isPlayable, pageable);
+    public PageResponse<ProfileLightResponse> searchProfile(String query, Account viewer, boolean isPlayable, UUID inGroup, UUID notInGroup, Pageable pageable) {
+        Page<Account> accounts;
 
+        if (inGroup != null) {
+            accounts = accountRepository.searchByUsernameInGroup(query, viewer != null ? viewer.getId() : null, inGroup, pageable);
+        } else if (notInGroup != null) {
+            accounts = accountRepository.searchByUsernameNotInGroup(query, viewer != null ? viewer.getId() : null, notInGroup, pageable);
+        } else {
+            accounts = accountRepository.searchByUsername(query, viewer != null ? viewer.getId() : null, isPlayable, pageable);
+        }
         Page<ProfileLightResponse> profileLigthPage = accounts.map(account -> {
             ProfileLightResponse profileLightResponse = profileLightResponseMapper.fromAccount(account);
             return profileLightResponse;
