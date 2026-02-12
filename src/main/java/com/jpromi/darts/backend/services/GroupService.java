@@ -18,6 +18,8 @@ public interface GroupService {
     PageResponse<GroupLightResponse> searchGroups(String query, Account account, Pageable pageable, Boolean isMember, Boolean isPublic);
 
     GroupResponse createGroup(GroupRequest groupRequest, Account account);
+    GroupGeneralResponse getGroupGeneralByUuid(UUID groupUuid, Account account);
+    GroupGeneralResponse updateGroupGeneralByUuid(GroupGeneralRequest groupData, Account account);
     List<GroupMemberAdminResponse> getGroupMembersSettings(UUID groupUuid, Account account);
     Void updateGroupMemberSettings(UUID groupUuid, UUID memberUuid, GroupMemberAdminRequest request, Account account);
     Void removeMemberFromGroup(UUID groupUuid, UUID memberUuid, Account account);

@@ -95,6 +95,42 @@ public class GroupController {
         }
     }
 
+    @GetMapping("/{uuid}/general")
+    public ResponseEntity<GroupGeneralResponse> getGroupGeneralInfo(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID uuid) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                GroupGeneralResponse group = this.groupService.getGroupGeneralByUuid(uuid, session.getAccount());
+                if(group != null) {
+                    return ResponseEntity.ok(group);
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @PutMapping("/{uuid}/general")
+    public ResponseEntity<GroupGeneralResponse> updateGroupGeneralInfo(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID uuid, @RequestBody GroupGeneralRequest groupData) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                GroupGeneralResponse updatedGroup = this.groupService.updateGroupGeneralByUuid(groupData, session.getAccount());
+                return ResponseEntity.ok(updatedGroup);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
     @GetMapping("/{uuid}/members")
     public ResponseEntity<List<GroupMemberAdminResponse>> getGroupMembers(@CookieValue("dcn.session") String sessionCookie, @PathVariable String uuid) {
         if(sessionCookie != null) {

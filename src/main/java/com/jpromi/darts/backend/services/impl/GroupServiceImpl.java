@@ -54,6 +54,9 @@ public class GroupServiceImpl implements GroupService {
     @Autowired
     private AccountGroupInvitationAccountRepository accountGroupInvitationAccountRepository;
 
+    @Autowired
+    private GroupGeneralResponseMapper groupGeneralResponseMapper;
+
     @Value("${com.jpromi.darts.app.group.max-size}")
     private Integer maxGroupMembers;
 
@@ -154,6 +157,64 @@ public class GroupServiceImpl implements GroupService {
         accountGroupRepository.save(group);
 
         return groupResponseMapper.fromAccountGroup(group, account);
+    }
+
+    @Override
+    public GroupGeneralResponse getGroupGeneralByUuid(UUID groupUuid, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            return groupGeneralResponseMapper.fromGroup(group, account);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public GroupGeneralResponse updateGroupGeneralByUuid(GroupGeneralRequest groupData, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupData.getUuid());
+
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            group.setName(groupData.getName());
+            group.setDescription(groupData.getDescription());
+            group.setIsPublic(groupData.getIsPublic());
+
+            if(groupData.getAvatar() != null) {
+                File avatar = fileService.getFileByUuid(groupData.getAvatar().getUuid());
+                if(avatar != null) {
+                    avatar.setIsTmporary(false);
+                    group.setAvatar(avatar);
+                }
+            } else {
+                if(group.getAvatar() != null) {
+                    fileService.deleteFile(group.getAvatar().getUuid());
+                }
+                group.setAvatar(null);
+            }
+
+            if(groupData.getBanner() != null) {
+                File banner = fileService.getFileByUuid(groupData.getBanner().getUuid());
+                if(banner != null) {
+                    banner.setIsTmporary(false);
+                    group.setBanner(banner);
+                }
+            } else {
+                if(group.getBanner() != null) {
+                    fileService.deleteFile(group.getBanner().getUuid());
+                }
+                group.setBanner(null);
+            }
+
+            AccountGroup updatedGroup = accountGroupRepository.save(group);
+
+            return groupGeneralResponseMapper.fromGroup(updatedGroup, account);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
     }
 
     @Override
@@ -310,15 +371,9 @@ public class GroupServiceImpl implements GroupService {
         AccountGroup group = accountGroupRepository.findByUuid(uuid);
         // check if is owner
         if (group != null) {
-            AccountGroupMember groupMember = group.getMembers().stream()
-                    .filter(member -> member.getAccount().getId().equals(account.getId()))
-                    .findFirst()
-                    .orElse(null);
-            if (groupMember != null && groupMember.getIsOwner()) {
-                accountGroupRepository.delete(group);
-            } else {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            }
+            checkPermission(group, account, "admin");
+
+            accountGroupRepository.delete(group);
         }
         return null;
     }
