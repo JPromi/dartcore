@@ -5,9 +5,11 @@ import com.jpromi.darts.backend.entities.File;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -51,4 +53,22 @@ public interface AccountGroupRepository extends JpaRepository<AccountGroup, Long
     WHERE ag.uuid = :groupUuid
     """)
     Long countActiveMembersByGroupUuid(UUID groupUuid);
+
+    @Modifying
+    @Transactional
+    @Query("""
+    DELETE FROM AccountGroupMember m
+    WHERE m.accountGroup.uuid = :groupUuid
+      AND m.account.uuid = :memberUuid
+    """)
+    int deleteMemberFromGroup(@Param("groupUuid") UUID groupUuid, @Param("memberUuid") UUID memberUuid);
+
+    @Modifying
+    @Transactional
+    @Query("""
+    DELETE FROM AccountGroupInvitationAccount i
+    WHERE i.accountGroup.uuid = :groupUuid
+      AND i.account.uuid = :memberUuid
+    """)
+    int deleteInvitationFromGroup(@Param("groupUuid") UUID groupUuid, @Param("memberUuid") UUID memberUuid);
 }

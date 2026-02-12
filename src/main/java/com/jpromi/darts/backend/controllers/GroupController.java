@@ -136,6 +136,25 @@ public class GroupController {
         }
     }
 
+    @DeleteMapping("/{uuid}/members/{memberUuid}")
+    public ResponseEntity<Void> removeGroupMember(
+            @CookieValue("dcn.session") String sessionCookie,
+            @PathVariable UUID uuid,
+            @PathVariable UUID memberUuid) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if (session != null) {
+                this.groupService.removeMemberFromGroup(uuid, memberUuid, session.getAccount());
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
     @PostMapping("/{uuid}/invite")
     public ResponseEntity<Void> inviteToGroup(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID uuid, @RequestBody UUID invitationPlayerUuid) {
         if(sessionCookie != null) {
@@ -148,6 +167,25 @@ public class GroupController {
                         session.getAccount()
                 );
                 return ResponseEntity.status(HttpStatus.OK).body(null);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @DeleteMapping("/{uuid}/invite/{memberUuid}")
+    public ResponseEntity<Void> removeGroupInvitation(
+            @CookieValue("dcn.session") String sessionCookie,
+            @PathVariable UUID uuid,
+            @PathVariable UUID memberUuid) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if (session != null) {
+                this.groupService.removeInvitationFromGroup(uuid, memberUuid, session.getAccount());
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }

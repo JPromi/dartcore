@@ -248,6 +248,64 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    public Void removeMemberFromGroup(UUID groupUuid, UUID memberUuid, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        // check if is owner or admin
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            AccountGroupMember member = group.getMembers().stream()
+                    .filter(m -> m.getAccount().getUuid().equals(memberUuid))
+                    .findFirst()
+                    .orElse(null);
+
+            if (member != null) {
+                if (!member.getIsOwner()) {
+                    int deletedEntries = accountGroupRepository.deleteMemberFromGroup(groupUuid, memberUuid);
+                    if (deletedEntries == 0) {
+                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to remove member from group");
+                    } else {
+                        return null;
+                    }
+                } else {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot remove owner");
+                }
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public Void removeInvitationFromGroup(UUID groupUuid, UUID memberUuid, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        // check if is owner or admin
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            AccountGroupInvitationAccount invitation = group.getInvitations().stream()
+                    .filter(i -> i.getAccount().getUuid().equals(memberUuid))
+                    .findFirst()
+                    .orElse(null);
+
+            if (invitation != null) {
+                int deletedEntries = accountGroupRepository.deleteInvitationFromGroup(groupUuid, memberUuid);
+                if (deletedEntries == 0) {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to remove invitation from group");
+                } else {
+                    return null;
+                }
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
     public Void deleteGroup(UUID uuid, Account account) {
         AccountGroup group = accountGroupRepository.findByUuid(uuid);
         // check if is owner

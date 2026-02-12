@@ -20,6 +20,8 @@ public interface GroupService {
     GroupResponse createGroup(GroupRequest groupRequest, Account account);
     List<GroupMemberAdminResponse> getGroupMembersSettings(UUID groupUuid, Account account);
     Void updateGroupMemberSettings(UUID groupUuid, UUID memberUuid, GroupMemberAdminRequest request, Account account);
+    Void removeMemberFromGroup(UUID groupUuid, UUID memberUuid, Account account);
+    Void removeInvitationFromGroup(UUID groupUuid, UUID memberUuid, Account account);
     Void inviteAccountToGroup(UUID groupUuid, UUID accountUuid, Account account);
     Void deleteGroup(UUID uuid, Account account);
 
