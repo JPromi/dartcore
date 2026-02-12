@@ -26,7 +26,7 @@ public class ProfileResponseMapper {
         // img
         profileResponse.setAvatar(urlService.toPublicUrl(account.getAvatar(), "/static/files/placeholder/user.svg"));
 
-        profileResponse.setBanner(urlService.toPublicUrl(account.getProfile().getBanner()));
+        profileResponse.setBanner(urlService.toPublicUrl(account.getProfile().getBanner(), "/static/files/placeholder/banner.svg"));
 
         ProfileResponse.Links links = new ProfileResponse.Links();
         links.setX(account.getProfile().getLinkX());
@@ -49,7 +49,7 @@ public class ProfileResponseMapper {
                 .description(null)
                 .country(null)
                 .avatar(urlService.toPublicUrl(account.getAvatar(), "/static/files/placeholder/user.svg"))
-                .banner(null)
+                .banner(urlService.toPublicUrl(null, "/static/files/placeholder/banner.svg"))
                 .createdAt(null)
                 .visibility(account.getProfile().getVisibility())
                 .build();
