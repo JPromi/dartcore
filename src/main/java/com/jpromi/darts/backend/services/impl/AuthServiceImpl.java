@@ -129,7 +129,7 @@ public class AuthServiceImpl implements AuthService {
                         .lastName(account.getLastName())
                         .email(account.getEmail())
                         .username(account.getUsername())
-                        .avatar(account.getAvatar() != null ? urlService.toPublicUrl(account.getAvatar().getRealPath()) : null)
+                        .avatar(urlService.toPublicUrl(account.getAvatar(), "/static/files/placeholder/user.svg"))
                         .registrationTimestamp(account.getEmailVerificationTimestamp())
                         .build();
             } else {
