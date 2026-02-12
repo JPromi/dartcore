@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController("")
 @RequestMapping("/api")
@@ -116,5 +117,10 @@ public class TestController {
                 "urlWeb", "https://jpromi.com",
                 "confirmationLink", "https://dev.jpromi.com/barrier/register/1234567890"
         )));
+    }
+
+    @GetMapping("/groupcount/{uuid}")
+    public Long groupCount(@PathVariable UUID uuid) {
+        return accountGroupRepository.countActiveMembersByGroupUuid(uuid);
     }
 }

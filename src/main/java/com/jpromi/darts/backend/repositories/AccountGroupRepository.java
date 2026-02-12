@@ -42,4 +42,13 @@ public interface AccountGroupRepository extends JpaRepository<AccountGroup, Long
             @Param("isPublic") Boolean isPublic,
             Pageable pageable
     );
+    @Query("""
+    SELECT
+        COUNT(DISTINCT i) + COUNT(DISTINCT m)
+    FROM AccountGroup ag
+    LEFT JOIN ag.members m
+    LEFT JOIN ag.invitations i ON i.status = 'PENDING'
+    WHERE ag.uuid = :groupUuid
+    """)
+    Long countActiveMembersByGroupUuid(UUID groupUuid);
 }

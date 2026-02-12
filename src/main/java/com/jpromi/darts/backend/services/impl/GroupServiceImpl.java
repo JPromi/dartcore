@@ -11,6 +11,7 @@ import com.jpromi.darts.backend.services.FileService;
 import com.jpromi.darts.backend.services.GroupService;
 import com.jpromi.darts.backend.services.UrlService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -52,6 +53,9 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private AccountGroupInvitationAccountRepository accountGroupInvitationAccountRepository;
+
+    @Value("${com.jpromi.darts.app.group.max-size}")
+    private Integer maxGroupMembers;
 
     @Override
     public List<GroupLightResponse> getGroupsByAccount(Long accountId) {
@@ -160,6 +164,11 @@ public class GroupServiceImpl implements GroupService {
         // check if is owner or admin
         if (group != null && invitationAccount != null) {
             checkPermission(group, account, "admin");
+
+            Long activeMembers = accountGroupRepository.countActiveMembersByGroupUuid(groupUuid);
+            if (activeMembers >= maxGroupMembers) {
+                throw new ResponseStatusException(HttpStatus.LOCKED, "Max group members reached (" + maxGroupMembers + ")");
+            }
 
             if (isGroupMember(group, invitationAccount) || isGroupInvited(group, invitationAccount)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account already member or invited");
