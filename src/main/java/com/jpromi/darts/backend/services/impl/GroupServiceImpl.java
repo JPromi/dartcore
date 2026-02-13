@@ -379,6 +379,39 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    public Void leaveGroup(UUID groupUuid, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        // check if is member
+        if (group != null) {
+            if (isGroupMember(group, account)) {
+                AccountGroupMember member = group.getMembers().stream()
+                        .filter(m -> m.getAccount().getId().equals(account.getId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (member != null) {
+                    if (!member.getIsOwner()) {
+                        int deletedEntries = accountGroupRepository.deleteMemberFromGroup(groupUuid, account.getUuid());
+                        if (deletedEntries == 0) {
+                            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to leave group");
+                        } else {
+                            return null;
+                        }
+                    } else {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Owner cannot leave the group");
+                    }
+                } else {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                }
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account is not a member of the group");
+            }
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
     public List<GroupInvitationResponse> getAccountInvitations(Account account, InvitationStatusAccountEnum status) {
         List<AccountGroupInvitationAccount> invitations = accountGroupInvitationAccountRepository.findByAccountAndStatus(account, status);
         return invitations.stream()

@@ -191,6 +191,24 @@ public class GroupController {
         }
     }
 
+    @DeleteMapping("/{uuid}/leave")
+    public ResponseEntity<Void> leaveGroup(
+            @CookieValue("dcn.session") String sessionCookie,
+            @PathVariable UUID uuid) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if (session != null) {
+                this.groupService.leaveGroup(uuid, session.getAccount());
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
     @PostMapping("/{uuid}/invite")
     public ResponseEntity<Void> inviteToGroup(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID uuid, @RequestBody UUID invitationPlayerUuid) {
         if(sessionCookie != null) {

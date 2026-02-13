@@ -27,6 +27,8 @@ public interface GroupService {
     Void inviteAccountToGroup(UUID groupUuid, UUID accountUuid, Account account);
     Void deleteGroup(UUID uuid, Account account);
 
+    Void leaveGroup(UUID groupUuid, Account account);
+
     List<GroupInvitationResponse> getAccountInvitations(Account account, InvitationStatusAccountEnum status);
     Void responseInvitation(UUID uuid, Account account, InvitationStatusAccountEnum status);
     Long countAccountInvitations(Account account, InvitationStatusAccountEnum status);
