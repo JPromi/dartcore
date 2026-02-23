@@ -93,7 +93,7 @@ WHERE a.username ILIKE CONCAT('%', :q, '%')
     SELECT a
     FROM Account a
     WHERE LOWER(a.username) LIKE LOWER(CONCAT('%', :q, '%'))
-      AND a.id <> :viewerId
+      AND (:viewerId IS NULL OR a.id <> :viewerId)
       AND NOT EXISTS (
           SELECT 1
           FROM AccountGroup g
