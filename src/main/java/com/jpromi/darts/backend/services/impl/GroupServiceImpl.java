@@ -445,10 +445,12 @@ public class GroupServiceImpl implements GroupService {
                             .build();
                     group.getMembers().add(groupMember);
                     accountGroupRepository.save(group);
+                    accountGroupInvitationAccountRepository.delete(invitation);
+                } else {
+                    invitation.setStatus(status);
+                    accountGroupInvitationAccountRepository.save(invitation);
                 }
 
-                invitation.setStatus(status);
-                accountGroupInvitationAccountRepository.save(invitation);
             } else {
                 throw new RuntimeException("Invitation already answered");
             }
