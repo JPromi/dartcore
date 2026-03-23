@@ -51,7 +51,7 @@ public class MailServiceImpl implements MailService {
                         "title", mail.getSubject()
                 )
         );
-        String htmlContent = templateService.generateTemplateFromFile("src/main/resources/templates/mail/container.html", templateVariables);
+        // String htmlContent = templateService.generateTemplateFromFile("src/main/resources/templates/mail/container.html", templateVariables);
 
         try {
             Session session = getMailClient();
@@ -59,7 +59,19 @@ public class MailServiceImpl implements MailService {
             message.setFrom(new InternetAddress(mailUsername));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(mail.getTo().getFirst()));
             message.setSubject(mail.getSubject());
-            message.setText(htmlContent, "UTF-8", "html");
+            // content
+            MimeMultipart multipart = new MimeMultipart("alternative");
+
+            MimeBodyPart messageTextPart = new MimeBodyPart();
+            messageTextPart.setText(templateService.generatePlainText(mail.getHtmlBody(), templateVariables), "utf-8");
+
+            MimeBodyPart messageHtmlPart = new MimeBodyPart();
+            messageHtmlPart.setContent(templateService.generateTemplateFromFile("src/main/resources/templates/mail/container.html", templateVariables), "text/html; charset=utf-8");
+
+            multipart.addBodyPart(messageTextPart);
+            multipart.addBodyPart(messageHtmlPart);
+
+            message.setContent(multipart);
             message.saveChanges();
 
             Transport.send(message);

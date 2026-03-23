@@ -7,6 +7,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class TemplateServiceImpl implements TemplateService {
@@ -14,7 +16,7 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public String generateTemplate(String htmlContent, HashMap<String, String> variables) {
         htmlContent = htmlContent.replaceAll("\\{\\{\\s*(\\w+)\\s*\\}\\}", "{{$1}}");
-        htmlContent = htmlContent.replaceAll("<raw>.*?</raw>", "");
+        htmlContent = htmlContent.replaceAll("<raw>[\\s\\S]*?</raw>", "");
         for (String key : variables.keySet()) {
             htmlContent = htmlContent.replace("{{" + key + "}}", variables.get(key));
         }
@@ -41,7 +43,32 @@ public class TemplateServiceImpl implements TemplateService {
 
     @Override
     public String generatePlainText(String htmlContent, HashMap<String, String> variables) {
-        return htmlContent.replaceAll(".*<raw>(.*?)</raw>.*", "$1");
+        htmlContent = htmlContent.replaceAll("\\{\\{\\s*(\\w+)\\s*\\}\\}", "{{$1}}");
+        for (String key : variables.keySet()) {
+            htmlContent = htmlContent.replace("{{" + key + "}}", variables.get(key));
+        }
+
+        System.out.println(htmlContent);
+
+        Pattern pattern = Pattern.compile(
+                "<raw\\b[^>]*>(.*?)</raw>",
+                Pattern.DOTALL | Pattern.CASE_INSENSITIVE
+        );
+
+        Matcher m = pattern.matcher(htmlContent);
+        StringBuilder result = new StringBuilder();
+
+        while (m.find()) {
+            String text = m.group(1).strip();
+            if (!text.isEmpty()) {
+                if (result.length() > 0) {
+                    result.append(System.lineSeparator());
+                }
+                result.append(text);
+            }
+        }
+
+        return result.toString();
     }
 
     @Override
