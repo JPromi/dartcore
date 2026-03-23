@@ -32,7 +32,7 @@ public class AccountGroupInvitationAccount {
     @JoinColumn(name = "inviter_id")
     private Account inviter;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "account_group_id")
     private AccountGroup accountGroup;
 
