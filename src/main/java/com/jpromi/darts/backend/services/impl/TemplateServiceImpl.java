@@ -48,8 +48,6 @@ public class TemplateServiceImpl implements TemplateService {
             htmlContent = htmlContent.replace("{{" + key + "}}", variables.get(key));
         }
 
-        System.out.println(htmlContent);
-
         Pattern pattern = Pattern.compile(
                 "<raw\\b[^>]*>(.*?)</raw>",
                 Pattern.DOTALL | Pattern.CASE_INSENSITIVE
