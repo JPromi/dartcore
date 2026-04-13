@@ -159,16 +159,11 @@ public class GameServiceImpl implements GameService {
                     playerResponse.setIsEliminated(true);
                 }
 
-                // score from stats
+                // Remaining score from stats (updated incrementally on each throw)
                 Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(player.getId());
-                if (statsOpt.isPresent()) {
-                    TmpGamePlayerStats stats = statsOpt.get();
-                    playerResponse.setScore(stats.getTotalScore());
-                    playerResponse.setHighscore(stats.getHighscore());
-                } else {
-                    playerResponse.setScore(game.getGameTypeClassicPoints());
-                    playerResponse.setHighscore(0L);
-                }
+                playerResponse.setScore(statsOpt.isPresent()
+                        ? statsOpt.get().getTotalScore()
+                        : game.getGameTypeClassicPoints());
 
                 boolean isCurrentPlayer = player.getId().equals(currentPlayerId);
                 playerResponse.setIsCurrentPlayer(isCurrentPlayer);
@@ -182,6 +177,10 @@ public class GameServiceImpl implements GameService {
                 if (!(throwsResponses.size() >= roundSize && isCurrentPlayer)) {
                     playerResponse.setThrowList(throwsResponses);
                 }
+
+                // Highscore and average derived from actual throw history (correct after undos too)
+                playerResponse.setHighscore(computeHighscore(playerThrows));
+                playerResponse.setAverage(computeAverage(playerThrows));
 
                 response.getPlayers().add(playerResponse);
             }
@@ -513,6 +512,37 @@ public class GameServiceImpl implements GameService {
         throw new IllegalArgumentException("No active player found in this game");
     }
 
+
+    /**
+     * Best single-round score across all of the player's rounds.
+     * Only countable throws are summed; bust/voided rounds contribute 0.
+     */
+    private Long computeHighscore(List<DartThrow> playerThrows) {
+        if (playerThrows.isEmpty()) return 0L;
+        Map<Integer, Long> scorePerRound = new HashMap<>();
+        for (DartThrow t : playerThrows) {
+            if (!Boolean.TRUE.equals(t.getIsNotCountable())) {
+                scorePerRound.merge(t.getRound(), (long) calculatePoints(t.getScore(), t.getMultiplier()), Long::sum);
+            }
+        }
+        return scorePerRound.values().stream().mapToLong(Long::longValue).max().orElse(0L);
+    }
+
+    /**
+     * Three-dart average: total countable points scored divided by number of rounds visited.
+     * Bust rounds count as a visit but contribute 0 points, matching standard darts convention.
+     */
+    private Double computeAverage(List<DartThrow> playerThrows) {
+        if (playerThrows.isEmpty()) return 0.0;
+        long totalScored = 0L;
+        for (DartThrow t : playerThrows) {
+            if (!Boolean.TRUE.equals(t.getIsNotCountable())) {
+                totalScored += calculatePoints(t.getScore(), t.getMultiplier());
+            }
+        }
+        long roundsVisited = playerThrows.stream().mapToInt(DartThrow::getRound).distinct().count();
+        return roundsVisited > 0 ? (double) totalScored / roundsVisited : 0.0;
+    }
 
     private Integer calculatePoints(Integer points, DartThrowMultiplierEnum multiplier) {
         if (points == null || multiplier == null) return 0;
