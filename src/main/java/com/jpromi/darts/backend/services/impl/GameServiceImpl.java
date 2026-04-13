@@ -64,14 +64,11 @@ public class GameServiceImpl implements GameService {
                     break;
             }
 
-            // DartGame savedGame = this.dartGameRepository.save(dartGame);
-
-            // set players
+             // set players
             if (newGameRequest.getPlayers() != null && !newGameRequest.getPlayers().isEmpty()) {
                 for (int i = 0; i < newGameRequest.getPlayers().size(); i++) {
                     NewGamePlayerRequest playerRequest = newGameRequest.getPlayers().get(i);
-                    // if name isset
-                    if (playerRequest.getName() != null ) {
+                    if (playerRequest.getName() != null) {
                         // Player is guest
                         DartPlayer player = DartPlayer.builder()
                                 .guestName(playerRequest.getName())
@@ -96,9 +93,7 @@ public class GameServiceImpl implements GameService {
                 }
             }
 
-            // save
             DartGame savedGame = this.dartGameRepository.save(dartGame);
-
             return savedGame;
         } else {
             throw new IllegalArgumentException("New game request or/and account cannot be null");
@@ -125,8 +120,19 @@ public class GameServiceImpl implements GameService {
     @Transactional(readOnly = true)
     public GameResponse getGameResponseByUuid(DartGame game) {
         if (game != null) {
+            // Fetch all active throws once, sorted ascending by id (= chronological order)
+            List<DartThrow> allActiveThrows = dartThrowRepository.findByGameAndIsUndoFalse(game);
+            allActiveThrows.sort(Comparator.comparing(DartThrow::getId));
 
-            Boolean hasActiveThrows = dartThrowRepository.existsByGameAndIsUndoFalse(game);
+            Integer roundSize = getRoundSize(game.getGameType());
+
+            // Pre-group throws by player id so each player's list is already in chronological order
+            Map<Long, List<DartThrow>> throwsByPlayerId = new HashMap<>();
+            for (DartThrow t : allActiveThrows) {
+                throwsByPlayerId
+                        .computeIfAbsent(t.getPlayer().getId(), k -> new ArrayList<>())
+                        .add(t);
+            }
 
             GameResponse response = GameResponse.builder()
                     .uuid(game.getUuid())
@@ -137,26 +143,23 @@ public class GameServiceImpl implements GameService {
                     .gameTypeClassicOutType(game.getGameTypeClassicOutType())
                     .gameTypeClassicPoints(game.getGameTypeClassicPoints())
                     .players(new ArrayList<>())
-                    .round(!hasActiveThrows ? 0 : getThrowRound(game.getGameType(), game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game)))
+                    .round(allActiveThrows.isEmpty() ? 0 : getThrowRound(game.getGameType(), game.getPlayers(), allActiveThrows))
                     .build();
 
-            Integer roundSize = getRoundSize(game.getGameType());
+            // Determine current player once outside the loop
+            Long currentPlayerId = null;
+            if (game.getEndTime() == null) {
+                currentPlayerId = getCurrentPlayer(game.getPlayers(), allActiveThrows, roundSize).getId();
+            }
 
-            List<DartThrow> dartThrowsReversed = dartThrowRepository.findByGameAndIsUndoFalse(game).reversed();
-
-            // player
-            // Hibernate.initialize(game.getPlayers());
             for (DartPlayer player : game.getPlayers()) {
                 GameResponse.GamePlayerResponse playerResponse = gamePlayerResponseMapper.fromDartPlayer(player);
-                List<GameResponse.GamePlayerResponse.GameThrowResponse> throwsResponses = new ArrayList<>();
 
                 if (player.getLeftGameAt() != null) {
                     playerResponse.setIsEliminated(true);
                 }
 
-                // playerResponse.setIsWinner(player.getIsWinner());
-
-                // get tmp stats
+                // score from stats
                 Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(player.getId());
                 if (statsOpt.isPresent()) {
                     TmpGamePlayerStats stats = statsOpt.get();
@@ -167,56 +170,16 @@ public class GameServiceImpl implements GameService {
                     playerResponse.setHighscore(0L);
                 }
 
-                // get last throws
-                Integer foundInRound = null;
-                Boolean notCountableFound = false;
-                for (DartThrow dartThrow : dartThrowsReversed) {
-                    if (dartThrow.getPlayer().getId().equals(player.getId())) {
-                        if (foundInRound == null) {
-                            foundInRound = dartThrow.getRound();
-                        } else if (!foundInRound.equals(dartThrow.getRound())) {
-                            break; // we have all throws for the last round
-                        }
+                boolean isCurrentPlayer = player.getId().equals(currentPlayerId);
+                playerResponse.setIsCurrentPlayer(isCurrentPlayer);
 
-                        if (Boolean.TRUE.equals(dartThrow.getIsNotCountable())) {
-                            notCountableFound = true;
-                        }
+                // Build throw list from this player's most recent round
+                List<DartThrow> playerThrows = throwsByPlayerId.getOrDefault(player.getId(), Collections.emptyList());
+                List<GameResponse.GamePlayerResponse.GameThrowResponse> throwsResponses =
+                        buildLastRoundThrowResponses(playerThrows, roundSize);
 
-                        throwsResponses.add(GameResponse.GamePlayerResponse.GameThrowResponse.builder()
-                                .type(dartThrow.getType())
-                                .multiplier(dartThrow.getMultiplier())
-                                .score(dartThrow.getScore())
-                                .timestamp(dartThrow.getTimestamp())
-                                .round(dartThrow.getRound())
-                                .build()
-                        );
-                    }
-                }
-
-                Collections.reverse(throwsResponses);
-
-                if (notCountableFound) {
-
-                    if (throwsResponses.size() < roundSize) {
-                        // fill up with not countable throws
-                        for (int i = throwsResponses.size(); i < roundSize; i++) {
-                            throwsResponses.add(GameResponse.GamePlayerResponse.GameThrowResponse.builder()
-                                    .type(ThrowType.ABORT)
-                                    .multiplier(null)
-                                    .score(0)
-                                    .timestamp(null)
-                                    .round(foundInRound)
-                                    .build()
-                            );
-                        }
-                    }
-                }
-
-                if (game.getEndTime() == null) {
-                    playerResponse.setIsCurrentPlayer(getCurrentPlayer(game.getPlayers(), dartThrowRepository.findByGameAndIsUndoFalse(game), getRoundSize(game.getGameType())).getId().equals(player.getId()));
-                }
-
-                if(!(throwsResponses.size() >= roundSize && playerResponse.getIsCurrentPlayer())) {
+                // Clear if the current player has a complete round — they are about to start a new round
+                if (!(throwsResponses.size() >= roundSize && isCurrentPlayer)) {
                     playerResponse.setThrowList(throwsResponses);
                 }
 
@@ -229,45 +192,122 @@ public class GameServiceImpl implements GameService {
         }
     }
 
+    /**
+     * Builds the throw-response list for a player's most recent round.
+     *
+     * @param playerThrows sorted ascending by id (chronological order)
+     * @param roundSize    number of darts per round for this game type
+     */
+    private List<GameResponse.GamePlayerResponse.GameThrowResponse> buildLastRoundThrowResponses(
+            List<DartThrow> playerThrows, int roundSize) {
+
+        if (playerThrows.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // The last saved throw (highest id) determines the player's current round
+        int lastRound = playerThrows.getLast().getRound();
+
+        boolean notCountableFound = false;
+        List<GameResponse.GamePlayerResponse.GameThrowResponse> responses = new ArrayList<>();
+
+        for (DartThrow t : playerThrows) {
+            if (t.getRound() == lastRound) {
+                if (Boolean.TRUE.equals(t.getIsNotCountable())) {
+                    notCountableFound = true;
+                }
+                responses.add(GameResponse.GamePlayerResponse.GameThrowResponse.builder()
+                        .type(t.getType())
+                        .multiplier(t.getMultiplier())
+                        .score(t.getScore())
+                        .timestamp(t.getTimestamp())
+                        .round(t.getRound())
+                        .build());
+            }
+        }
+
+        // Fill remaining slots with ABORT when the round ended early (bust / bad in-out type)
+        if (notCountableFound && responses.size() < roundSize) {
+            for (int i = responses.size(); i < roundSize; i++) {
+                responses.add(GameResponse.GamePlayerResponse.GameThrowResponse.builder()
+                        .type(ThrowType.ABORT)
+                        .multiplier(null)
+                        .score(0)
+                        .timestamp(null)
+                        .round(lastRound)
+                        .build());
+            }
+        }
+
+        return responses;
+    }
+
     @Transactional
     @Override
     public DartGame addThrow(UUID gameUuid, GameThrowRequest request) {
         DartGame game = this.getGameByUuid(gameUuid);
         if (game != null && request != null && game.getEndTime() == null) {
-            if (request.getIsUndo()) {
+            if (Boolean.TRUE.equals(request.getIsUndo())) {
                 List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalseForUpdate(game);
 
                 if (!gameThrowsActive.isEmpty()) {
+                    gameThrowsActive.sort(Comparator.comparing(DartThrow::getId));
                     DartThrow lastThrow = gameThrowsActive.getLast();
                     lastThrow.setIsUndo(true);
 
-                    // update tmp player stats
-                    Optional<TmpGamePlayerStats> playerStats = tmpGamePlayerStatsRepository.findByPlayerId(lastThrow.getPlayer().getId());
+                    // If the undone throw is not-countable and was a bust that voided earlier
+                    // throws in the same round, restore those throws and re-deduct their scores.
+                    if (Boolean.TRUE.equals(lastThrow.getIsNotCountable())) {
+                        int lastRound = lastThrow.getRound();
+                        Long lastPlayerId = lastThrow.getPlayer().getId();
+                        List<DartThrow> bustVoided = gameThrowsActive.stream()
+                                .filter(t -> !t.getId().equals(lastThrow.getId())
+                                        && t.getRound() == lastRound
+                                        && t.getPlayer().getId().equals(lastPlayerId)
+                                        && Boolean.TRUE.equals(t.getIsNotCountable()))
+                                .toList();
 
+                        if (!bustVoided.isEmpty()) {
+                            long scoreToReApply = 0;
+                            for (DartThrow t : bustVoided) {
+                                t.setIsNotCountable(false);
+                                scoreToReApply += calculatePoints(t.getScore(), t.getMultiplier());
+                                // managed entity — dirty checking persists the flag at commit
+                            }
+                            Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(lastPlayerId);
+                            if (statsOpt.isPresent()) {
+                                TmpGamePlayerStats stats = statsOpt.get();
+                                stats.setTotalScore(stats.getTotalScore() - scoreToReApply);
+                                tmpGamePlayerStatsRepository.save(stats);
+                            }
+                        }
+                    }
+
+                    // Restore score for countable throws
+                    Optional<TmpGamePlayerStats> playerStats = tmpGamePlayerStatsRepository.findByPlayerId(lastThrow.getPlayer().getId());
                     if (playerStats.isPresent() && !Boolean.TRUE.equals(lastThrow.getIsNotCountable())) {
                         TmpGamePlayerStats stats = playerStats.get();
                         stats.setTotalScore(stats.getTotalScore() + calculatePoints(lastThrow.getScore(), lastThrow.getMultiplier()));
                         tmpGamePlayerStatsRepository.save(stats);
                     }
 
-                    DartThrow throwSave = dartThrowRepository.save(lastThrow);
-                    return throwSave.getGame();
+                    dartThrowRepository.save(lastThrow);
+                    return game;
                 } else {
                     return null;
                 }
 
-
             } else {
                 List<DartThrow> gameThrowsActive = dartThrowRepository.findByGameAndIsUndoFalseForUpdate(game);
+                gameThrowsActive.sort(Comparator.comparing(DartThrow::getId));
 
                 DartThrow dartThrow = DartThrow.builder()
-                        .player(getCurrentPlayer(game.getPlayers(), gameThrowsActive, getRoundSize(game.getGameType()))) // fix this
+                        .player(getCurrentPlayer(game.getPlayers(), gameThrowsActive, getRoundSize(game.getGameType())))
                         .game(game)
                         .type(request.getType())
                         .round(getThrowRound(game.getGameType(), game.getPlayers(), gameThrowsActive))
                         .multiplier(request.getMultiplier())
                         .score(request.getPoint())
-                        .type(request.getType())
                         .build();
 
                 // get player stats
@@ -280,13 +320,18 @@ public class GameServiceImpl implements GameService {
                                 .build()
                 );
 
-                // check if throw counts
                 switch (game.getGameType()) {
                     case CLASSIC:
-                        // check in type
-                        if (dartThrow.getRound().equals(0) && gameThrowsActive.isEmpty()) {
-                            if (!(game.getGameTypeClassicInType() == null || dartThrow.getMultiplier().equals(game.getGameTypeClassicInType()))) {
-                                dartThrow.setIsNotCountable(true);
+                        // check in type: every player must hit the required multiplier before their score counts
+                        if (game.getGameTypeClassicInType() != null) {
+                            boolean playerHasOpened = gameThrowsActive.stream()
+                                    .anyMatch(t -> t.getPlayer().getId().equals(dartThrow.getPlayer().getId())
+                                            && !Boolean.TRUE.equals(t.getIsNotCountable()));
+                            if (!playerHasOpened) {
+                                if (dartThrow.getMultiplier() == null
+                                        || !dartThrow.getMultiplier().equals(game.getGameTypeClassicInType())) {
+                                    dartThrow.setIsNotCountable(true);
+                                }
                             }
                         }
 
@@ -295,33 +340,49 @@ public class GameServiceImpl implements GameService {
 
                         if (newScore < 0) {
                             dartThrow.setIsNotCountable(true);
-                        } else if (newScore.equals(0)) {
+                            // bust: void all previous throws in this round for this player and restore their score
+                            int bustRound = dartThrow.getRound();
+                            Long bustPlayerId = dartThrow.getPlayer().getId();
+                            long pointsToRestore = 0;
+                            for (DartThrow t : gameThrowsActive) {
+                                if (t.getRound() == bustRound
+                                        && t.getPlayer().getId().equals(bustPlayerId)
+                                        && !Boolean.TRUE.equals(t.getIsNotCountable())) {
+                                    t.setIsNotCountable(true);
+                                    pointsToRestore += calculatePoints(t.getScore(), t.getMultiplier());
+                                    // managed entity — dirty checking persists the flag at commit
+                                }
+                            }
+                            playerStats.setTotalScore(playerStats.getTotalScore() + pointsToRestore);
+                        } else if (newScore.equals(0L)) {
                             // check out type
-                            if (!(game.getGameTypeClassicOutType().describeConstable().isEmpty() || dartThrow.getMultiplier().equals(game.getGameTypeClassicOutType()))) {
+                            if (game.getGameTypeClassicOutType() != null
+                                    && (dartThrow.getMultiplier() == null
+                                        || !dartThrow.getMultiplier().equals(game.getGameTypeClassicOutType()))) {
                                 dartThrow.setIsNotCountable(true);
                             }
                         }
 
-                        if (
-                            game.getGameTypeClassicOutType() != null && (
+                        // minimum remaining score check: prevent reaching an unreachable finish
+                        if (game.getGameTypeClassicOutType() != null && (
                                 (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.TRIPLE) && newScore < 3) ||
                                 (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.DOUBLE) && newScore < 2)
-                            )
-                        ) {
+                        )) {
                             dartThrow.setIsNotCountable(true);
                         }
 
-                        if (
-                            (game.getGameTypeClassicOutType() == null && newScore.equals(0L)) ||
-                            (game.getGameTypeClassicOutType() != null && dartThrow.getMultiplier() != null && game.getGameTypeClassicOutType().equals(dartThrow.getMultiplier()) && newScore.equals(0L))
-                        ) {
-                            // winner
+                        // winner
+                        if (!Boolean.TRUE.equals(dartThrow.getIsNotCountable()) && (
+                                (game.getGameTypeClassicOutType() == null && newScore.equals(0L)) ||
+                                (game.getGameTypeClassicOutType() != null && dartThrow.getMultiplier() != null
+                                        && game.getGameTypeClassicOutType().equals(dartThrow.getMultiplier())
+                                        && newScore.equals(0L))
+                        )) {
                             game.setEndTime(LocalDateTime.now());
                             dartThrow.getPlayer().setIsWinner(true);
-                            playerStats.setTotalScore(newScore);
                         }
 
-                        if (!dartThrow.getIsNotCountable()) {
+                        if (!Boolean.TRUE.equals(dartThrow.getIsNotCountable())) {
                             playerStats.setTotalScore(newScore);
                         }
                         break;
@@ -332,8 +393,8 @@ public class GameServiceImpl implements GameService {
                 }
 
                 tmpGamePlayerStatsRepository.save(playerStats);
-                DartThrow throwSave = dartThrowRepository.save(dartThrow);
-                return throwSave.getGame();
+                dartThrowRepository.save(dartThrow);
+                return game;
             }
 
         } else {
@@ -353,8 +414,9 @@ public class GameServiceImpl implements GameService {
                                   List<DartThrow> gameThrowsActive) {
         if (gameThrowsActive == null || gameThrowsActive.isEmpty()) return 0;
 
-        gameThrowsActive.sort(Comparator
-                .comparing(DartThrow::getTimestamp).reversed());
+        // work on a sorted copy so the caller's list is not mutated
+        List<DartThrow> sorted = new ArrayList<>(gameThrowsActive);
+        sorted.sort(Comparator.comparing(DartThrow::getId).reversed()); // newest first
 
         // get last active player
         Long lastActivePlayerId = null;
@@ -362,25 +424,30 @@ public class GameServiceImpl implements GameService {
             DartPlayer p = players.get(i);
             if (p.getLeftGameAt() == null) { lastActivePlayerId = p.getId(); break; }
         }
-        if (lastActivePlayerId == null) return 0; // niemand aktiv
+        if (lastActivePlayerId == null) return 0;
 
-        // Current round and player
-        DartThrow latest = gameThrowsActive.get(0);
+        DartThrow latest = sorted.get(0);
         int roundSize = getRoundSize(gameType);
         int currentRound = latest.getRound();
         Long currentPlayerId = latest.getPlayer().getId();
 
-        // count throws in current round for current player
+        // count how many throws the current player has in their latest round.
+        // Mirror getCurrentPlayer logic: a not-countable throw (bust) ends the round early.
         int throwCount = 0;
-        for (DartThrow t : gameThrowsActive) {
+        boolean roundEndedEarly = false;
+        for (DartThrow t : sorted) {
             if (t.getRound() != currentRound) break;
             if (!t.getPlayer().getId().equals(currentPlayerId)) break;
+            if (Boolean.TRUE.equals(t.getIsNotCountable())) {
+                roundEndedEarly = true;
+                break;
+            }
             throwCount++;
             if (throwCount == roundSize) break;
         }
 
-        // if current player has thrown all throws in this round and is last active player, next round
-        if (throwCount == roundSize && currentPlayerId.equals(lastActivePlayerId)) {
+        // if the last active player has completed (or busted out of) their round, advance
+        if ((throwCount == roundSize || roundEndedEarly) && currentPlayerId.equals(lastActivePlayerId)) {
             return currentRound + 1;
         }
         return currentRound;
@@ -391,40 +458,41 @@ public class GameServiceImpl implements GameService {
                                         Integer roundSize) {
 
         if (gameThrowsActive.isEmpty()) {
-            // first active player
             for (DartPlayer player : players) {
                 if (player.getLeftGameAt() == null) return player;
             }
             throw new IllegalArgumentException("No active player found in this game");
         }
 
+        // work on a sorted copy (newest first) so the caller's list is not mutated
+        List<DartThrow> sorted = new ArrayList<>(gameThrowsActive);
+        sorted.sort(Comparator.comparing(DartThrow::getId).reversed());
+
         Long lastPlayerId = null;
         int throwCount = 0;
 
-        // reverse list to start from last throw
-        Collections.reverse(gameThrowsActive);
-
-        for (DartThrow dartThrow : gameThrowsActive) {
+        for (DartThrow dartThrow : sorted) {
             if (lastPlayerId == null) {
                 lastPlayerId = dartThrow.getPlayer().getId();
             }
 
-            // If throw is not countable, skip
+            // stop as soon as we hit a throw from a different player
+            if (!lastPlayerId.equals(dartThrow.getPlayer().getId())) {
+                break;
+            }
+
+            // a not-countable throw (bust / bad in/out) ends the round immediately for this player
             if (Boolean.TRUE.equals(dartThrow.getIsNotCountable())) {
                 throwCount = roundSize;
                 break;
             }
 
-            if (lastPlayerId.equals(dartThrow.getPlayer().getId())) {
-                throwCount++;
-                if (throwCount >= roundSize) break;
-            } else {
-                break;
-            }
+            throwCount++;
+            if (throwCount >= roundSize) break;
         }
 
-        // samre player
         if (throwCount < roundSize) {
+            // same player still has darts left
             for (DartPlayer player : players) {
                 if (player.getId().equals(lastPlayerId)) return player;
             }
@@ -436,7 +504,7 @@ public class GameServiceImpl implements GameService {
                 if (player.getId().equals(lastPlayerId)) returnNext = true;
             }
 
-            // if last player, return first active player
+            // if last player, wrap around to first active player
             for (DartPlayer player : players) {
                 if (player.getLeftGameAt() == null) return player;
             }
