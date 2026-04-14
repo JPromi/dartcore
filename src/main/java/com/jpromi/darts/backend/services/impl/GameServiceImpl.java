@@ -159,6 +159,10 @@ public class GameServiceImpl implements GameService {
                     playerResponse.setIsEliminated(true);
                 }
 
+                if (Boolean.TRUE.equals(player.getIsWinner())) {
+                    playerResponse.setIsWinner(true);
+                }
+
                 // Remaining score from stats (updated incrementally on each throw)
                 Optional<TmpGamePlayerStats> statsOpt = tmpGamePlayerStatsRepository.findByPlayerId(player.getId());
                 playerResponse.setScore(statsOpt.isPresent()
@@ -362,8 +366,9 @@ public class GameServiceImpl implements GameService {
                             }
                         }
 
-                        // minimum remaining score check: prevent reaching an unreachable finish
-                        if (game.getGameTypeClassicOutType() != null && (
+                        // minimum remaining score check: prevent reaching an unreachable finish.
+                        // Only applies when score > 0; newScore == 0 is the winning condition.
+                        if (newScore > 0 && game.getGameTypeClassicOutType() != null && (
                                 (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.TRIPLE) && newScore < 3) ||
                                 (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.DOUBLE) && newScore < 2)
                         )) {
@@ -378,7 +383,9 @@ public class GameServiceImpl implements GameService {
                                         && newScore.equals(0L))
                         )) {
                             game.setEndTime(LocalDateTime.now());
-                            dartThrow.getPlayer().setIsWinner(true);
+                            DartPlayer winner = dartThrow.getPlayer();
+                            winner.setIsWinner(true);
+                            dartPlayerRepository.save(winner);
                         }
 
                         if (!Boolean.TRUE.equals(dartThrow.getIsNotCountable())) {
