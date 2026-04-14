@@ -10,23 +10,27 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Getter
 @Setter
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(nullable = false, unique = true)
     @Builder.Default
+    @ToString.Include
     private UUID uuid = UUID.randomUUID();
 
     @Column(nullable = false, unique = true)
+    @ToString.Include
     private String username;
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -43,8 +47,8 @@ public class Account {
     @Column(nullable = true)
     private String totpSecret;
 
-    @OneToMany()
-    private TotpFallback[] totpFallback;
+    @OneToMany
+    private List<TotpFallback> totpFallback;
 
     @Column(nullable = false)
     private String email;

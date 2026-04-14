@@ -22,10 +22,12 @@ public class DartGame {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(nullable = false, unique = true)
     @Builder.Default
+    @ToString.Include
     private UUID uuid = UUID.randomUUID();
 
     @Column(nullable = false)

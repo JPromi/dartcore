@@ -28,9 +28,6 @@ public class GameServiceImpl implements GameService {
     private DartThrowRepository dartThrowRepository;
 
     @Autowired
-    private DartPlayerRepository dartPlayerRepository;
-
-    @Autowired
     private AccountGroupRepository accountGroupRepository;
 
     @Autowired
@@ -103,7 +100,7 @@ public class GameServiceImpl implements GameService {
     @Override
     public DartGame getGameByUuid(UUID gameUuid) {
         if (gameUuid != null) {
-            return this.dartGameRepository.findByUuid(gameUuid).orElse(null);
+            return this.dartGameRepository.findByUuidWithPlayersAndAccounts(gameUuid).orElse(null);
         } else {
             throw new IllegalArgumentException("Game UUID cannot be null or empty");
         }
@@ -112,7 +109,7 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional(readOnly = true)
     public GameResponse getGameResponseByUuid(UUID gameUuid) {
-        DartGame game = this.dartGameRepository.findByUuid(gameUuid).orElse(null);
+        DartGame game = this.dartGameRepository.findByUuidWithPlayersAndAccounts(gameUuid).orElse(null);
         return this.getGameResponseByUuid(game);
     }
 
@@ -120,9 +117,13 @@ public class GameServiceImpl implements GameService {
     @Transactional(readOnly = true)
     public GameResponse getGameResponseByUuid(DartGame game) {
         if (game != null) {
-            // Fetch all active throws once, sorted ascending by id (= chronological order)
-            List<DartThrow> allActiveThrows = dartThrowRepository.findByGameAndIsUndoFalse(game);
-            allActiveThrows.sort(Comparator.comparing(DartThrow::getId));
+            // Fetch all active throws with their player associations eagerly loaded (join fetch).
+            // This ensures DartPlayer entities are fully hydrated in the Hibernate session before
+            // game.getPlayers() is accessed, preventing the loadedState=null NPE in Hibernate 6
+            // that occurs when a lazy @ManyToOne proxy (loadedState=null) is encountered during
+            // finalizeCollectionLoading of the players collection.
+            // The query returns rows ordered by id, so no additional sort is needed.
+            List<DartThrow> allActiveThrows = dartThrowRepository.findByGameAndIsUndoFalseWithPlayer(game);
 
             Integer roundSize = getRoundSize(game.getGameType());
 
@@ -383,9 +384,7 @@ public class GameServiceImpl implements GameService {
                                         && newScore.equals(0L))
                         )) {
                             game.setEndTime(LocalDateTime.now());
-                            DartPlayer winner = dartThrow.getPlayer();
-                            winner.setIsWinner(true);
-                            dartPlayerRepository.save(winner);
+                            dartThrow.getPlayer().setIsWinner(true);
                         }
 
                         if (!Boolean.TRUE.equals(dartThrow.getIsNotCountable())) {
