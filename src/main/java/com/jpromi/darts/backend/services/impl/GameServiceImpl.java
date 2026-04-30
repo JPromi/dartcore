@@ -327,6 +327,7 @@ public class GameServiceImpl implements GameService {
                 switch (game.getGameType()) {
                     case CLASSIC:
                         // check in type: every player must hit the required multiplier before their score counts
+                        // Wenn inType null ist, wird diese Prüfung übersprungen
                         if (game.getGameTypeClassicInType() != null) {
                             boolean playerHasOpened = gameThrowsActive.stream()
                                     .anyMatch(t -> t.getPlayer().getId().equals(dartThrow.getPlayer().getId())
@@ -359,7 +360,8 @@ public class GameServiceImpl implements GameService {
                             }
                             playerStats.setTotalScore(playerStats.getTotalScore() + pointsToRestore);
                         } else if (newScore.equals(0L)) {
-                            // check out type
+                            // check out type: nur wenn outType gesetzt ist
+                            // Wenn outType null ist, ist jeder Multiplier erlaubt für den Finish
                             if (game.getGameTypeClassicOutType() != null
                                     && (dartThrow.getMultiplier() == null
                                         || !dartThrow.getMultiplier().equals(game.getGameTypeClassicOutType()))) {
@@ -368,23 +370,41 @@ public class GameServiceImpl implements GameService {
                         }
 
                         // minimum remaining score check: prevent reaching an unreachable finish.
-                        // Only applies when score > 0; newScore == 0 is the winning condition.
-                        if (newScore > 0 && game.getGameTypeClassicOutType() != null && (
-                                (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.TRIPLE) && newScore < 3) ||
-                                (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.DOUBLE) && newScore < 2)
-                        )) {
-                            dartThrow.setIsNotCountable(true);
+                        // Nur wenn outType gesetzt ist
+                        // - Wenn outType NULL: Keine Beschränkung, Score kann bis 1 gehen (dann Single 1 zum Ausmachen)
+                        // - Wenn outType DOUBLE: Score muss >= 2 bleiben (Double 1 existiert nicht)
+                        // - Wenn outType TRIPLE: Score muss >= 3 bleiben (Triple 1/2 existiert nicht)
+                        if (newScore > 0 && game.getGameTypeClassicOutType() != null) {
+                            boolean isBustRisk = false;
+                            if (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.DOUBLE) && newScore < 2) {
+                                isBustRisk = true;
+                            } else if (game.getGameTypeClassicOutType().equals(DartThrowMultiplierEnum.TRIPLE) && newScore < 3) {
+                                isBustRisk = true;
+                            }
+                            
+                            if (isBustRisk) {
+                                dartThrow.setIsNotCountable(true);
+                            }
                         }
 
-                        // winner
-                        if (!Boolean.TRUE.equals(dartThrow.getIsNotCountable()) && (
-                                (game.getGameTypeClassicOutType() == null && newScore.equals(0L)) ||
-                                (game.getGameTypeClassicOutType() != null && dartThrow.getMultiplier() != null
-                                        && game.getGameTypeClassicOutType().equals(dartThrow.getMultiplier())
-                                        && newScore.equals(0L))
-                        )) {
-                            game.setEndTime(LocalDateTime.now());
-                            dartThrow.getPlayer().setIsWinner(true);
+                        // winner: Spieler gewinnt wenn Score == 0 und nicht busted
+                        // Wenn outType null: Score muss 0 sein (egal welcher Multiplier)
+                        // Wenn outType nicht null: Score muss 0 sein UND mit dem erforderlichen Multiplier
+                        if (!Boolean.TRUE.equals(dartThrow.getIsNotCountable()) && newScore.equals(0L)) {
+                            boolean isValidFinish = false;
+                            
+                            if (game.getGameTypeClassicOutType() == null) {
+                                // Wenn kein outType definiert: egal welcher Multiplier - ist ein gültiger Finish
+                                isValidFinish = true;
+                            } else if (dartThrow.getMultiplier() != null && game.getGameTypeClassicOutType().equals(dartThrow.getMultiplier())) {
+                                // Wenn outType definiert: muss der Multiplier matchen
+                                isValidFinish = true;
+                            }
+                            
+                            if (isValidFinish) {
+                                game.setEndTime(LocalDateTime.now());
+                                dartThrow.getPlayer().setIsWinner(true);
+                            }
                         }
 
                         if (!Boolean.TRUE.equals(dartThrow.getIsNotCountable())) {

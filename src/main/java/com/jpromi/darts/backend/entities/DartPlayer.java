@@ -42,7 +42,7 @@ public class DartPlayer {
     @Column(nullable = true)
     private Integer leftGameAt;
 
-    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude @EqualsAndHashCode.Exclude
     @Builder.Default
     private List<DartThrow> throwsList = new ArrayList<>();

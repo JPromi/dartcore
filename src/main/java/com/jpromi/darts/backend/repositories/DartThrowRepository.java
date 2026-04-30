@@ -20,6 +20,12 @@ public interface DartThrowRepository extends JpaRepository<DartThrow, Long> {
 
     List<DartThrow> findByGameAndIsUndoFalse(DartGame game);
 
-    @Query("select t from DartThrow t join fetch t.player where t.game = :game and t.isUndo = false order by t.id asc")
+    @Query("""
+            select t from DartThrow t 
+            join fetch t.player p
+            left join fetch p.account a
+            where t.game = :game and t.isUndo = false 
+            order by t.id asc
+            """)
     List<DartThrow> findByGameAndIsUndoFalseWithPlayer(@Param("game") DartGame game);
 }
