@@ -107,6 +107,27 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    @Transactional
+    public DartGame endGame(UUID gameUuid) {
+        if (gameUuid == null) {
+            throw new IllegalArgumentException("Game UUID cannot be null or empty");
+        }
+
+        DartGame game = this.getGameByUuid(gameUuid);
+        if (game == null) {
+            return null;
+        }
+
+        if (game.getEndTime() == null) {
+            game.setEndTime(LocalDateTime.now());
+            game.setIsCancelled(false);
+            this.dartGameRepository.save(game);
+        }
+
+        return game;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public GameResponse getGameResponseByUuid(UUID gameUuid) {
         DartGame game = this.dartGameRepository.findByUuidWithPlayersAndAccounts(gameUuid).orElse(null);

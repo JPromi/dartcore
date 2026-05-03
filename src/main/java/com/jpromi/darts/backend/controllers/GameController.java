@@ -1,12 +1,8 @@
 package com.jpromi.darts.backend.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jpromi.darts.backend.entities.Session;
-import com.jpromi.darts.backend.enums.InvitationStatusAccountEnum;
-import com.jpromi.darts.backend.mapper.GameResponseMapper;
 import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
-import com.jpromi.darts.backend.models.GroupInvitationResponse;
 import com.jpromi.darts.backend.models.NewGameRequest;
 import com.jpromi.darts.backend.registry.GameLockRegistry;
 import com.jpromi.darts.backend.services.AuthService;
@@ -18,7 +14,6 @@ import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
@@ -39,9 +34,6 @@ public class GameController {
 
     @Autowired
     private GameService gameService;
-
-    @Autowired
-    private GameResponseMapper gameResponseMapper;
 
     @Autowired
     private GameLockRegistry gameLockRegistry;
@@ -71,6 +63,38 @@ public class GameController {
                 GameResponse game = this.gameService.getGameResponseByUuid(gameUuid);
                 if (game != null) {
                     return ResponseEntity.ok(game);
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+    
+    @DeleteMapping("/{gameUuid}")
+    public ResponseEntity<Void> endGame(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID gameUuid) {
+        if (sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if (session != null) {
+                ReentrantLock lock = gameLockRegistry.get(gameUuid);
+                lock.lock();
+                boolean success = false;
+                try {
+                    success = this.gameService.endGame(gameUuid) != null;
+                } finally {
+                    lock.unlock();
+                    gameLockRegistry.cleanup(gameUuid, lock);
+                    if (success) {
+                        sendGameUpdate(gameUuid);
+                    }
+                }
+
+                if (success) {
+                    return ResponseEntity.noContent().build();
                 } else {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
                 }
