@@ -30,6 +30,7 @@ services:
       SMTP_HOST: ${SMTP_HOST}
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWD: ${SMTP_PASSWD}
+      SMTP_PORT: 587
       SMTP_AUTH: true
       SMTP_STARTTLS: true
     volumes:
