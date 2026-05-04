@@ -3,9 +3,11 @@ package com.jpromi.darts.backend.services.impl;
 import com.jpromi.darts.backend.services.TemplateService;
 import org.springframework.stereotype.Service;
 
+import org.springframework.core.io.ClassPathResource;
+
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,7 +29,7 @@ public class TemplateServiceImpl implements TemplateService {
     public String generateTemplateFromFile(String filePath, HashMap<String, String> variables) {
         StringBuilder contentBuilder = new StringBuilder();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new ClassPathResource(filePath).getInputStream()))) {
             String line;
             while ((line = br.readLine()) != null) {
                 contentBuilder.append(line).append("\n");
@@ -73,7 +75,7 @@ public class TemplateServiceImpl implements TemplateService {
     public String generatePlainTextFromFile(String filePath, HashMap<String, String> variables) {
         StringBuilder contentBuilder = new StringBuilder();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new ClassPathResource(filePath).getInputStream()))) {
             String line;
             while ((line = br.readLine()) != null) {
                 contentBuilder.append(line).append("\n");

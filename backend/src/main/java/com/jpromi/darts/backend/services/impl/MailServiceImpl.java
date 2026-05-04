@@ -66,7 +66,7 @@ public class MailServiceImpl implements MailService {
             messageTextPart.setText(templateService.generatePlainText(mail.getHtmlBody(), templateVariables), "utf-8");
 
             MimeBodyPart messageHtmlPart = new MimeBodyPart();
-            messageHtmlPart.setContent(templateService.generateTemplateFromFile("src/main/resources/templates/mail/container.html", templateVariables), "text/html; charset=utf-8");
+            messageHtmlPart.setContent(templateService.generateTemplateFromFile("templates/mail/container.html", templateVariables), "text/html; charset=utf-8");
 
             multipart.addBodyPart(messageTextPart);
             multipart.addBodyPart(messageHtmlPart);

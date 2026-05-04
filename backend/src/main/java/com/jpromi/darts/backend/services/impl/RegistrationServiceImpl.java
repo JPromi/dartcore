@@ -86,14 +86,14 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         mailObject.setHtmlBody(
             templateService.generateTemplateFromFile(
-                "src/main/resources/templates/mail/registration.html",
+                "templates/mail/registration.html",
                 templateVariables
             )
         );
 
         mailObject.setBody(
             templateService.generatePlainTextFromFile(
-                "src/main/resources/templates/mail/registration.html",
+                "templates/mail/registration.html",
                 templateVariables
             )
         );
