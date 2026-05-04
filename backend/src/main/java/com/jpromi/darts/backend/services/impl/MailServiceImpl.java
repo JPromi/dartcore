@@ -91,7 +91,7 @@ public class MailServiceImpl implements MailService {
         return Session.getInstance(props, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("darts@dev.jpromi.com", "darts.jpromi.com");
+                return new PasswordAuthentication(mailUsername, mailPassword);
             }
         });
     }
