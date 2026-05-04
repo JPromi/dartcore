@@ -24,7 +24,7 @@ services:
     ports:
       - "4000:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:4001/darts
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/darts
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SMTP_HOST: ${SMTP_HOST}
