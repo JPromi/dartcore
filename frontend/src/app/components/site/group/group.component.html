@@ -1,0 +1,102 @@
+@if (group) {
+    <div class="container">
+        
+        <img *ngIf="group.banner" [src]="group.banner" class="background">
+
+        <div class="content">
+            <div class="options">
+                @if (group.isAdmin || group.isOwner) {
+                    <a [routerLink]="[ '/', 'group', group.uuid, 'settings' ]">
+                        <fa-icon [icon]="fa.faGear"/>
+                    </a>
+                    <a [routerLink]="[ '/', 'group', group.uuid, 'settings', 'members' ]">
+                        <fa-icon [icon]="fa.faUserPlus"/>
+                    </a>
+                }
+                @if (group.isMember && !group.isOwner) {
+                    <button (click)="showLeaveGroupPopup = true" title="{{ 'page.group.single.options.leaveGroup.tooltip' | translate }}">
+                        <fa-icon [icon]="fa.faArrowRightFromBracket"/>
+                    </button>
+
+                    <asset-popup
+                        [title]="'page.group.single.options.leaveGroup.title' | translate"
+                        [description]="'page.group.single.options.leaveGroup.confirmation.text' | translate:{ groupName: group.name }"
+                        [type]="'leave'"
+                        [(show)]="showLeaveGroupPopup"
+                        (close)="leaveGroup($event)" />
+                }
+            </div>
+            <header class="top">
+                <div class="avatar">
+                    <img [src]="group.avatar">
+                </div>
+                <div class="name">
+                    <h2>{{ group.name }}</h2>
+                </div>
+            </header>
+            @if (group.isMember || group.isPublic) {
+                <section>
+                    <main>
+                        <nav>
+                            <ul>
+                                <li>
+                                    <a [routerLink]="[ '/', 'group', group.uuid ]">
+                                        <fa-icon [icon]="fa.faGrip" />
+                                        {{ 'page.group.single.nav.overview.label' | translate }}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a [routerLink]="[ '/', 'group', group.uuid, 'games' ]">
+                                        <fa-icon [icon]="fa.faFootball" />
+                                        {{ 'page.group.single.nav.games.label' | translate }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                        <section>
+                            <router-outlet />
+                        </section>
+                    </main>
+                    <aside>
+                        <div *ngIf="group.members && group.members.length > 0">
+                            <h3>{{ 'page.group.single.aside.members.title' | translate }}</h3>
+                            <div class="profile-list" [class.large]="isLargeMembersPreview">
+                                @for (profile of group.members; track $index) {
+                                    <span class="profile" [@profileExpand]="isLargeMembersPreview ? 'large-outside' : (membersPreviewMax > $index ? 'small-outside' : 'none')">
+                                        <a 
+                                            class="avatar"
+                                            [routerLink]="[ '/' , 'profile', profile.username]"
+                                            [@profileExpand]="isLargeMembersPreview ? 'large' : (membersPreviewMax > $index ? 'small' : 'none')"
+                                            [title]="profile.username">
+                                            <div class="avatar">
+                                                <img [src]="profile.avatar">
+                                            </div>
+                                            <p>{{ profile.username }}</p>
+                                        </a>
+                                    </span>
+                                }
+                                <span class="profile extend" *ngIf="group.members.length > membersPreviewMax">
+                                    <button (click)="isLargeMembersPreview = true" *ngIf="!isLargeMembersPreview">+{{ group.members.length - membersPreviewMax }}</button>
+                                    <button (click)="isLargeMembersPreview = false" *ngIf="isLargeMembersPreview">-{{ group.members.length - membersPreviewMax }}</button>
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <h3>{{ 'page.group.single.aside.informations.title' | translate }}</h3>
+                            <!--
+                            Erstelldatum
+                            letzte Aktivität
+                            -->
+                        </div>
+                    </aside>
+                </section>
+            } @else {
+                <section class="private">
+                    <h3>{{ 'page.group.single.private.title' | translate }}</h3>
+                    <p>{{ 'page.group.single.private.disclaimer.text' | translate }}</p>
+                </section>
+            }
+        </div>
+
+    </div>
+}

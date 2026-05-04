@@ -1,0 +1,15 @@
+<h1>{{ 'page.auth.validateToken.title' | translate }}</h1>
+
+<section>
+    @if (isLoading) {
+        <asset-loading [type]="LoadingType.BOUNCING_DOTS"/>
+        <span>{{ 'page.auth.validateToken.loading.text' | translate }}</span>
+    } @else {
+        @if (username) {
+            <p>{{ 'page.auth.validateToken.validToken.text' | translate:{username: username} }}</p>
+            <a [routerLink]="['/barrier/login']">{{ 'page.auth.validateToken.login.button' | translate }}</a>
+        } @else {
+            <p>{{ 'page.auth.validateToken.invalidToken.text' | translate }}</p>
+        }
+    }
+</section>

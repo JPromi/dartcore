@@ -1,0 +1,10 @@
+<asset-splash-screen [isLoading]="isLoading"/>
+
+@if(!isLoading && !isError(errorCode ?? 0)) {
+    <router-outlet></router-outlet>
+}
+
+<!-- Error Page -->
+@if(isError(errorCode ?? 0) && errorCode) {
+    <error-page [errorCode]="errorCode"></error-page>
+}

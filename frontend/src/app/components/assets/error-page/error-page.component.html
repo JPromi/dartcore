@@ -1,0 +1,13 @@
+<section class="error">
+    <div class="text">
+        <div class="code">
+            <h1>{{ errorCode }}</h1>
+            <h2>{{ translationExsists(errorCode) ? ('asset.error.c' + errorCode + '.title' | translate) : ('asset.error.default.title' | translate) }}</h2>
+        </div>
+        <p>{{ translationExsists(errorCode) ? ('asset.error.c' + errorCode + '.message' | translate) : ('asset.error.default.message' | translate) }}</p>
+        <a routerLink="/" *ngIf="errorCode != 504">{{ 'asset.error.text.home.button' | translate }}</a>
+    </div>
+    <div class="image">
+        <img src="./assets/images/error-drawing.svg" alt="Error" />
+    </div>
+</section>

@@ -1,0 +1,35 @@
+@if (group) {
+    <aside>
+        <nav>
+            <h1>{{ 'page.group.single.settings.menu.title' | translate }}</h1>
+            <ul>
+                <li>
+                    <a [routerLink]="['/', 'group', uuid, 'settings', 'general']" routerLinkActive="active">
+                        <fa-icon [icon]="fa.faGear" />
+                        <p>{{ 'page.group.single.settings.menu.general.label' | translate }}</p>
+                    </a>
+                </li>
+                <li>
+                    <a [routerLink]="['/', 'group', uuid, 'settings', 'members']" routerLinkActive="active">
+                        <fa-icon [icon]="fa.faUserFriends" />
+                        <p>{{ 'page.group.single.settings.menu.members.label' | translate }}</p>
+                    </a>
+                </li>
+                <li>
+                    <a [routerLink]="['/', 'group', uuid]">
+                        <fa-icon [icon]="fa.faArrowLeft" />
+                        <p>{{ 'page.group.single.settings.menu.back.label' | translate }}</p>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="informations">
+                <h6>{{ 'page.settings.menu.informations.title' | translate }}</h6>
+                <p>{{ 'page.group.single.settings.menu.informations.creationDate' | translate }} {{ group.createdAt | date: 'dd.MM.yyyy HH:mm' }}</p>
+            </div>
+        </nav>
+    </aside>
+    <main>
+        <router-outlet></router-outlet>
+    </main>
+}

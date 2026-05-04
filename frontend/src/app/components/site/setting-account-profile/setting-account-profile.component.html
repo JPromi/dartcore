@@ -1,0 +1,135 @@
+<form [formGroup]="form" (ngSubmit)="submit()" *ngIf="isLoaded">
+    <div class="top">
+        <div class="banner">
+            <div class="options" [class.disabled]="isUpdating">
+                <button type="button" (click)="uploadBanner.click()" (keydown.space.enter)="uploadBanner.click()">
+                    <fa-icon [icon]="fa.faCamera"/>
+                </button>
+                <button *ngIf="profile.banner" type="button" (click)="removeBanner()">
+                    <fa-icon [icon]="fa.faXmark"/>
+                </button>
+                <input #uploadBanner type="file" name="banner" id="banner" accept="image/*" (change)="updateBanner($event)" [disabled]="isUpdating">
+            </div>
+            <div class="container">
+                <img
+                    *ngIf="profile?.banner"
+                    [src]="profile.banner?.url"
+                    (load)="uploadProgressBanner.isLoading=false"
+                    (error)="uploadProgressBanner.isLoading=false"
+                    (show)="uploadProgressBanner.isLoading=true"/>
+            </div>
+            <div class="waiting" *ngIf="uploadProgressBanner.isLoading || uploadProgressBanner.isUploading">
+                @if (uploadProgressBanner.isUploading) {
+                    <div class="progress">
+                        <div>
+                            <p>{{ uploadProgressBanner.uploadFilename }}</p>
+                        </div>
+                        <span class="bar">
+                            <span [style.width.%]="uploadProgressBanner.progress"></span>
+                        </span>
+                        <div>
+                            <p>{{ getSizeString(uploadProgressBanner.uploadSize) }}</p>
+                            <p>{{ uploadProgressBanner.progress }}%</p>
+                        </div>
+                    </div>
+                }
+                @if (uploadProgressBanner.isLoading) {
+                    <asset-loading />
+                }
+            </div>
+        </div>
+        <div class="avatar">
+            <div class="options" [class.disabled]="isUpdating">
+                <button type="button" (click)="avatarBanner.click()" (keydown.space.enter)="avatarBanner.click()">
+                    <fa-icon [icon]="fa.faCamera"/>
+                </button>
+                <button *ngIf="profile.avatar" type="button" (click)="removeAvatar()">
+                    <fa-icon [icon]="fa.faXmark"/>
+                </button>
+                <input #avatarBanner type="file" name="avatar" id="avatar" accept="image/*" (change)="updateAvatar($event)" [disabled]="isUpdating">
+            </div>
+            <div class="container">
+                <img
+                    *ngIf="profile?.avatar"
+                    [src]="profile.avatar?.url"
+                    (load)="uploadProgressAvatar.isLoading=false"
+                    (error)="uploadProgressAvatar.isLoading=false"
+                    (show)="uploadProgressAvatar.isLoading=true"/>
+            </div>
+            <div class="waiting" *ngIf="uploadProgressAvatar.isLoading || uploadProgressAvatar.isUploading">
+                @if (uploadProgressAvatar.isUploading) {
+                    <div class="progress">
+                        <div>
+                            <p>{{ uploadProgressAvatar.uploadFilename }}</p>
+                        </div>
+                        <span class="bar">
+                            <span [style.width.%]="uploadProgressAvatar.progress"></span>
+                        </span>
+                        <div>
+                            <p>{{ getSizeString(uploadProgressAvatar.uploadSize) }}</p>
+                            <p>{{ uploadProgressAvatar.progress }}%</p>
+                        </div>
+                    </div>
+                }
+                @if (uploadProgressAvatar.isLoading) {
+                    <asset-loading />
+                }
+            </div>
+        </div>
+    </div>
+
+    <h3>{{ 'page.settings.profile.general.title' | translate }}</h3>
+
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'username', label: 'page.settings.profile.general.username.label' | translate }" />
+    
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'description', label: 'page.settings.profile.general.description.label' | translate, type: 'textarea' }" />
+    
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'country', label: 'page.settings.profile.general.country.label' | translate }" />
+
+    <h3>{{ 'page.settings.profile.links.title' | translate }}</h3>
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'l_web', label: 'page.settings.profile.links.website.label' | translate }"></ng-container>
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'l_x', label: 'page.settings.profile.links.x.label' | translate }"></ng-container>
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'l_instagram', label: 'page.settings.profile.links.instagram.label' | translate }"></ng-container>
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'l_github', label: 'page.settings.profile.links.github.label' | translate }"></ng-container>
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'l_youtube', label: 'page.settings.profile.links.youtube.label' | translate }"></ng-container>
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'l_twitch', label: 'page.settings.profile.links.twitch.label' | translate }"></ng-container>
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'l_facebook', label: 'page.settings.profile.links.facebook.label' | translate }"></ng-container>
+
+    <h3>{{ 'page.settings.profile.visibility.title' | translate }}</h3>
+    <div class="selection-block" [class.disabled]="isUpdating">
+        <label for="visibility_public" [class.active]="form.get('visibility')?.value === profileVisibilityEnum.PUBLIC">
+            <input type="radio" id="visibility_public" name="visibility" [value]="profileVisibilityEnum.PUBLIC" formControlName="visibility" [disabled]="isUpdating" />
+            <p>{{ 'page.settings.profile.visibility.public.label' | translate }}</p>
+        </label>
+        <label for="visibility_firends" [class.active]="form.get('visibility')?.value === profileVisibilityEnum.FRIENDS_ONLY">
+            <input type="radio" id="visibility_firends" name="visibility" [value]="profileVisibilityEnum.FRIENDS_ONLY" formControlName="visibility" [disabled]="isUpdating" />
+            <p>{{ 'page.settings.profile.visibility.friends.label' | translate }}</p>
+        </label>
+        <label for="visibility_private" [class.active]="form.get('visibility')?.value === profileVisibilityEnum.PRIVATE">
+            <input type="radio" id="visibility_private" name="visibility" [value]="profileVisibilityEnum.PRIVATE" formControlName="visibility" [disabled]="isUpdating" />
+            <p>{{ 'page.settings.profile.visibility.private.label' | translate }}</p>
+        </label>
+    </div>
+
+    <div class="btns">
+        <button type="submit" [disabled]="form.invalid && isUpdating">{{ 'page.settings.profile.buttons.save.button' | translate }}</button>
+    </div>
+
+
+    <!-- TEMPLATE -->
+    <ng-template #formInput let-name="name" let-label="label" let-type="type">
+        <div class="input-container" [class.error]="form.get(name)?.errors && form.get(name)?.touched">
+            <div class="input" [class.disabled]="isUpdating">
+                <label [for]="name">{{ label }}</label>
+                @if (type !== 'textarea') {
+                    <input [type]="type ? type : 'text'" [id]="name" [name]="name" [formControlName]="name" autocomplete="off" [disabled]="isUpdating"/>
+                } @else {
+                    <textarea [id]="name" [name]="name" [formControlName]="name" autocomplete="off" [disabled]="isUpdating"></textarea>
+                }
+            </div>
+            <p *ngIf="form.get(name)?.errors && form.get(name)?.touched" class="error-msg">
+            {{ `asset.form.error.${getFirstErrorKey(name)}` | translate }}
+            </p>
+        </div>
+    </ng-template>
+</form>

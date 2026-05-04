@@ -1,0 +1,45 @@
+<form [formGroup]="form" (ngSubmit)="submit()" *ngIf="isLoaded">
+
+    <h3>{{ 'page.settings.account.general.title' | translate }}</h3>
+
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'firstName', label: 'page.settings.account.general.firstName.label' | translate }" />
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'lastName', label: 'page.settings.account.general.lastName.label' | translate }" />
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'email', label: 'page.settings.account.general.email.label' | translate, type: 'email' }" />
+
+    <h3>{{ 'page.settings.account.password.title' | translate }}</h3>
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'passwordOld', label: 'page.settings.account.password.passwordOld.label' | translate, type: 'password' }" />
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'password', label: 'page.settings.account.password.passwordNew.label' | translate, type: 'password' }" />
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'passwordConfirm', label: 'page.settings.account.password.passwordConfirm.label' | translate, type: 'password' }" />
+
+    <div class="btns">
+        <button type="submit" [disabled]="form.invalid && isUpdating">{{ 'page.settings.account.buttons.save.button' | translate }}</button>
+    </div>
+
+
+    <!-- TEMPLATE -->
+    <ng-template #formInput let-name="name" let-label="label" let-type="type">
+        <div class="input-container" [class.error]="form.get(name)?.errors && form.get(name)?.touched">
+            <div class="input" [class.disabled]="isUpdating">
+                <label [for]="name">{{ label }}</label>
+                @if (type !== 'textarea') {
+                    <div class="input-content">
+                        <input [type]="type ? type : 'text'" [id]="name" [name]="name" [formControlName]="name" autocomplete="off" #inputField [disabled]="isUpdating" />
+                        @if (type === 'password') {
+                            <button (click)="inputField.type = inputField.type === 'password' ? 'text' : 'password'" type="button" [disabled]="isUpdating">
+                                <fa-icon [icon]="fa.faEye" *ngIf="inputField.type === 'password'"/>
+                                <fa-icon [icon]="fa.faEyeSlash" *ngIf="inputField.type !== 'password'"/>
+                            </button>
+                        }
+                    </div>
+                } @else {
+                    <div class="input-content">
+                        <textarea [id]="name" [name]="name" [formControlName]="name" autocomplete="off" [disabled]="isUpdating"></textarea>
+                    </div>
+                }
+            </div>
+            <p *ngIf="form.get(name)?.errors && form.get(name)?.touched" class="error-msg">
+            {{ `asset.form.error.${getFirstErrorKey(name)}` | translate }}
+            </p>
+        </div>
+    </ng-template>
+</form>

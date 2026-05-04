@@ -1,0 +1,39 @@
+label {
+    position: relative;
+    display: inline-block;
+    width: 3rem;
+    height: 1.5rem;
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 150ms ease-in-out,
+                border-color 150ms ease-in-out;
+
+    &.disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    span.slider {
+        position: absolute;
+        top: .1rem;
+        left: .1rem;
+        width: 1.3rem;
+        height: 1.3rem;
+        background-color: var(--text);
+        border-radius: 50%;
+        transition: left 150ms ease-in-out;
+        content: '';
+    }
+
+    &.checked {
+        background-color: var(--primary);
+        border-color: transparent;
+
+        span.slider {
+            left: 1.6rem;
+        }
+    }
+}

@@ -1,0 +1,210 @@
+<header>
+    <!-- <h1>New Game</h1> -->
+</header>
+
+<main>
+    @switch (creationStep) {
+        @case (0) {
+            <!-- SELECT GROUP -->
+            <section class="group" [@stepAnimation]>
+                <h2>{{ 'page.game.create.settings.selectGroup.title' | translate }}</h2>
+                <div class="group-list">
+                    <!-- <button class="group-item no-group" (click)="selectGroup(null)" [class.selected]="game.groupUuid === null">
+                        <h2>No group</h2>
+                    </button> -->
+                    @for (group of groups; track $index) {
+                        <button class="group-item" (click)="selectGroup(group)" [class.selected]="game.groupUuid === group.uuid">
+                            <div class="name">
+                                <div class="avatar">
+                                    <img *ngIf="group.avatar" [src]="group.avatar">
+                                </div>
+                                <h2>{{ group.name }}</h2>
+                            </div>
+
+                            <div class="background">
+                                <img *ngIf="group.banner" [src]="group.banner">
+                                <span class="gradient"></span>
+                            </div>
+                        </button>
+                    }
+                </div>
+            </section>
+        }
+        @case (1) {
+            <!-- SELECT LOCATION -->
+        }
+        @case (2) {
+            <!-- SELECT GAME TYPE -->
+            <section class="game-mode" [@stepAnimation]>
+                <h2>{{ 'page.game.create.settings.gameMode.title' | translate }}</h2>
+                <div class="list">
+                    @for (gameMode of gameModes; track $index) {
+                        <button class="game-mode-item" [class.large]="gameMode.isPopular" [class.selected]="game.gameType === gameMode.name" (click)="selectGameMode(gameMode.name)">
+                            <h2>{{ `page.game.create.game.${gameMode.name}.title` | translate}}</h2>
+                            <div class="background">
+                                <img *ngIf="gameMode.icon" [src]="gameMode.icon">
+                            </div>
+                        </button>
+                    }
+                </div>
+            </section>
+        }
+        @case (3) {
+            <!-- GAME SETTINGS -->
+            <section class="game-settings" [@stepAnimation]>
+                <h2 class="header">{{ 'page.game.create.settings.title' | translate }}</h2>
+                <div class="player-selection box-border">
+                    <div class="search-container player-container">
+                        <div class="search">
+                            <input type="text" name="profileSearch" [(ngModel)]="searchQuery" (ngModelChange)="searchProfile()" [placeholder]=" 'page.game.create.settings.players.search.label' | translate ">
+                            <button [class.clear]="searchQuery.length > 0" (click)="clearSearchProfile()">
+                                <div>
+                                    <fa-icon [icon]="fa.faSearch"/>
+                                </div>
+                                <div>
+                                    <fa-icon [icon]="fa.faXmark"/>
+                                </div>
+                            </button>
+                        </div>
+                        <button (click)="selectProfileAsGuest()" class="guest-btn" [disabled]="checkPlayerIsSelected(searchQuery)">{{ 'page.game.create.settings.players.addAsGuest.button' | translate}}</button>
+                        <div *ngIf="!profileSearchLoading" class="list">
+                            @for (profile of profileSearchResults; track $index) {
+                                <button class="profile-item btn" [disabled]="checkPlayerIsSelected(profile.username)" (click)="selectProfile(profile)" @playerAppear>
+                                    <div class="avatar">
+                                        <img *ngIf="profile.avatar" [src]="profile.avatar">
+                                    </div>
+                                    <p class="name">{{ profile.username }}</p>
+                                </button>
+                            }
+                        </div>
+                        <p *ngIf="!profileSearchResults.length && !profileSearchLoading" class="error">{{ 'page.game.create.settings.players.noPlayers.text' | translate }}</p>
+                        <asset-loading *ngIf="profileSearchLoading" [type]="LoadingType.CIRCULAR"/>
+                    </div>
+                    <div class="list-container player-container">
+                        <div class="list-header">
+                            <h2>
+                                {{ 'page.game.create.settings.players.title' | translate}}
+                                <span [class.error]="game.players.length < (getGameMode()?.minPlayers ?? 0) || game.players.length > (getGameMode()?.maxPlayers ?? 0)">{{ game.players.length }}/{{ getGameMode()?.maxPlayers }}</span>
+                            </h2>
+                            <button (click)="randomizePlayers()">
+                                <fa-icon [icon]="fa.faShuffle"/>
+                            </button>
+                        </div>
+                        <div
+                            class="list"
+                            cdkDropList
+                            [cdkDropListData]="game.players"
+                            (cdkDropListDropped)="drop($event)">
+                            @for (player of game.players; track player.username; let i = $index) {
+                                <div
+                                    class="profile-item"
+                                    cdkDrag
+                                    #profileItemContainer
+                                    (touchstart)="userUuid !== player.uuid && onTouchStart($event, profileItemContainer)"
+                                    (touchend)="userUuid !== player.uuid && onTouchEnd($event, profileItemContainer)"
+                                    [@playerDisappear]
+                                    [@playerAppear]>
+                                    <span class="index">{{ i + 1 }}</span>
+                                    <div class="avatar">
+                                        <img *ngIf="player.avatar" [src]="player.avatar">
+                                    </div>
+                                    <p class="name">{{ player.username }}</p>
+                                    <button *ngIf="userUuid !== player.uuid" (click)="profileItemContainer.classList.toggle('delete-active')" class="delete">
+                                        <fa-icon [icon]="fa.faTrash" />
+                                    </button>
+                                    <span class="move-icon" cdkDragHandle>
+                                        <fa-icon [icon]="fa.faGripLines"/>
+                                    </span>
+
+                                    <button *ngIf="userUuid !== player.uuid" class="delete-confirm" (click)="deleteProfile(player)">
+                                        <fa-icon [icon]="fa.faTrash" />
+                                    </button>
+
+                                    <span class="background"></span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="game-information">
+                    <h2>{{ `page.game.create.game.${game.gameType}.title` | translate }}</h2>
+                    <p>{{ `page.game.create.game.${game.gameType}.description` | translate }}</p>
+                </div>
+                <!-- classic -->
+                <div *ngIf="game.gameType === GameTypeEnum.CLASSIC" class="gamemode-settings box-border">
+                    <h2>{{ game.gameType }}</h2>
+                    <div class="gamemode-settings-content">
+                        <div>
+                            <h3>{{ 'page.game.create.settings.gameSettings.CLASSIC.inType.title' | translate }}</h3>
+                            <div class="button-grid col-2">
+                                <button [class.selected]="game.gameTypeClassicIn === null" (click)="game.gameTypeClassicIn = null">{{ 'page.game.create.settings.gameSettings.CLASSIC.inType.options.all' | translate }}</button>
+                                <button [class.selected]="game.gameTypeClassicIn === GameThrowMultiplierEnum.SINGLE" (click)="game.gameTypeClassicIn = GameThrowMultiplierEnum.SINGLE">{{ 'page.game.create.settings.gameSettings.CLASSIC.inType.options.singleIn' | translate }}</button>
+                                <button [class.selected]="game.gameTypeClassicIn === GameThrowMultiplierEnum.DOUBLE" (click)="game.gameTypeClassicIn = GameThrowMultiplierEnum.DOUBLE">{{ 'page.game.create.settings.gameSettings.CLASSIC.inType.options.doubleIn' | translate }}</button>
+                                <button [class.selected]="game.gameTypeClassicIn === GameThrowMultiplierEnum.TRIPLE" (click)="game.gameTypeClassicIn = GameThrowMultiplierEnum.TRIPLE">{{ 'page.game.create.settings.gameSettings.CLASSIC.inType.options.tripleIn' | translate }}</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h3>{{ 'page.game.create.settings.gameSettings.CLASSIC.outType.title' | translate }}</h3>
+                            <div class="button-grid col-2">
+                                <button [class.selected]="game.gameTypeClassicOut === null" (click)="game.gameTypeClassicOut = null">{{ 'page.game.create.settings.gameSettings.CLASSIC.outType.options.all' | translate }}</button>
+                                <button [class.selected]="game.gameTypeClassicOut === GameThrowMultiplierEnum.DOUBLE" (click)="game.gameTypeClassicOut = GameThrowMultiplierEnum.DOUBLE">{{ 'page.game.create.settings.gameSettings.CLASSIC.outType.options.doubleOut' | translate }}</button>
+                                <button [class.selected]="game.gameTypeClassicOut === GameThrowMultiplierEnum.SINGLE" (click)="game.gameTypeClassicOut = GameThrowMultiplierEnum.SINGLE">{{ 'page.game.create.settings.gameSettings.CLASSIC.outType.options.singleOut' | translate }}</button>
+                                <button [class.selected]="game.gameTypeClassicOut === GameThrowMultiplierEnum.TRIPLE" (click)="game.gameTypeClassicOut = GameThrowMultiplierEnum.TRIPLE">{{ 'page.game.create.settings.gameSettings.CLASSIC.outType.options.tripleOut' | translate }}</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h3>{{ 'page.game.create.settings.gameSettings.CLASSIC.points.title' | translate }}</h3>
+                            <div class="button-grid col-2" #presetPointsContainer>
+                                @for (points of [301, 501, 1001]; track $index) {
+                                    <button [class.selected]="game.gameTypeClassicPoints === points" (click)="game.gameTypeClassicPoints = points">{{ points }}</button>
+                                }
+                                <button (click)="customPointsInputContainer.classList.remove('hide'); presetPointsContainer.classList.add('hide')" [class.selected]="![301, 501, 1001].includes(game.gameTypeClassicPoints ?? 0)">
+                                    {{ 'page.game.create.settings.gameSettings.CLASSIC.points.custom.button' | translate }}
+                                    <fa-icon [icon]="fa.faArrowRight"/>
+                                </button>
+                            </div>
+                            <div class="button-grid hide" #customPointsInputContainer>
+                                <div class="input">
+                                    <input
+                                        type="number"
+                                        name="customPoints"
+                                        [(ngModel)]="game.gameTypeClassicPoints"
+                                        [min]="1"
+                                        [max]="9999"
+                                        (ngModelChange)="checkCustomPoints()">
+                                </div>
+                                <button (click)="customPointsInputContainer.classList.add('hide'); presetPointsContainer.classList.remove('hide')">
+                                    <fa-icon [icon]="fa.faArrowLeft"/>
+                                    {{ 'page.game.create.settings.gameSettings.CLASSIC.points.backToDefault.button' | translate }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        }
+    }
+
+    <div class="step-controls">
+        @if (creationStep > 0) {
+            <button class="back" (click)="previousStep()">Zurück</button>
+        }
+        @if (creationStep < 3) {
+            <button class="next primary large" (click)="nextStep()">
+                {{
+                    creationStep === 0 && game.groupUuid === null ? 'Weiter ohne Gruppe' :
+                    creationStep === 1 && game.locationUuid === null ? 'Weiter ohne Standort' :
+                    'Weiter'
+                }}
+            </button>
+        } @else {
+            <button class="create primary large" [disabled]="!validateForm()" (click)="postForm()">Spiel Starten</button>
+        }
+    </div>
+</main>
+
+<div class="step-status-box">
+    <div class="status">
+        <span [style.width.%]="creationStep / 3 * 100"></span>
+    </div>
+</div>

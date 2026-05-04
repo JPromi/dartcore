@@ -1,0 +1,64 @@
+@if (!sessionAccount) {
+
+    @if (isSavedUser) {
+        <h1>{{ 'page.auth.lastUsers.title' | translate }}</h1>
+    
+        <div class="past-user-list">
+            @for (user of lastUsers.slice().reverse(); track $index) {
+                <a tabindex="0" (click)="selectUser(user)" (keydown.enter)="selectUser(user)" (keydown.space)="selectUser(user)">
+                    <div class="avatar">
+                        <img *ngIf="user.avatar" [src]="user.avatar">
+                    </div>
+                    <h3>{{ user.username }}</h3>
+                </a>
+            }
+    
+            <a tabindex="0" (click)="isSavedUser = false" (keydown.enter)="isSavedUser = false" (keydown.space)="isSavedUser = false">
+                <div class="avatar">
+                    <span></span>
+                </div>
+                <h3>{{ 'page.auth.lastUsers.otherUser.label' | translate }}</h3>
+            </a>
+        </div>
+    } @else {
+        <h1>{{ 'page.auth.login.title' | translate }}</h1>
+    
+        <form>
+            <div>
+                <label for="username">{{ 'page.auth.login.username.label' | translate }}</label>
+                <input type="text" class="input" id="username" name="username" autocomplete="username" [(ngModel)]="loginObject.username" required>
+            </div>
+    
+            <div>
+                <label for="password">{{ 'page.auth.login.password.label' | translate }}</label>
+                <div class="input-container">
+                    <input [type]="isPasswordVisible ? 'text' : 'password'" id="password" name="password" autocomplete="current-password" [(ngModel)]="loginObject.password" required>
+                    <button type="button" (click)="isPasswordVisible = !isPasswordVisible">
+                        <fa-icon *ngIf="!isPasswordVisible" [icon]="fa.faEye"></fa-icon>
+                        <fa-icon *ngIf="isPasswordVisible" [icon]="fa.faEyeSlash"></fa-icon>
+                    </button>
+                </div>
+            </div>
+    
+            <a [routerLink]="['forget']">{{ 'page.auth.login.forgotPassword.label' | translate }}</a>
+
+            <div class="long">
+                <span class="checkbox">
+                    <span [class.checked]="loginObject.rememberMe">
+                        <fa-icon [icon]="fa.faCheck"></fa-icon>
+                    </span>
+                    <input type="checkbox" name="rememberMe" id="rememberMe" [(ngModel)]="loginObject.rememberMe">
+                </span>
+                <label for="rememberMe">{{ 'page.auth.login.rememberMe.label' | translate }}</label>
+            </div>
+            
+            <span class="error" *ngIf="loginResponse && loginResponse.error">
+                <p>{{ loginResponse.error }}</p>
+            </span>
+            <button (click)="login()">{{ 'page.auth.login.login.button' | translate }}</button>
+
+            <a routerLink="/barrier/register">Noch keinen Account?</a>
+        </form>
+    }
+
+}

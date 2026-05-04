@@ -1,0 +1,26 @@
+@if (profile) {
+    <div class="container">
+        <section class="header">
+            <div class="banner">
+                <img [src]="profile.banner">
+                <div class="settings" *ngIf="isCurrentUser">
+                    <a [routerLink]="['/', 'settings', 'profile']">
+                        <fa-icon [icon]="fa.faGear"/>
+                    </a>
+                </div>
+            </div>
+            <div class="top">
+                <div class="avatar">
+                    <img [src]="profile.avatar" *ngIf="profile.avatar"/>
+                </div>
+                <div class="name">
+                    <h2>{{ profile.username }}</h2>
+                </div>
+            </div>
+        </section>
+    </div>
+}
+
+@if (errorCode) {
+    <error-page [errorCode]="errorCode" />
+}

@@ -1,0 +1,61 @@
+<h2>{{ 'page.group.settings.create.title' | translate }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+    <!--
+    Inputs:
+    - Name
+    - Beschreibung
+    - Avatar
+    - Banner
+    - Sichtbarkeit (öffentlich/privat)
+    - Mitglieder einladen
+    -->
+
+    <h3>{{ 'page.group.settings.create.general.title' | translate }}</h3>
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'name', label: 'page.group.settings.create.general.name.label' | translate }" />
+    <ng-container *ngTemplateOutlet="formInput; context: { name: 'description', label: 'page.group.settings.create.general.description.label' | translate, type: 'textarea' }" />
+
+    <h3>{{ 'page.group.settings.create.visibility.title' | translate }}</h3>
+    <div class="selection-block" [class.disabled]="isUpdating">
+        <label [class.active]="form.get('isPublic')?.value === true" for="visibility_public">
+            <input type="radio" id="visibility_public" name="isPublic" [value]="true" formControlName="isPublic" [disabled]="isUpdating"/>
+            <p>{{ 'page.group.settings.create.visibility.public.label' | translate }}</p>
+        </label>
+
+        <label [class.active]="form.get('isPublic')?.value === false" for="visibility_private">
+            <input type="radio" id="visibility_private" name="isPublic" [value]="false" formControlName="isPublic" [disabled]="isUpdating"/>
+            <p>{{ 'page.group.settings.create.visibility.private.label' | translate }}</p>
+        </label>
+    </div>
+
+    <div class="btns">
+        <button type="submit" [disabled]="form.invalid && isUpdating">{{ 'page.group.settings.create.buttons.create.button' | translate }}</button>
+    </div>
+
+    <!-- TEMPLATE -->
+    <ng-template #formInput let-name="name" let-label="label" let-type="type">
+        <div class="input-container" [class.error]="form.get(name)?.errors && form.get(name)?.touched">
+            <div class="input" [class.disabled]="isUpdating">
+                <label [for]="name">{{ label }}</label>
+                @if (type !== 'textarea') {
+                    <div class="input-content">
+                        <input [type]="type ? type : 'text'" [id]="name" [name]="name" [formControlName]="name" autocomplete="off" #inputField [disabled]="isUpdating" />
+                        @if (type === 'password') {
+                            <button (click)="inputField.type = inputField.type === 'password' ? 'text' : 'password'" type="button" [disabled]="isUpdating">
+                                <fa-icon [icon]="fa.faEye" *ngIf="inputField.type === 'password'"/>
+                                <fa-icon [icon]="fa.faEyeSlash" *ngIf="inputField.type !== 'password'"/>
+                            </button>
+                        }
+                    </div>
+                } @else {
+                    <div class="input-content">
+                        <textarea [id]="name" [name]="name" [formControlName]="name" autocomplete="off" [disabled]="isUpdating"></textarea>
+                    </div>
+                }
+            </div>
+            <p *ngIf="form.get(name)?.errors && form.get(name)?.touched" class="error-msg">
+            {{ `asset.form.error.${getFirstErrorKey(name)}` | translate }}
+            </p>
+        </div>
+    </ng-template>
+</form>

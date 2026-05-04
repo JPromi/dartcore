@@ -1,0 +1,67 @@
+<form *ngIf="!isRegistrationSuccess" [formGroup]="registrationForm">
+    <h1>{{ 'page.auth.registration.title' | translate }}</h1>
+
+    <div class="group">
+        <h2>{{ 'page.auth.registration.general.title' | translate }}</h2>
+        <div class="list">
+            <ng-container *ngTemplateOutlet="formInput; context: { name: 'username', label: 'page.auth.registration.general.username.label' | translate }" />
+            <ng-container *ngTemplateOutlet="formInput; context: { name: 'email', label: 'page.auth.registration.general.email.label' | translate }" />
+        </div>
+    </div>
+
+    <div class="group">
+        <h2>{{ 'page.auth.registration.personalData.title' | translate }}</h2>
+        <div class="list">
+            <ng-container *ngTemplateOutlet="formInput; context: { name: 'firstName', label: 'page.auth.registration.personalData.firstName.label' | translate }" />
+            <ng-container *ngTemplateOutlet="formInput; context: { name: 'lastName', label: 'page.auth.registration.personalData.lastName.label' | translate }" />
+            <ng-container *ngTemplateOutlet="formInput; context: { name: 'dateOfBirth', label: 'page.auth.registration.personalData.dateOfBirth.label' | translate, type: 'date' }" />
+        </div>
+    </div>
+
+    <div class="group">
+        <h2>{{ 'page.auth.registration.password.title' | translate }}</h2>
+        <div class="list">
+            <ng-container *ngTemplateOutlet="formInput; context: { name: 'password', label: 'page.auth.registration.password.password.label' | translate, type: 'password' }" />
+            <ng-container *ngTemplateOutlet="formInput; context: { name: 'passwordConfirm', label: 'page.auth.registration.password.passwordConfirm.label' | translate, type: 'password' }" />
+        </div>
+    </div>
+
+
+    <button type="submit" [disabled]="registrationForm.invalid || isSending" (click)="onSubmit()">{{ 'page.auth.registration.submit.button' | translate }}</button>
+
+    <!-- TEMPLATE -->
+    <ng-template #formInput let-name="name" let-label="label" let-type="type">
+        <div class="input-container" [class.error]="registrationForm.get(name)?.errors && registrationForm.get(name)?.touched">
+            <div class="input" [class.disabled]="isSending">
+                <label [for]="name">{{ label }}</label>
+                @if (type == 'text' || type == 'password' || type == undefined) {
+                    <div class="input-content">
+                        <input [type]="type ? type : 'text'" [id]="name" [name]="name" [formControlName]="name" autocomplete="off" #inputField />
+                        @if (type === 'password') {
+                            <button (click)="inputField.type = inputField.type === 'password' ? 'text' : 'password'" type="button" [disabled]="isSending">
+                                <fa-icon [icon]="fa.faEye" *ngIf="inputField.type === 'password'"/>
+                                <fa-icon [icon]="fa.faEyeSlash" *ngIf="inputField.type !== 'password'"/>
+                            </button>
+                        }
+                    </div>
+                } @else if (type == 'textarea') {
+                    <div class="input-content">
+                        <textarea [id]="name" [name]="name" [formControlName]="name" autocomplete="off"></textarea>
+                    </div>
+                } @else if (type == 'date') {
+                    <div class="input-content">
+                        <input [type]="type" [id]="name" [name]="name" [formControlName]="name" autocomplete="off" />
+                    </div>
+                }
+            </div>
+            <p *ngIf="registrationForm.get(name)?.errors && registrationForm.get(name)?.touched" class="error-msg">
+            {{ `asset.form.error.${getFirstErrorKey(name)}` | translate }}
+            </p>
+        </div>
+    </ng-template>
+</form>
+
+<section *ngIf="isRegistrationSuccess" class="success-message">
+    <h1>{{ 'page.auth.registration.success.title' | translate }}</h1>
+    <p>{{ 'page.auth.registration.success.message' | translate }}</p>
+</section>

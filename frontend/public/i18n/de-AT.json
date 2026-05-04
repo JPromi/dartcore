@@ -1,0 +1,377 @@
+{
+    "asset": {
+        "nav": {
+            "page": {
+                "home.label": "Startseite",
+                "groups.label": "Gruppen",
+                "newGame.label": "Neues Spiel"
+            },
+            "usermenu": {
+                "profile.label": "Profil",
+                "settings.label": "Einstellungen",
+                "logout.label": "Abmelden"
+            }
+        },
+        "form": {
+            "error": {
+                "required": "Dieses Feld ist erforderlich",
+                "email": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+                "passwordMismatch": "Die Passwörter stimmen nicht überein",
+                "userExistsAlready": "Dieser Benutzername ist bereits vergeben",
+                "minlength": "Der eingegebene Wert ist zu kurz"
+            }
+        },
+        "error": {
+            "text": {
+                "home.button": "Zurück zur Startseite"
+            },
+            "default": {
+                "title": "Error",
+                "message": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut."
+            },
+            "c401": {
+                "title": "Nicht autorisiert",
+                "message": "Sie sind nicht berechtigt, auf diese Seite zuzugreifen. Bitte melden Sie sich an."
+            },
+            "c403": {
+                "title": "Zugriff verweigert",
+                "message": "Sie haben keine Berechtigung, auf diese Seite zuzugreifen."
+            },
+            "c404": {
+                "title": "Seite nicht gefunden",
+                "message": "Die angeforderte Seite existiert nicht oder wurde entfernt."
+            },
+            "c504": {
+                "title": "Gateway Timeout",
+                "message": "Der Server hat nicht rechtzeitig auf die Anfrage geantwortet."
+            }
+        },
+        "enum": {
+            "invitationStatusAccount" : {
+                "PENDING": "Ausstehend",
+                "ACCEPTED": "Akzeptiert",
+                "REJECTED": "Abgelehnt"
+            }
+        },
+        "popup": {
+            "ok": "OK",
+            "cancel": "Abbrechen",
+            "delete": "Löschen",
+            "leave": "Verlassen"
+        }
+    },
+    "page": {
+        "auth": {
+            "lastUsers": {
+                "title": "Willkommen zurück",
+                "otherUser.label": "Anderer Benutzer"
+            },
+            "login": {
+                "title": "Anmelden",
+                "username.label": "Benutzername",
+                "password.label": "Password",
+                "forgotPassword.label": "Passwort vergessen?",
+                "rememberMe.label": "Benutzer speichern?",
+                "login.button": "Login"
+            },
+            "totp": {
+                "title": "TOTP",
+                "totp.label": "TOTP",
+                "login.button": "Login"
+            },
+            "logout": {
+                "logout.text": "Abmelden"
+            },
+            "registration": {
+                "title": "Registrierung",
+                "general": {
+                    "title": "Allgemein",
+                    "username.label": "Benutzername",
+                    "email.label": "E-Mail"
+                },
+                "personalData": {
+                    "title": "Persönliche Daten",
+                    "firstName.label": "Vorname",
+                    "lastName.label": "Nachname",
+                    "dateOfBirth.label": "Geburtsdatum"
+                },
+                "password": {
+                    "title": "Passwort",
+                    "password.label": "Passwort",
+                    "passwordConfirm.label": "Passwort bestätigen"
+                },
+                "submit.button": "Registrieren",
+                "success": {
+                    "title": "Registrierung erfolgreich",
+                    "message": "Deine Registrierung war erfolgreich! Bitte überprüfe deine E-Mails, um dein Konto zu aktivieren. Solltest du keine E-Mail erhalten haben, überprüfe bitte auch deinen Spam-Ordner."
+                }
+            },
+            "validateToken": {
+                "title": "Konto aktivieren",
+                "loading.text": "Token wird überprüft...",
+                "invalidToken.text": "Der Aktivierungstoken ist ungültig.",
+                "validToken.text": "Hallo {{username}}, dein Konto wurde erfolgreich aktiviert! Du kannst dich jetzt anmelden.",
+                "login.button": "Zur Anmeldung"
+            }
+        },
+        "settings": {
+            "menu": {
+                "title": "Einstellungen",
+                "account.label": "Konto",
+                "profile.label": "Profil",
+                "informations": {
+                    "title": "Informationen",
+                    "version.label": "Version:",
+                    "buildDate.label": "Build date:"
+                }
+            },
+            "account": {
+                "general": {
+                    "title": "Allgemein",
+                    "firstName.label": "Vorname",
+                    "lastName.label": "Nachname",
+                    "email.label": "E-Mail"
+                },
+                "password": {
+                    "title": "Passwort",
+                    "passwordOld.label": "Altes Passwort",
+                    "passwordNew.label": "Neues Passwort",
+                    "passwordConfirm.label": "Passwort bestätigen"
+                },
+                "buttons": {
+                    "save.button": "Speichern"
+                }
+            },
+            "profile": {
+                "general": {
+                    "title": "Allgemein",
+                    "username.label": "Benutzername",
+                    "description.label": "Beschreibung",
+                    "country.label": "Land"
+                },
+                "links": {
+                    "title": "Links",
+                    "website.label": "Webseite",
+                    "x.label": "X",
+                    "instagram.label": "Instagram",
+                    "twitch.label": "Twitch",
+                    "youtube.label": "YouTube",
+                    "facebook.label": "Facebook",
+                    "github.label": "GitHub"
+                },
+                "visibility": {
+                    "title": "Sichtbarkeit",
+                    "friends.label": "Freunde",
+                    "public.label": "Öffentlich",
+                    "private.label": "Privat"
+                },
+                "buttons": {
+                    "save.button": "Speichern"
+                }
+            }
+        },
+        "game": {
+            "active": {
+                "input": {
+                    "round.label": "Runde",
+                    "gameTime.label": "Spielzeit",
+                    "miss.button": "Miss",
+                    "single.button": "Single",
+                    "double.button": "Double",
+                    "triple.button": "Triple"
+                },
+                "player": {
+                    "extendedInformations": {
+                        "highscore.label": "Highscore",
+                        "hint.label": "Tipps",
+                        "average.label": "Durchschnitt"
+                    },
+                    "points": {
+                        "miss.text": "Miss"
+                    }
+                },
+                "popup": {
+                    "endGame": {
+                        "title": "Spiel beenden",
+                        "message": "Möchtest du das Spiel wirklich beenden?"
+                    }
+                }
+            },
+            "create": {
+                "game": {
+                    "CLASSIC": {
+                        "title": "Klassisch",
+                        "description": "Jeder Spieler startet mit einem festen Punktestand und muss durch abwechselndes Werfen exakt auf 0 kommen. Je nach Spielmodus muss der letzte Wurf dabei auf ein Doppelfeld (Double Out) erfolgen."
+                    },
+                    "CRICKET": {
+                        "title": "Cricket",
+                        "description": "Ein strategisches Spiel, bei dem Spieler bestimmte Felder treffen müssen, um Punkte zu sammeln und das Spiel zu gewinnen."
+                    },
+                    "COUNT_UP": {
+                        "title": "Count Up",
+                        "description": "Ein einfaches Spiel, bei dem Spieler so viele Punkte wie möglich in einer bestimmten Anzahl von Würfen sammeln."
+                    }
+                },
+                "settings": {
+                    "title": "Einstellungen",
+                    "players": {
+                        "title": "Spieler",
+                        "search.label": "Spieler suchen...",
+                        "addAsGuest.button": "Als Gast hinzufügen",
+                        "noPlayers.text": "Keine Spieler hinzugefügt"
+                    },
+                    "selectGroup": {
+                        "title": "Gruppe auswählen"
+                    },
+                    "gameMode": {
+                        "title": "Spielmodus Auswählen"
+                    },
+                    "gameSettings": {
+                        "CLASSIC": {
+                            "inType": {
+                                "title": "Start",
+                                "options": {
+                                    "singleIn": "Single In",
+                                    "doubleIn": "Double In",
+                                    "tripleIn": "Triple In",
+                                    "all": "Alle"
+                                }
+                            },
+                            "outType": {
+                                "title": "Ende",
+                                "options": {
+                                    "singleOut": "Single Out",
+                                    "doubleOut": "Double Out",
+                                    "tripleOut": "Triple Out",
+                                    "all": "Alle"
+                                }
+                            },
+                            "points": {
+                                "title": "Punkte",
+                                "custom.button": "Benutzerdefiniert",
+                                "backToDefault.button": "Zurück zu Standard"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "group": {
+            "single": {
+                "nav": {
+                    "overview.label": "Übersicht",
+                    "games.label": "Spiele"
+                },
+                "aside": {
+                    "members.title": "Mitglieder",
+                    "informations": {
+                        "title": "Informationen"
+                    }
+                },
+                "private": {
+                    "title": "Private Gruppe",
+                    "disclaimer.text": "Diese Gruppe ist privat. Sie müssen Mitglied sein, um Informationen über diese Gruppe zu sehen."
+                },
+                "options": {
+                    "leaveGroup": {
+                        "tooltip": "Gruppe verlassen",
+                        "title": "Gruppe verlassen",
+                        "confirmation.text": "Möchtest du die Gruppe \"{{groupName}}\" wirklich verlassen?"
+                    }
+                },
+                "settings": {
+                    "menu": {
+                        "title": "Einstellungen",
+                        "general.label": "Allgemein",
+                        "members.label": "Mitglieder",
+                        "invitations.label": "Einladungen",
+                        "back.label": "Zurück",
+                        "informations": {
+                            "title": "Informationen",
+                            "creationDate": "Erstellt am"
+                        }
+                    },
+                    "edit": {
+                        "general": {
+                            "informations": {
+                                "title": "Informationen",
+                                "name.label": "Gruppenname",
+                                "description.label": "Beschreibung"
+                            },
+                            "visibility": {
+                                "title": "Sichtbarkeit",
+                                "public.label": "Öffentlich",
+                                "private.label": "Privat"
+                            },
+                            "dangerZone": {
+                                "title": "Gefahrenzone",
+                                "delete": {
+                                    "title": "Gruppe löschen",
+                                    "button": "Gruppe löschen",
+                                    "confirmation.text": "Möchtest du diese Gruppe wirklich löschen?\nDieser Vorgang kann nicht rückgängig gemacht werden."
+                                }
+                            },
+                            "buttons": {
+                                "save.button": "Speichern"
+                            }
+                        },
+                        "member": {
+                            "invite": {
+                                "title": "Einladen",
+                                "search.placeholder": "Suchen...",
+                                "noQuery.text": "Kein Suchbegriff eingegeben",
+                                "noResults.text": "Keine Spieler gefunden",
+                                "invite.tooltip": "Einladen"
+                            },
+                            "memberSettings": {
+                                "title": "Bearbeiten",
+                                "rejected.text": "Dieser Benutzer hat die Einladung abgelehnt.",
+                                "pending.text": "Dieser Benutzer hat die Einladung noch nicht angenommen.",
+                                "permissions": {
+                                    "title": "Berechtigungen",
+                                    "admin.label": "Admin",
+                                    "owner.label": "Besitzer"
+                                },
+                                "remove": {
+                                    "title": "Entfernen",
+                                    "confirmation.text": "Möchtest du {{username}} wirklich aus der Gruppe entfernen?",
+                                    "remove.button": "Entfernen",
+                                    "cancel.button": "Abbrechen"
+                                },
+                                "buttons": {
+                                    "save.button": "Speichern",
+                                    "cancel.button": "Abbrechen",
+                                    "remove.button": "Entfernen"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "settings": {
+                "create": {
+                    "title": "Gruppe erstellen",
+                    "general": {
+                        "title": "Allgemeine Informationen",
+                        "name.label": "Gruppenname",
+                        "description.label": "Beschreibung"
+                    },
+                    "visibility": {
+                        "title": "Sichtbarkeit",
+                        "public.label": "Öffentlich",
+                        "private.label": "Privat"
+                    },
+                    "buttons": {
+                        "create.button": "Gruppe erstellen"
+                    }
+                }
+            },
+            "list": {
+                "search": "Suchen...",
+                "invitations": "Einladungen",
+                "noPendingInvitations": "Keine ausstehenden Einladungen",
+                "acceptInvitationFrom": "Einladung von {{username}} annehmen?"
+            }
+        }
+    }
+}

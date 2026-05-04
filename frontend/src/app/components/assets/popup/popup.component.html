@@ -1,0 +1,22 @@
+<div class="popup" *ngIf="show" [@fade]>
+    <span class="void" (click)="submit(false)"></span>
+
+    <div class="container" [class]="type">
+        <h2>{{ title }}</h2>
+        <p class="description">{{ description }}</p>
+        <div class="btns">
+            @switch (type) {
+                @case ('info') {
+                    <button type="button" class="primary" (click)="submit(true)">{{ 'asset.popup.ok' | translate }}</button>
+                }
+                @case ('delete') {
+                    <button type="button" (click)="submit(false)">{{ 'asset.popup.cancel' | translate }}</button>
+                    <button type="button" class="danger" (click)="submit(true)">{{ 'asset.popup.delete' | translate }}</button>
+                }
+                @case ('leave') {
+                    <button type="button" (click)="submit(false)">{{ 'asset.popup.cancel' | translate }}</button>
+                    <button type="button" class="danger" (click)="submit(true)">{{ 'asset.popup.leave' | translate }}</button>
+                }
+            }
+        </div>
+</div>

@@ -1,0 +1,126 @@
+<header class="options">
+    <div>
+        <div class="search">
+            <input type="text" name="searchGroup" placeholder="{{ 'page.group.list.search' | translate }}" [(ngModel)]="searchQuery" (ngModelChange)="searchGroup()"/>
+            <button [class.clear]="searchQuery.length > 0" (click)="clearSearch()">
+                <div>
+                    <fa-icon [icon]="fa.faSearch"/>
+                </div>
+                <div>
+                    <fa-icon [icon]="fa.faXmark"/>
+                </div>
+            </button>
+        </div>
+    </div>
+    <div>
+        <a [routerLink]="['/group', 'new']">
+            <!-- <p>Neue Gruppe</p> -->
+            <fa-icon [icon]="fa.faAdd"/>
+        </a>
+
+        <div class="container">
+            <button (click)="isInvitePopupOpen = !isInvitePopupOpen">
+                <!-- <p>Ausstehende Einladungen</p> -->
+                <fa-icon [icon]="fa.faInbox"/>
+                <span class="notify" *ngIf="groupInvitationCount > 0">{{ getInvitationCount(groupInvitationCount) }}</span>
+            </button>
+
+            <div
+                class="popup"
+                *ngIf="isInvitePopupOpen">
+                <h1>{{ 'page.group.list.invitations' | translate }}</h1>
+
+                @if (groupInvitation.length > 0) {
+                    <div class="list">
+                        @for (invitation of groupInvitation; track $index) {
+                            <div class="element">
+                                <div>
+                                    <img [src]="invitation.group?.avatar" class="avatar">
+                                    <div class="info">
+                                        <a [routerLink]="[ '/', 'group', invitation.group?.uuid ]">
+                                            <h3>{{ invitation.group?.name }}</h3>
+                                        </a>
+                                        <a [routerLink]="[ '/', 'profile', invitation.inviter?.username ]">
+                                            <i>{{ invitation.inviter?.username }}</i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <button (click)="sendInvitationResponse(invitation, true)">
+                                        <fa-icon [icon]="fa.faCheck"/>
+                                    </button>
+                                    <button (click)="sendInvitationResponse(invitation, false)">
+                                        <fa-icon [icon]="fa.faXmark"/>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                } @else {
+                    <p class="disclaimer">{{ 'page.group.list.noPendingInvitations' | translate }}</p>
+                }
+            </div>
+        </div>
+    </div>
+</header>
+<main>
+    <div class="list">
+        @for (group of groups; track $index) {
+            <div class="group">
+
+                <a [routerLink]="[ '/', 'group', group.uuid ]"></a>
+                
+                @if (findActiveInvitationForGroup(group.uuid); as invitation) {
+                    <span class="invitation">
+                        <button (click)="content.classList.toggle('active')">
+                            <fa-icon [icon]="fa.faEnvelope" />
+                        </button>
+
+                        <div class="content" #content>
+                            <h3>{{ 'page.group.list.acceptInvitationFrom' | translate:{ username: invitation.inviter?.username } }}</h3>
+                            
+                            <div class="options">
+                                <button (click)="sendInvitationResponse(invitation, true)">
+                                    <fa-icon [icon]="fa.faCheck"/>
+                                </button>
+
+                                <button (click)="sendInvitationResponse(invitation, false)">
+                                    <fa-icon [icon]="fa.faXmark"/>
+                                </button>
+                            </div>
+                        </div>
+                    </span>
+                }
+
+                <div class="name">
+                    <div class="avatar">
+                        <img *ngIf="group.avatar" [src]="group.avatar">
+                    </div>
+                    <h2>{{ group.name }}</h2>
+                </div>
+
+                <div class="informations">
+                    <div class="box">
+                        <fa-icon [icon]="fa.faUser"/>
+                        @if (group.isPublic || group.isMember) {
+                            <span class="number">
+                                {{ getMemberCount(group.membersTotal) }}
+                            </span>
+                        } @else {
+                            <span class="number anonym">XXX</span>
+                        }
+                    </div>
+                    <div class="box" *ngIf="group.isMember">
+                        <fa-icon [icon]="fa.faUserCheck"/>
+                    </div>
+                </div>
+
+                <div class="background">
+                    <img *ngIf="group.banner" [src]="group.banner">
+                    <span class="gradient"></span>
+                </div>
+            </div>
+        }
+    </div>
+</main>

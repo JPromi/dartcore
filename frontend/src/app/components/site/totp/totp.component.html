@@ -1,0 +1,14 @@
+<h1>{{ 'page.auth.totp.title' | translate }}</h1>
+
+<form>
+    <div>
+        <label for="totp">{{ 'page.auth.totp.totp.label' | translate }}</label>
+        <input type="text" class="input" name="totp" id="totp" autocomplete="totp" [(ngModel)]="totp" required [maxlength]="9">
+    </div>
+
+    <span class="error" *ngIf="loginResponse && loginResponse?.error">
+        <p>{{ loginResponse.error }}</p>
+    </span>
+
+    <button type="submit" (click)="login()">{{ 'page.auth.totp.login.button' | translate }}</button>
+</form>

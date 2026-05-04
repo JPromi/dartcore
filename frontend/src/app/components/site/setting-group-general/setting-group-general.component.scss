@@ -1,0 +1,392 @@
+:host {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+    form {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 50rem;
+        margin: 0 auto 5rem auto;
+        gap: 1rem;
+
+        .top {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+
+            .banner {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 1rem;
+                width: 100%;
+                height: 25vh;
+                position: relative;
+                border-radius: .5rem;
+                overflow: hidden;
+                
+                .container {
+                    width: 100%;
+                    height: 100%;
+
+                    img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                }
+
+                .waiting {
+                    position: absolute;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    width: 100%;
+                    height: 100%;
+                    background-color: #00000075;
+                    backdrop-filter: blur(5px);
+                    top: 0;
+                    left: 0;
+
+                    .progress {
+                        width: 15rem;
+                        gap: .25rem;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+
+                        span.bar {
+                            content: "";
+                            display: block;
+                            width: 100%;
+                            height: .45rem;
+                            background-color: var(--background);
+                            border-radius: .25rem;
+                            transition: width 150ms ease-in-out;
+                            position: relative;
+
+                            span {
+                                content: "";
+                                display: block;
+                                height: 100%;
+                                background-color: var(--primary);
+                                border-radius: .25rem;
+                                width: calc(var(--progress) * 1%);
+                                transition: width 150ms ease-in-out;
+                            }
+                        }
+
+                        div {
+                            display: flex;
+                            justify-content: space-between;
+                            width: 100%;
+
+                            p {
+                                font-size: .75rem;
+                                color: var(--text);
+                                font-weight: 500;
+                                max-width: 100%;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .avatar {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 10rem;
+                height: 10rem;
+                position: relative;
+                overflow: hidden;
+                margin-bottom: -5rem;
+                transform: translate(2rem, -50%);
+                border: 5px solid var(--background);
+                border-radius: 50%;
+
+                .container {
+                    width: 100%;
+                    height: 100%;
+                    overflow: hidden;
+                    background-color: var(--background-secondary);
+
+                    img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                }
+
+                .waiting {
+                    position: absolute;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    width: 100%;
+                    height: 100%;
+                    background-color: #00000075;
+                    backdrop-filter: blur(5px);
+                    top: 0;
+                    left: 0;
+
+                    .progress {
+                        width: 8rem;
+                        gap: .25rem;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+
+                        span.bar {
+                            content: "";
+                            display: block;
+                            width: 100%;
+                            height: .45rem;
+                            background-color: var(--background);
+                            border-radius: .25rem;
+                            transition: width 150ms ease-in-out;
+                            position: relative;
+
+                            span {
+                                content: "";
+                                display: block;
+                                height: 100%;
+                                background-color: var(--primary);
+                                border-radius: .25rem;
+                                width: calc(var(--progress) * 1%);
+                                transition: width 150ms ease-in-out;
+                            }
+                        }
+
+                        div {
+                            display: flex;
+                            justify-content: space-between;
+                            width: 100%;
+
+                            p {
+                                font-size: .75rem;
+                                color: var(--text);
+                                font-weight: 500;
+                                max-width: 100%;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .options {
+                position: absolute;
+                display: flex;
+                gap: .5rem;
+
+                button {
+                    width: 2.5rem;
+                    height: 2.5rem;
+                    border-radius: 50%;
+                    background-color: #ffffff50;
+                    backdrop-filter: blur(5px);
+                    border: none;
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    transition: opacity 150ms ease-in-out;
+
+                    fa-icon {
+                        color: var(--background);
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        font-size: 1.1rem;
+                    }
+                }
+
+                input {
+                    display: none;
+                }
+
+                &.disabled {
+                    button {
+                        opacity: 0;
+                    }
+                }
+            }
+        }
+
+        & > h3 {
+            border-bottom: 1px solid var(--border);
+            padding: .25rem .5rem;
+            font-size: .9rem;
+            font-weight: 400;
+            color: var(--text);
+            margin-top: .5rem;
+            box-sizing: border-box;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: .25rem;
+            width: 100%;
+            max-width: 25rem;
+
+            .input {
+                border: 1px solid var(--border);
+                border-radius: .25rem;
+                padding: .5rem .75rem;
+                transition: border 150ms ease-in-out, opacity 150ms ease-in-out;
+
+                label {
+                    font-size: .9rem;
+                    font-weight: 400;
+                    color: var(--text);
+                    line-height: .5rem;
+                    opacity: .5;
+                    transition: color 150ms ease-in-out, opacity 150ms ease-in-out;
+                }
+    
+                input {
+                    background-color: transparent;
+                    border: transparent;
+                    color: var(--text);
+                    outline: none;
+                    font-size: 1rem;
+                    width: 100%;
+                }
+
+                textarea {
+                    background-color: transparent;
+                    border: transparent;
+                    color: var(--text);
+                    outline: none;
+                    font-size: 1rem;
+                    width: 100%;
+                    resize: none;
+                    height: 4.75rem;
+                }
+
+                &.disabled {
+                    opacity: .5;
+                    cursor: not-allowed;
+                }
+
+            }
+
+            p.error-msg {
+                color: var(--error);
+            }
+
+            &.error {
+                .input {
+                    border: 1px solid var(--error);
+
+                    label {
+                        color: var(--error);
+                        opacity: 1;
+                    }
+                }
+            }
+        }
+
+        .selection-block {
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
+
+            label {
+                display: flex;
+                padding: .25rem .5rem;
+                border-radius: .25rem;
+                cursor: pointer;
+                transition: background-color 150ms ease-in-out, opacity 150ms ease-in-out;
+
+                input {
+                    display: none;
+                }
+
+                &.active {
+                    background-color: var(--primary);
+                }
+            }
+
+            &.disabled {
+
+                label {
+                    opacity: .5;
+                    cursor: not-allowed;
+                }
+            }
+        }
+
+        .btns {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+
+            &.left {
+                justify-content: flex-start;
+            }
+
+            &.footer {
+                margin-top: 2rem;
+            }
+
+            button {
+                min-width: fit-content;
+                width: 7.5rem;
+                height: 2.5rem;
+                border-radius: .25rem;
+                background-color: var(--primary);
+                color: var(--text);
+                font-size: 1rem;
+                font-weight: 500;
+                border: none;
+                cursor: pointer;
+                transition: background-color 150ms ease-in-out;
+                padding: 0 .75rem;
+
+                &.danger {
+                    background-color: var(--error);
+                }
+
+                &:hover {
+                    opacity: .9;
+                }
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 768px) {
+    :host {
+        form {
+            .top {
+                .avatar {
+                    width: 7.5rem;
+                    height: 7.5rem;
+                    margin-bottom: -3.75rem;
+                    transform: translate(1rem, -50%);
+                }
+            }
+
+            .input-container {
+                max-width: 100%;
+            }
+        }
+    }
+}

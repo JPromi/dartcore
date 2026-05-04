@@ -1,0 +1,29 @@
+<aside>
+    <nav>
+        <h1>{{ 'page.settings.menu.title' | translate }}</h1>
+        <ul>
+            <li>
+                <a [routerLink]="['/', 'settings', 'account']" routerLinkActive="active">
+                    <fa-icon [icon]="fa.faUser" />
+                    <p>{{ 'page.settings.menu.account.label' | translate }}</p>
+                </a>
+            </li>
+            <li>
+                <a [routerLink]="['/', 'settings', 'profile']" routerLinkActive="active">
+                    <fa-icon [icon]="fa.faCircleUser" />
+                    <p>{{ 'page.settings.menu.profile.label' | translate }}</p>
+                </a>
+            </li>
+        </ul>
+
+        <div class="informations">
+            <h6>{{ 'page.settings.menu.informations.title' | translate }}</h6>
+            <p>{{ ('page.settings.menu.informations.version.label' | translate) + ` ${buildInfo.version}` }}</p>
+            <p>{{ ('page.settings.menu.informations.buildDate.label' | translate) + ` ${(buildInfo.buildDate | date: 'yyyy-MM-dd HH:mm')}` }}</p>
+            <p>by <a href="https://jpromi.com">JPromi</a></p>
+        </div>
+    </nav>
+</aside>
+<main>
+    <router-outlet></router-outlet>
+</main>

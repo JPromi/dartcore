@@ -1,0 +1,146 @@
+@if (groupData) {
+    <main>
+        <div class="options">
+            <button class="primary" (click)="showInviteMembers = true">
+                <fa-icon [icon]="fa.faUserPlus" />
+            </button>
+        </div>
+
+        <div class="list">
+            @for (member of groupMembers; track $index) {
+                <div class="member">
+                    <div class="options">
+                        <button (click)="selectedMember = member">
+                            <fa-icon [icon]="fa.faGear" />
+                        </button>
+                        @if (member.status != 'ACCEPTED') {
+                            <span class="status" [class.pending]="member.status == 'PENDING'" [class.rejected]="member.status == 'REJECTED'">{{ 'asset.enum.invitationStatusAccount.' + member.status | translate }}</span>
+                        }
+                    </div>
+
+                    <img [src]="member.avatar" class="avatar">
+                    <div class="text">
+                        <p>{{ member.username }}</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Edit Member -->
+        <div class="popup" *ngIf="selectedMember" [@fade]>
+            <span class="void" (click)="closeMemberPopup()" ></span>
+
+            <div class="container">
+                <span class="title">{{ 'page.group.single.settings.edit.member.memberSettings.title' | translate }}</span>
+
+                <form class="content member" (submit)="saveMemberChanges(); $event.preventDefault();">
+
+                    <div class="header">
+                        <img [src]="selectedMember.avatar" class="avatar">
+
+                        <div class="text">
+                            <h2>{{ selectedMember.username }}</h2>
+                        </div>
+                    </div>
+
+                    @if (selectedMember.status != 'ACCEPTED') {
+                        @switch (selectedMember.status) {
+                            @case ('REJECTED') {
+                                <p class="disclaimer">{{ 'page.group.single.settings.edit.member.memberSettings.rejected.text' | translate }}</p>
+                            }
+                            @case ('PENDING') {
+                                <p class="disclaimer">{{ 'page.group.single.settings.edit.member.memberSettings.pending.text' | translate }}</p>
+                            }
+                        }
+                    } @else {
+                        <div class="main">
+                            <div>
+                                <h3>{{ 'page.group.single.settings.edit.member.memberSettings.permissions.title' | translate }}</h3>
+                                
+                                <div class="form-group">
+                                    <p>{{ 'page.group.single.settings.edit.member.memberSettings.permissions.admin.label' | translate }}</p>
+                                    <input-checkbox-slider [(checked)]="selectedMember.isAdmin" [disabled]="selectedMember.isOwner"/>
+                                </div>
+
+                                <div class="form-group">
+                                    <p>{{ 'page.group.single.settings.edit.member.memberSettings.permissions.owner.label' | translate }}</p>
+                                    <input-checkbox-slider [checked]="selectedMember.isOwner" [disabled]="true"/>
+                                </div>
+                            </div>
+                            <div class="dangerzone">
+                                <h3>{{ 'page.group.single.settings.edit.member.memberSettings.remove.title' | translate }}</h3>
+                                
+                                @if (!removeMember) {
+                                    <button class="danger" type="button" (click)="removeMember = true" [disabled]="selectedMember.isOwner">{{ 'page.group.single.settings.edit.member.memberSettings.remove.remove.button' | translate }}</button>
+                                } @else {
+                                    <p>{{ 'page.group.single.settings.edit.member.memberSettings.remove.confirmation.text' | translate:{username: selectedMember.username} }}</p>
+                                    <div class="button-group">
+                                        <button class="danger" type="button" (click)="removeMemberFromGroup()">{{ 'page.group.single.settings.edit.member.memberSettings.remove.remove.button' | translate }}</button>
+                                        <button type="button" (click)="removeMember = false">{{ 'page.group.single.settings.edit.member.memberSettings.remove.cancel.button' | translate }}</button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="footer">
+                        <button type="button" (click)="closeMemberPopup()">{{ 'page.group.single.settings.edit.member.memberSettings.buttons.cancel.button' | translate }}</button>
+                        @if (selectedMember.status != 'ACCEPTED') {
+                            <button type="button" class="danger" (click)="removeInvitation()">{{ 'page.group.single.settings.edit.member.memberSettings.buttons.remove.button' | translate }}</button>
+                        } @else {
+                            <button type="submit" class="primary">{{ 'page.group.single.settings.edit.member.memberSettings.buttons.save.button' | translate }}</button>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Invite Member -->
+        <div class="popup" *ngIf="showInviteMembers" [@fade]>
+            <span class="void" (click)="showInviteMembers = false" ></span>
+
+            <div class="container">
+                <span class="title">{{ 'page.group.single.settings.edit.member.invite.title' | translate }}</span>
+
+                <div class="content invite">
+                    
+                    <div class="search">
+                        <input type="text" name="searchGroup" placeholder="{{ 'page.group.single.settings.edit.member.invite.search.placeholder' | translate }}" [(ngModel)]="inviteSearchTerm" (ngModelChange)="searchProfileInvitation()"/>
+                        <button [class.clear]="inviteSearchTerm.length > 0" (click)="clearSearchProfileInvitation()">
+                            <div>
+                                <fa-icon [icon]="fa.faSearch"/>
+                            </div>
+                            <div>
+                                <fa-icon [icon]="fa.faXmark"/>
+                            </div>
+                        </button>
+                    </div>
+
+                    @if (invitationSearchResults == null) {
+                        <p class="disclaimer">{{ 'page.group.single.settings.edit.member.invite.noQuery.text' | translate }}</p>
+                    } @else if (invitationSearchResults.content.length == 0) {
+                        <p class="disclaimer">{{ 'page.group.single.settings.edit.member.invite.noResults.text' | translate }}</p>
+                    } @else {
+                        <div class="list">
+                            @for (player of invitationSearchResults.content; track $index) {
+                                <div class="player">
+                                    <div>
+                                        <img [src]="player.avatar" class="avatar">
+                                        <p>{{ player.username }}</p>
+                                    </div>
+                                    <div>
+                                        <button (click)="invitePlayer(player)" [title]="'page.group.single.settings.edit.member.invite.invite.tooltip' | translate">
+                                            <fa-icon [icon]="fa.faPlus"/>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </main>
+} @else {
+    <p>Loading...</p>
+}

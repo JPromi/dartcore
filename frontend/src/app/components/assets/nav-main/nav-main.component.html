@@ -1,0 +1,63 @@
+<nav>
+    <div class="left">
+        <button
+            (click)="isMobileMenuOpen = !isMobileMenuOpen"
+            (keydown.enter)="isMobileMenuOpen = !isMobileMenuOpen"
+            (keydown.space)="isMobileMenuOpen = !isMobileMenuOpen"
+            class="veggi-burger"
+            [class.active]="isMobileMenuOpen">
+            <span></span>
+            <span></span>
+        </button>
+        <ul *ngIf="!isMobile || (isMobile && isMobileMenuOpen)" @fade id="mobilemenu">
+            <li>
+                <a routerLink="/game/new" class="highlight">
+                    <fa-icon [icon]="fa.faPen" />
+                    {{ 'asset.nav.page.newGame.label' | translate }}
+                </a>
+            </li>
+            <li>
+                <a routerLink="/">
+                    <fa-icon [icon]="fa.faHome" />
+                    {{ 'asset.nav.page.home.label' | translate }}
+                </a>
+            </li>
+            <li>
+                <a routerLink="/group">
+                    <fa-icon [icon]="fa.faUserGroup" />
+                    {{ 'asset.nav.page.groups.label' | translate }}
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="right">
+        <button class="user" (click)="toggleUserMenu()" (keydown.enter)="toggleUserMenu()" (keydown.space)="toggleUserMenu()">
+            <p>{{ account?.username }}</p>
+            <div class="avatar">
+                <img [src]="account?.avatar" *ngIf="account?.avatar"/>
+            </div>
+        </button>
+        <div class="usermenu" id="usermenu" @fade *ngIf="isUserMenuOpen" (blur)="isUserMenuOpen = false">
+            <ul>
+                <li>
+                    <a routerLink="/profile">
+                        <fa-icon [icon]="fa.faUser" />
+                        {{ 'asset.nav.usermenu.profile.label' | translate }}
+                    </a>
+                </li>
+                <li>
+                    <a routerLink="/settings">
+                        <fa-icon [icon]="fa.faGear" />
+                        {{ 'asset.nav.usermenu.settings.label' | translate }}
+                    </a>
+                </li>
+                <li>
+                    <a routerLink="/barrier/logout">
+                        <fa-icon [icon]="fa.faRightFromBracket" />
+                        {{ 'asset.nav.usermenu.logout.label' | translate }}
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

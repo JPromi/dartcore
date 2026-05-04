@@ -1,0 +1,46 @@
+html, body {
+    height: 100%;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+* {
+    font-family: 'Poppins', sans-serif;
+}
+
+a {
+    color: var(--text-link);
+    transition: color 150ms ease-in-out;
+
+    &:hover {
+        color: var(--text-link-hover);
+    }
+}
+
+body {
+    --nav-height: 7rem;
+    --davice-top: env(safe-area-inset-top);
+    --device-bottom: env(safe-area-inset-bottom);
+}
+
+body {
+    --primary: #0099ff;
+    --secondary: #00ff00;
+    --tertiary: #d32525;
+    --text: #ffffff;
+    --text-link: #0099ff;
+    --text-link-hover: #00c3ff;
+    --error: #cf1a1a;
+    --border: #46485e;
+    --shadow-background: #1a1b27;
+    --background: #232534;
+    --background-gradient: #2e3e4b;
+    --background-secondary: #1d1e2b;
+    --game-button: #405674;
+
+    --status-pending: #ff9800;
+    --status-rejected: #cf1a1a;
+}
