@@ -113,6 +113,11 @@ export class GameCreateComponent implements OnInit {
     if (this.creationStep < 3) {
       this.creationStep++;
     }
+
+    // load player on last step
+    if (this.creationStep === 3) {
+      this._searchProfile();
+    }
   }
 
   public previousStep(): void {
@@ -238,8 +243,16 @@ export class GameCreateComponent implements OnInit {
   private _searchProfile() {
     this.profileSearchLoading = true;
     if (this.searchQuery.length == 0) {
-      this.profileSearchResults = [];
+      // this.profileSearchResults = [];
+      // this.profileSearchLoading = false;
+      this.profileService.searchProfile("", 0, 20, true).subscribe(
+        (response: PageResponse<ProfileLightResponse>) => {
+          this.profileSearchResults = response.content;
           this.profileSearchLoading = false;
+        }
+      );
+
+
       return;
     } else {
       this.profileService.searchProfile(this.searchQuery, 0, 5, true).subscribe(
