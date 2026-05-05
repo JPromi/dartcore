@@ -14,7 +14,7 @@ services:
     volumes:
       - ./data_db:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d darts"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d darts"]
       interval: 5s
       timeout: 5s
       retries: 10
