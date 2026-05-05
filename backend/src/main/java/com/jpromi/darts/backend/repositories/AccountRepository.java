@@ -38,7 +38,10 @@ SELECT a.*
 FROM account a
 JOIN rel r ON r.target_id = a.id
 WHERE a.username ILIKE CONCAT('%', :q, '%')
-  AND (:isPlayable = TRUE AND r.same_group OR :isPlayable IS NULL OR :isPlayable = FALSE)
+  AND (:isPlayable IS NULL
+       OR (:isPlayable = TRUE  AND r.same_group)
+       OR (:isPlayable = FALSE AND NOT r.same_group))
+  AND a.isDeleted = FALSE AND a.isDisabled = FALSE AND a.isEmailVerified = TRUE
 ORDER BY a.username
 """,
             countQuery = """
@@ -61,6 +64,7 @@ WHERE a.username ILIKE CONCAT('%', :q, '%')
   AND (:isPlayable IS NULL
        OR (:isPlayable = TRUE  AND r.same_group)
        OR (:isPlayable = FALSE AND NOT r.same_group))
+  AND a.isDeleted = FALSE AND a.isDisabled = FALSE AND a.isEmailVerified = TRUE
 """,
             nativeQuery = true
     )
@@ -80,6 +84,7 @@ WHERE a.username ILIKE CONCAT('%', :q, '%')
     WHERE g.uuid = :groupUuid
       AND gmViewer.account.id = :viewerId
       AND LOWER(a.username) LIKE LOWER(CONCAT('%', :q, '%'))
+      AND a.isDeleted = FALSE AND a.isDisabled = FALSE AND a.isEmailVerified = TRUE
     """)
     Page<Account> searchByUsernameInGroup(
             @Param("q") String query,
@@ -109,6 +114,7 @@ WHERE a.username ILIKE CONCAT('%', :q, '%')
            AND i.account.id = a.id
            AND i.status <> "REJECTED"
      )
+     AND a.isDeleted = FALSE AND a.isDisabled = FALSE AND a.isEmailVerified = TRUE
     """)
     Page<Account> searchByUsernameNotInGroup(
             @Param("q") String query,
