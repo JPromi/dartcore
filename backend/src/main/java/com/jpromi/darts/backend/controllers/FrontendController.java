@@ -7,11 +7,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class FrontendController {
 
     @GetMapping(value = {
-            "/",
-            "/{path:[^\\.]*}",
-            "/{a:[^\\.]+}/{path:[^\\.]*}",
-            "/{a:[^\\.]+}/{b:[^\\.]+}/{path:[^\\.]*}",
-            "/{a:[^\\.]+}/{b:[^\\.]+}/{c:[^\\.]+}/{path:[^\\.]*}"
+        "/",
+        "/{path:^(?!api$|ws$)[^\\.]*}",
+        "/{a:^(?!api$|ws$)[^\\.]+}/{path:[^\\.]*}",
+        "/{a:^(?!api$|ws$)[^\\.]+}/{b:[^\\.]+}/{path:[^\\.]*}",
+        "/{a:^(?!api$|ws$)[^\\.]+}/{b:[^\\.]+}/{c:[^\\.]+}/{path:[^\\.]*}"
     })
     public String handleForward() {
         return "forward:/index.html";
