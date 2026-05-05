@@ -4,6 +4,8 @@ services:
     image: postgres:17
     restart: unless-stopped
     environment:
+      TZ: Europe/Vienna
+      PGTZ: Europe/Vienna
       POSTGRES_DB: darts
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -24,6 +26,7 @@ services:
     ports:
       - "4000:8080"
     environment:
+      TZ: Europe/Vienna
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/darts
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
