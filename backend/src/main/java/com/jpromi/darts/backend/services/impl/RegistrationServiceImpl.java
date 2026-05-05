@@ -107,7 +107,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         Optional<Account> accountCheck = accountRepository.findByEmailVerificationTokenAndIsEmailVerifiedFalseAndIsDeletedFalseAndIsDisabledFalse(token);
         if (accountCheck.isPresent()) {
             Account account = accountCheck.get();
-            account.setEmailVerificationToken(null);
+            // account.setEmailVerificationToken(null);
             account.setIsEmailVerified(true);
             account.setEmailVerificationTimestamp(Instant.now());
 
