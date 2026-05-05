@@ -4,7 +4,7 @@ import com.jpromi.darts.backend.enums.InvitationStatusAccountEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,6 +47,6 @@ public class AccountGroupInvitationAccount {
 
     @Column(nullable = false)
     @Builder.Default
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    private Instant createdAt = Instant.now();
 
 }

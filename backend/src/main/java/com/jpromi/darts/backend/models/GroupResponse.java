@@ -3,7 +3,7 @@ package com.jpromi.darts.backend.models;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,6 +21,6 @@ public class GroupResponse {
     private Boolean isAdmin;
     private Boolean isOwner;
     private List<ProfileLightResponse> members;
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
 }

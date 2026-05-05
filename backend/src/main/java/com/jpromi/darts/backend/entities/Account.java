@@ -5,8 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -84,16 +83,16 @@ public class Account {
     private String emailVerificationToken;
 
     @Column(nullable = true)
-    private OffsetDateTime emailVerificationTimestamp;
+    private Instant emailVerificationTimestamp;
 
     @Column(nullable = true)
     private String passwordResetToken;
 
     @Column(nullable = true)
-    private OffsetDateTime passwordResetTokenTimestamp;
+    private Instant passwordResetTokenTimestamp;
 
     @Column(nullable = true)
-    private OffsetDateTime registrationTimestamp;
+    private Instant registrationTimestamp;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AccountGroupMember> groupMemberships;

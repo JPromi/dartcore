@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -118,8 +118,8 @@ public class GameServiceImpl implements GameService {
             return null;
         }
 
-        if (game.getEndTime() == null) {
-            game.setEndTime(LocalDateTime.now());
+            if (game.getEndTime() == null) {
+            game.setEndTime(Instant.now());
             game.setIsCancelled(false);
             this.dartGameRepository.save(game);
         }
@@ -423,7 +423,7 @@ public class GameServiceImpl implements GameService {
                             }
                             
                             if (isValidFinish) {
-                                game.setEndTime(LocalDateTime.now());
+                                game.setEndTime(Instant.now());
                                 dartThrow.getPlayer().setIsWinner(true);
                             }
                         }

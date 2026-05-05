@@ -18,8 +18,7 @@ import com.password4j.Password;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -49,7 +48,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .lastName(registerRequest.getLastName())
                 .isEmailVerified(false)
                 .emailVerificationToken(generateValidationToken())
-                .registrationTimestamp(OffsetDateTime.now())
+                .registrationTimestamp(Instant.now())
                 .profile(profile)
                 .build();
 
@@ -110,7 +109,7 @@ public class RegistrationServiceImpl implements RegistrationService {
             Account account = accountCheck.get();
             account.setEmailVerificationToken(null);
             account.setIsEmailVerified(true);
-            account.setEmailVerificationTimestamp(OffsetDateTime.now());
+            account.setEmailVerificationTimestamp(Instant.now());
 
             accountRepository.save(account);
             return account.getUsername();

@@ -3,7 +3,7 @@ package com.jpromi.darts.backend.models;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+// no time types needed
 import java.util.List;
 import java.util.UUID;
 

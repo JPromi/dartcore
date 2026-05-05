@@ -41,7 +41,7 @@ WHERE a.username ILIKE CONCAT('%', :q, '%')
   AND (:isPlayable IS NULL
        OR (:isPlayable = TRUE  AND r.same_group)
        OR (:isPlayable = FALSE AND NOT r.same_group))
-  AND a.isDeleted = FALSE AND a.isDisabled = FALSE AND a.isEmailVerified = TRUE
+  AND a.is_deleted = FALSE AND a.is_disabled = FALSE AND a.is_email_verified = TRUE
 ORDER BY a.username
 """,
             countQuery = """
@@ -64,7 +64,7 @@ WHERE a.username ILIKE CONCAT('%', :q, '%')
   AND (:isPlayable IS NULL
        OR (:isPlayable = TRUE  AND r.same_group)
        OR (:isPlayable = FALSE AND NOT r.same_group))
-  AND a.isDeleted = FALSE AND a.isDisabled = FALSE AND a.isEmailVerified = TRUE
+  AND a.is_deleted = FALSE AND a.is_disabled = FALSE AND a.is_email_verified = TRUE
 """,
             nativeQuery = true
     )

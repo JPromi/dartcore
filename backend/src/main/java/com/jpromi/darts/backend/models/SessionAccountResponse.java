@@ -3,8 +3,7 @@ package com.jpromi.darts.backend.models;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -16,5 +15,5 @@ public class SessionAccountResponse {
     private String firstName;
     private String lastName;
     private String avatar;
-    private OffsetDateTime registrationTimestamp;
+    private Instant registrationTimestamp;
 }
