@@ -1,6 +1,5 @@
 package com.jpromi.darts.backend.controllers;
 
-import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
@@ -39,6 +38,12 @@ public class GameController {
 
     @Autowired
     private GameLockRegistry gameLockRegistry;
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Invalid request"));
+    }
 
     @GetMapping("/active")
     public ResponseEntity<List<GameResponse>> getActiveGamesResponseByAccount(@CookieValue("dcn.session") String sessionCookie) {

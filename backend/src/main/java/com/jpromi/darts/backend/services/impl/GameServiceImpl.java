@@ -171,7 +171,15 @@ public class GameServiceImpl implements GameService {
             // Determine current player once outside the loop
             Long currentPlayerId = null;
             if (game.getEndTime() == null) {
-                currentPlayerId = getCurrentPlayer(game.getPlayers(), allActiveThrows, roundSize).getId();
+                try {
+                    DartPlayer currentPlayer = getCurrentPlayer(game.getPlayers(), allActiveThrows, roundSize);
+                    if (currentPlayer != null) {
+                        currentPlayerId = currentPlayer.getId();
+                    }
+                } catch (IllegalArgumentException ignored) {
+                    // No active player left in an ongoing game: keep response valid without a current player.
+                    currentPlayerId = null;
+                }
             }
 
             for (DartPlayer player : game.getPlayers()) {
