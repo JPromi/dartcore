@@ -51,6 +51,8 @@ export class GameInputComponent implements OnInit, OnDestroy {
 
   popupEndGameShow: boolean = false;
 
+  showInput: boolean = true;
+
   currentGameTime = "";
   inputType = "keys"; // keys, board
   multiplier: GameThrowMultiplierEnum = GameThrowMultiplierEnum.SINGLE;

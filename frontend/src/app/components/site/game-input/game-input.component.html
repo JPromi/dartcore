@@ -77,7 +77,7 @@
         </div>
     </main>
 
-    <aside>
+    <aside [class.hidden]="!showInput">
         <div class="content">
             <div class="options">
                 <div>
@@ -93,6 +93,12 @@
                         } @else {
                             <fa-icon [icon]="fa.faUpRightAndDownLeftFromCenter" />
                         }
+                    </button>
+                    <button (click)="showInput = false">
+                        <span class="close">
+                            <fa-icon class="arrow" [icon]="fa.faArrowRight" />
+                            <fa-icon class="minus" [icon]="fa.faMinus" />
+                        </span>
                     </button>
                 </div>
                 <div class="input-toggle">
@@ -261,6 +267,11 @@
             </div>
         </div>
     </aside>
+    <div class="side-options">
+        <button class="extend-input" [class.active]="!showInput" (click)="showInput = true">
+            <fa-icon [icon]="fa.faKeyboard" />
+        </button>
+    </div>
 
 </div>
 
