@@ -60,4 +60,20 @@
             </ul>
         </div>
     </div>
+
+    @if (activeGames.length > 0) {
+        <div class="active-game-list">
+            <button (click)="openActiveGames = !openActiveGames">{{ activeGames.length }} Aktive Spiele</button>
+            <div class="list" *ngIf="openActiveGames" @openGames>
+                @for (game of activeGames; track game) {
+                    <a class="game" [routerLink]="['/game', 'active', game.uuid]">
+                        <p>Laufendes Spiel</p>
+                        @if (now$ | async; as now) {
+                            <p>{{ getActiveTime(game.startTime, now) }}</p>
+                        }
+                    </a>
+                }
+            </div>
+        </div>
+    }
 </nav>

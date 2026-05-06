@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { GameNewRequest } from '../dtos/gameNewRequest';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ActiveGameResponse } from '../dtos/activeGameResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,10 @@ export class GameService {
   constructor(
     private http: HttpClient,
   ) { }
+
+  public getActiveGamesAccount(): Observable<ActiveGameResponse[]> {
+    return this.http.get<ActiveGameResponse[]>(`${environment.baseUrl}/game/active`, { withCredentials: true });
+  }
 
   public createGame(gameData: GameNewRequest): Observable<string> {
     return this.http.post<string>(`${environment.baseUrl}/game`, gameData, { withCredentials: true });

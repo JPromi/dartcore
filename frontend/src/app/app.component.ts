@@ -6,6 +6,7 @@ import { LoStorageService } from './services/local/lo-storage.service';
 import { CommonModule } from '@angular/common';
 import { ErrorPageComponent } from './components/assets/error-page/error-page.component';
 import { SplashScreenComponent } from './components/assets/splash-screen/splash-screen.component';
+import { GameService } from './services/game.service';
 
 @Component({
     selector: 'app-root',
@@ -25,7 +26,8 @@ export class AppComponent implements AfterViewInit, OnInit {
     private translate: TranslateService,
     private router: Router,
     private authService: AuthService,
-    private loStorageService: LoStorageService
+    private loStorageService: LoStorageService,
+    private gameService: GameService
   ) {
     this.translate.addLangs(['de-AT', 'en-US']);
     this.translate.setDefaultLang('de-AT');
@@ -80,6 +82,10 @@ export class AppComponent implements AfterViewInit, OnInit {
       (response) => {
         this.loStorageService.setSessionAccount(response);
         this.isLoading = false;
+        this._getActiveGames();
+        setInterval(() => {
+          this._getActiveGames();
+        }, 30000);
       },
       (error) => {
         this.loStorageService.setSessionAccount(null);
@@ -94,5 +100,18 @@ export class AppComponent implements AfterViewInit, OnInit {
     }
 
     this.router.navigate([url]);
+  }
+
+  private _getActiveGames() {
+    this.gameService.getActiveGamesAccount().subscribe({
+      next: (response) => {
+        this.loStorageService.setActiveGames(response);
+        this.loStorageService.setErrorCode(null);
+      },
+      error: (error) => {
+        this.loStorageService.setActiveGames([]);
+        this.loStorageService.setErrorCodeFromResponse(error);
+      }
+    })
   }
 }

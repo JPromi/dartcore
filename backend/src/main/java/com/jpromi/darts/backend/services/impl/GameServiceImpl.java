@@ -216,6 +216,25 @@ public class GameServiceImpl implements GameService {
             throw new IllegalArgumentException("Game not found for UUID");
         }
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<GameResponse> getActiveGamesResponseByAccount(Account account) {
+        if (account == null || account.getId() == null) {
+            throw new IllegalArgumentException("Account cannot be null");
+        }
+
+        List<DartGame> activeGames = this.dartGameRepository.findActiveGamesByAccountId(account.getId());
+        if (activeGames == null || activeGames.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<GameResponse> responses = new ArrayList<>(activeGames.size());
+        for (DartGame game : activeGames) {
+            responses.add(this.getGameResponseByUuid(game));
+        }
+        return responses;
+    }
 
     /**
      * Builds the throw-response list for a player's most recent round.

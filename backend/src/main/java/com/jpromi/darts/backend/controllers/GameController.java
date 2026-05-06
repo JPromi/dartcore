@@ -1,5 +1,6 @@
 package com.jpromi.darts.backend.controllers;
 
+import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
@@ -14,6 +15,7 @@ import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
@@ -37,6 +39,21 @@ public class GameController {
 
     @Autowired
     private GameLockRegistry gameLockRegistry;
+
+    @GetMapping("/active")
+    public ResponseEntity<List<GameResponse>> getActiveGamesResponseByAccount(@CookieValue("dcn.session") String sessionCookie) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                return ResponseEntity.ok(gameService.getActiveGamesResponseByAccount(session.getAccount()));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
 
     @PostMapping("")
     public ResponseEntity<UUID> newGame(@CookieValue("dcn.session") String sessionCookie, @RequestBody NewGameRequest gameRequest) {

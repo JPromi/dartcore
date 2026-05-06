@@ -6,6 +6,7 @@ import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface GameService {
@@ -15,4 +16,5 @@ public interface GameService {
     DartGame addThrow(UUID gameUuid, GameThrowRequest request);
     GameResponse getGameResponseByUuid(UUID gameUuid);
     GameResponse getGameResponseByUuid(DartGame game);
+    List<GameResponse> getActiveGamesResponseByAccount(Account account);
 }

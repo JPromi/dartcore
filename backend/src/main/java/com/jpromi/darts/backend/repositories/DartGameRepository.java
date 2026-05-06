@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,4 +23,18 @@ public interface DartGameRepository extends JpaRepository<DartGame, Long> {
             where g.uuid = :uuid
             """)
     Optional<DartGame> findByUuidWithPlayersAndAccounts(@Param("uuid") UUID uuid);
+
+    @Query("""
+            select distinct g
+            from DartGame g
+            join fetch g.players p
+            left join fetch p.account a
+            left join fetch a.avatar
+            where g.endTime is null
+              and (g.isCancelled = false or g.isCancelled is null)
+              and p.account.id = :accountId
+              and p.leftGameAt is null
+            order by g.startTime desc
+            """)
+    List<DartGame> findActiveGamesByAccountId(@Param("accountId") Long accountId);
 }
