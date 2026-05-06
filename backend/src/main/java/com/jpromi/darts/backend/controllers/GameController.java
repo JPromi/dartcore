@@ -1,5 +1,7 @@
 package com.jpromi.darts.backend.controllers;
 
+import com.jpromi.darts.backend.entities.DartGame;
+import com.jpromi.darts.backend.entities.DartPlayer;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
@@ -143,6 +145,34 @@ public class GameController {
         Session session = authService.session(sessionCookie);
         if (session == null) throw new IllegalArgumentException("Session invalid");
         System.out.println("GameController.addThrow: " + gameUuid + " - " + body);
+
+        // authorization: ensure the session account is a player in this game and the game is active
+        DartGame game = gameService.getGameByUuid(gameUuid);
+        if (game == null) {
+            messaging.convertAndSend("/response/game/" + gameUuid + "/error", Map.of("message", "Game not found"));
+            return;
+        }
+
+        if (game.getEndTime() != null) {
+            messaging.convertAndSend("/response/game/" + gameUuid + "/error", Map.of("message", "Game already ended"));
+            return;
+        }
+
+        boolean isPlayerInGame = false;
+        for (DartPlayer p : game.getPlayers()) {
+            if (p.getAccount() != null && session.getAccount() != null
+                    && p.getAccount().getId() != null && session.getAccount().getId() != null
+                    && p.getAccount().getId().equals(session.getAccount().getId())
+                    && p.getLeftGameAt() == null) {
+                isPlayerInGame = true;
+                break;
+            }
+        }
+
+        if (!isPlayerInGame) {
+            messaging.convertAndSend("/response/game/" + gameUuid + "/error", Map.of("message", "Not authorized to play in this game"));
+            return;
+        }
 
         // logic
         ReentrantLock lock = gameLockRegistry.get(gameUuid);
