@@ -681,6 +681,35 @@
                     }
                 }
             }
+
+            .side-options {
+                position: fixed;
+                flex-direction: row;
+                right: 1rem;
+                bottom: calc(1rem + var(--device-bottom));
+                top: auto;
+                transform: translate(0);
+
+                button {
+                    width: 3.5rem;
+                    height: 3.5rem;
+                    border-radius: 1rem;
+                    transition: transform 250ms ease-in-out, padding-right 150ms ease-in-out;
+                    transform: translateX(0%);
+
+                    fa-icon {
+                        font-size: 1.25rem;
+                    }
+
+                    &.active {
+                        transform: translateX(0);
+                    }
+
+                    &:hover {
+                        padding-right: 0;
+                    }
+                }
+            }
         }
     }
     
