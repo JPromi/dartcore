@@ -61,7 +61,7 @@
                         <div *ngIf="group.members && group.members.length > 0">
                             <h3>{{ 'page.group.single.aside.members.title' | translate }}</h3>
                             <div class="profile-list" [class.large]="isLargeMembersPreview">
-                                @for (profile of group.members; track $index) {
+                                @for (profile of group.members.reverse(); track $index) {
                                     <span class="profile" [@profileExpand]="isLargeMembersPreview ? 'large-outside' : (membersPreviewMax > $index ? 'small-outside' : 'none')">
                                         <a 
                                             class="avatar"
