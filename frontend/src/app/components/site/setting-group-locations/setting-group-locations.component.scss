@@ -224,7 +224,7 @@
                             gap: .5rem;
                         }
 
-                        button {
+                        button:not(.custom) {
                             width: 100%;
                             padding: .25rem .5rem;
                             background-color: var(--primary);
@@ -288,9 +288,11 @@
                                     align-items: center;
                                     width: 100%;
                                     padding: .45rem;
+                                    border: none;
                                     border-bottom: 1px solid var(--border);
                                     color: var(--text);
                                     text-decoration: none;
+                                    background-color: transparent;
                                 }
                             }
                         }

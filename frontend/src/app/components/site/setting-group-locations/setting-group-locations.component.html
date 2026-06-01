@@ -46,16 +46,16 @@
                             <h3>Anzeigen</h3>
                             <div class="item-list">
                                 <div class="list-options">
-                                    <button type="button">
+                                    <button type="button" class="custom">
                                         <fa-icon [icon]="fa.faPlus" />
                                     </button>
                                 </div>
                                 <div class="items">
                                     <!-- @for (client of selectedLocation.screens; track $index) { -->
                                     @for (_ of [].constructor(5); track $index) {
-                                        <a class="item">
+                                        <button type="button" class="item custom">
                                             <p>Item {{ $index }}</p>
-                                        </a>
+                                        </button>
                                     }
                                 </div>
                             </div>
@@ -63,16 +63,16 @@
                             <h3>Eingabegeräte</h3>
                             <div class="item-list">
                                 <div class="list-options">
-                                    <button type="button">
+                                    <button type="button" class="custom">
                                         <fa-icon [icon]="fa.faPlus" />
                                     </button>
                                 </div>
                                 <div class="items">
                                     <!-- @for (client of selectedLocation.inputClients; track $index) { -->
                                     @for (_ of [].constructor(5); track $index) {
-                                        <a class="item">
+                                        <button type="button" class="item">
                                             <p>Item {{ $index }}</p>
-                                        </a>
+                                        </button>
                                     }
                                 </div>
                             </div>
