@@ -16,6 +16,12 @@
                     </a>
                 </li>
                 <li>
+                    <a [routerLink]="['/', 'group', uuid, 'settings', 'locations']" routerLinkActive="active">
+                        <fa-icon [icon]="fa.faMapMarker" />
+                        <p>{{ 'page.group.single.settings.menu.locations.label' | translate }}</p>
+                    </a>
+                </li>
+                <li>
                     <a [routerLink]="['/', 'group', uuid]">
                         <fa-icon [icon]="fa.faArrowLeft" />
                         <p>{{ 'page.group.single.settings.menu.back.label' | translate }}</p>

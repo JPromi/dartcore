@@ -11,6 +11,7 @@ import { InvitationStatusAccountEnum } from '../enums/invitationStatusAccountEnu
 import { GroupAdminMember } from '../dtos/groupAdminMember';
 import { GroupMemberAdminRequest } from '../dtos/groupMemberAdminRequest';
 import { GroupSettingsGeneral } from '../entities/groupSettingsGeneral';
+import { LocationResponse } from '../dtos/LocationResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -94,5 +95,10 @@ export class GroupService {
   // member settings
   public leaveGroup(groupUuid: string): Observable<void> {
     return this.http.delete<void>(`${environment.baseUrl}/group/${groupUuid}/leave`, { withCredentials: true });
+  }
+
+  // locations
+  public getGroupLocations(groupUuid: string): Observable<LocationResponse[]> {
+    return this.http.get<LocationResponse[]>(`${environment.baseUrl}/group/${groupUuid}/location`, { withCredentials: true });
   }
 }

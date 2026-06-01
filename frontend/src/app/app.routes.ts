@@ -21,6 +21,7 @@ import { SettingGroupMembersComponent } from './components/site/setting-group-me
 import { GameCreateComponent } from './components/site/game-create/game-create.component';
 import { GroupCreateComponent } from './components/site/group-create/group-create.component';
 import { RegisterTokenComponent } from './components/site/register-token/register-token.component';
+import { SettingGroupLocationsComponent } from './components/site/setting-group-locations/setting-group-locations.component';
 
 export const routes: Routes = [
     {
@@ -59,7 +60,8 @@ export const routes: Routes = [
                 children: [
                     { path: "", redirectTo: "general", pathMatch: "full" },
                     { path: "general", component: SettingGroupGeneralComponent, pathMatch: "full" },
-                    { path: "members", component: SettingGroupMembersComponent, pathMatch: "full" }
+                    { path: "members", component: SettingGroupMembersComponent, pathMatch: "full" },
+                    { path: "locations", component: SettingGroupLocationsComponent, pathMatch: "full" }
                 ]
             },
             { 

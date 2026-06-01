@@ -1,0 +1,105 @@
+@if (groupData) {
+    <main>
+        <div class="options">
+            <button class="primary">
+                <fa-icon [icon]="fa.faPlus" />
+            </button>
+        </div>
+
+        <div class="list">
+            @for (location of locations; track $index) {
+                <div class="item">
+                    <div class="options">
+                        <button (click)="openLocationPopup(location)">
+                            <fa-icon [icon]="fa.faGear" />
+                        </button>
+                    </div>
+                    <div class="text">
+                        <p class="name">{{ location.name }}</p>
+                        <p class="description">{{ location.description }}</p>
+                        <p class="address">{{ location.address }}</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </main>
+
+    @if (selectedLocation) {
+        <div class="popup" [@fade]>
+            <span class="void" (click)="closeLocationPopup()" ></span>
+
+            <div class="container">
+                <span class="title">Bearbeiten</span>
+                <form class="content location" [formGroup]="selectedLocationForm">
+                    <div class="header">
+                        <h2>{{ selectedLocation.name }}</h2>
+                    </div>
+
+                    <div class="main">
+                        <div>
+                            <h3>Details</h3>
+                            <ng-container *ngTemplateOutlet="formInput; context: { name: 'name', label: 'Name' | translate, type: 'text' }" />
+                            <ng-container *ngTemplateOutlet="formInput; context: { name: 'description', label: 'Beschreibung' | translate, type: 'textarea' }" />
+                            <ng-container *ngTemplateOutlet="formInput; context: { name: 'address', label: 'Adresse' | translate, type: 'text' }" />
+                        </div>
+                        <div>
+                            <h3>Anzeigen</h3>
+                            <div class="item-list">
+                                <div class="list-options">
+                                    <button type="button">
+                                        <fa-icon [icon]="fa.faPlus" />
+                                    </button>
+                                </div>
+                                <div class="items">
+                                    <!-- @for (client of selectedLocation.screens; track $index) { -->
+                                    @for (_ of [].constructor(5); track $index) {
+                                        <a class="item">
+                                            <p>Item {{ $index }}</p>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+
+                            <h3>Eingabegeräte</h3>
+                            <div class="item-list">
+                                <div class="list-options">
+                                    <button type="button">
+                                        <fa-icon [icon]="fa.faPlus" />
+                                    </button>
+                                </div>
+                                <div class="items">
+                                    <!-- @for (client of selectedLocation.inputClients; track $index) { -->
+                                    @for (_ of [].constructor(5); track $index) {
+                                        <a class="item">
+                                            <p>Item {{ $index }}</p>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+
+                    <!-- TEMPLATE -->
+                    <ng-template #formInput let-name="name" let-label="label" let-type="type">
+                        <div class="input-container" [class.error]="selectedLocationForm.get(name)?.errors && selectedLocationForm.get(name)?.touched">
+                            <div class="input" [class.disabled]="false">
+                                <label [for]="name">{{ label }}</label>
+                                @if (type !== 'textarea') {
+                                    <input [type]="type ? type : 'text'" [id]="name" [name]="name" [formControlName]="name" autocomplete="off" [disabled]="false"/>
+                                } @else {
+                                    <textarea [id]="name" [name]="name" [formControlName]="name" autocomplete="off" [disabled]="false"></textarea>
+                                }
+                            </div>
+                            <p *ngIf="selectedLocationForm.get(name)?.errors && selectedLocationForm.get(name)?.touched" class="error-msg">
+                            {{ `asset.form.error.${getFirstErrorKey(name, selectedLocationForm)}` | translate }}
+                            </p>
+                        </div>
+                    </ng-template>
+                </form>
+            </div>
+        </div>
+    }
+} @else {
+    <p>Loading...</p>
+}
