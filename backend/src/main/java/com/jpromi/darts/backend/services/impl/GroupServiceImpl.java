@@ -7,6 +7,7 @@ import com.jpromi.darts.backend.models.*;
 import com.jpromi.darts.backend.repositories.AccountGroupInvitationAccountRepository;
 import com.jpromi.darts.backend.repositories.AccountGroupRepository;
 import com.jpromi.darts.backend.repositories.AccountRepository;
+import com.jpromi.darts.backend.repositories.LocationRepository;
 import com.jpromi.darts.backend.services.FileService;
 import com.jpromi.darts.backend.services.GroupService;
 import com.jpromi.darts.backend.services.UrlService;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.swing.text.html.Option;
 import java.util.*;
 
 @Service
@@ -26,6 +28,9 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private AccountGroupRepository accountGroupRepository;
+
+    @Autowired
+    private LocationRepository locationRepository;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -56,6 +61,9 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private GroupGeneralResponseMapper groupGeneralResponseMapper;
+
+    @Autowired
+    private LocationResponseMapper locationResponseMapper;
 
     @Value("${com.jpromi.darts.app.group.max-size}")
     private Integer maxGroupMembers;
@@ -457,6 +465,105 @@ public class GroupServiceImpl implements GroupService {
         } else {
             throw new RuntimeException("Invitation not found");
         }
+        return null;
+    }
+
+    // Location
+    @Override
+    public LocationResponse getLocation(UUID groupUuid, Account account, UUID uuid) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            Optional<Location> location = locationRepository.findByUuidAndGroup(uuid, group);
+            if (location.isPresent()) {
+                return locationResponseMapper.fromLocation(location.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public List<LocationResponse> getLocationsInGroup(UUID groupUuid, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            List<Location> location = locationRepository.findByGroup(group);
+            return location.stream().map(locationResponseMapper::fromLocation).toList();
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public LocationResponse createLocation(UUID groupUuid, Account account, LocationRequest location) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            Location newLocation = Location.builder()
+                    .name(location.getName())
+                    .description(location.getDescription())
+                    .address(location.getAddress())
+                    .group(group)
+                    .build();
+
+            try {
+                return locationResponseMapper.fromLocation(locationRepository.save(newLocation));
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            }
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public LocationResponse updateLocation(UUID groupUuid, Account account, UUID uuid, LocationRequest locationRequest) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        Location location = locationRepository.findByUuidAndGroup(uuid, group).orElse(null);
+        if (group != null &&  location != null) {
+            checkPermission(group, account, "admin");
+
+            location.setName(locationRequest.getName());
+            location.setDescription(locationRequest.getDescription());
+            location.setAddress(locationRequest.getAddress());
+
+            try {
+                return locationResponseMapper.fromLocation(locationRepository.save(location));
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            }
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public Void deleteLocation(UUID groupUuid, Account account, UUID uuid) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        Location location = locationRepository.findByUuidAndGroup(uuid, group).orElse(null);
+        if (group != null &&  location != null) {
+            checkPermission(group, account, "admin");
+
+            try {
+                locationRepository.delete(location);
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            }
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
         return null;
     }
 

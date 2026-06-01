@@ -26,6 +26,9 @@ public class Location {
     @Column(nullable = true)
     private String name;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private AccountGroup group;
+
     @Column(nullable = true)
     @ColumnDefault("false")
     @Builder.Default

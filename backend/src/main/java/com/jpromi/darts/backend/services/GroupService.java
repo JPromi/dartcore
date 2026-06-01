@@ -2,6 +2,7 @@ package com.jpromi.darts.backend.services;
 
 import com.jpromi.darts.backend.entities.Account;
 import com.jpromi.darts.backend.entities.AccountGroup;
+import com.jpromi.darts.backend.entities.Location;
 import com.jpromi.darts.backend.enums.InvitationStatusAccountEnum;
 import com.jpromi.darts.backend.models.*;
 import org.springframework.data.domain.Page;
@@ -32,4 +33,10 @@ public interface GroupService {
     List<GroupInvitationResponse> getAccountInvitations(Account account, InvitationStatusAccountEnum status);
     Void responseInvitation(UUID uuid, Account account, InvitationStatusAccountEnum status);
     Long countAccountInvitations(Account account, InvitationStatusAccountEnum status);
+
+    LocationResponse getLocation(UUID groupUuid, Account account, UUID uuid);
+    List<LocationResponse> getLocationsInGroup(UUID groupUuid, Account account);
+    LocationResponse createLocation(UUID groupUuid, Account account, LocationRequest location);
+    LocationResponse updateLocation(UUID groupUuid, Account account, UUID uuid, LocationRequest location);
+    Void deleteLocation(UUID groupUuid, Account account, UUID uuid);
 }
