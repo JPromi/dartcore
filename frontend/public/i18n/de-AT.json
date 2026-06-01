@@ -284,6 +284,7 @@
                         "title": "Einstellungen",
                         "general.label": "Allgemein",
                         "members.label": "Mitglieder",
+                        "locations.label": "Standorte",
                         "invitations.label": "Einladungen",
                         "back.label": "Zurück",
                         "informations": {
