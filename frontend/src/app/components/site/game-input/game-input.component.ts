@@ -199,18 +199,23 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   private gameTime() {
+    this._setGameTime();
     this.currentGameTimeInterval = setInterval(() => {
-      const now = new Date();
-      if (this.game.startTime) {
-        const startTime = new Date(this.game.startTime);
-        const endTime = this.game.endTime ? new Date(this.game.endTime) : now;
-        const seconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
-        const outputHours = Math.floor(seconds / 3600);
-        const outputMinutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-        const outputSeconds = (seconds % 60).toString().padStart(2, '0');
-        this.currentGameTime = (outputHours > 0 ? outputHours + ':' : '') + outputMinutes + ':' + outputSeconds;
-      }
+      this._setGameTime();
     }, 1000);
+  }
+
+  private _setGameTime() {
+    const now = new Date();
+    if (this.game.startTime) {
+      const startTime = new Date(this.game.startTime);
+      const endTime = this.game.endTime ? new Date(this.game.endTime) : now;
+      const seconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+      const outputHours = Math.floor(seconds / 3600);
+      const outputMinutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+      const outputSeconds = (seconds % 60).toString().padStart(2, '0');
+      this.currentGameTime = (outputHours > 0 ? outputHours + ':' : '') + outputMinutes + ':' + outputSeconds;
+    }
   }
 
   private sortPlayers() {
