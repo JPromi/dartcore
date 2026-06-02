@@ -607,6 +607,11 @@ public class GroupServiceImpl implements GroupService {
             checkPermission(group, account, "admin");
 
             try {
+                if (group.getLocations() != null) {
+                    group.getLocations().removeIf(existingLocation -> Objects.equals(existingLocation.getId(), location.getId()));
+                    accountGroupRepository.save(group);
+                }
+
                 locationRepository.delete(location);
             } catch (RuntimeException e) {
                 throw new RuntimeException(e);

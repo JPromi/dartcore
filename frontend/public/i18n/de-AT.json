@@ -345,6 +345,36 @@
                                     "remove.button": "Entfernen"
                                 }
                             }
+                        },
+                        "location": {
+                            "new.title": "Neuer Standort",
+                            "edit": {
+                                "title": "Bearbeiten",
+                                "details": {
+                                    "title": "Details",
+                                    "name.label": "Name",
+                                    "description.label": "Beschreibung",
+                                    "address.label": "Adresse"
+                                },
+                                "screen": {
+                                    "title": "Anzeigen",
+                                    "noScreens.text": "Keine Bildschirme verfügbar"
+                                },
+                                "clients": {
+                                    "title": "Eingabegeräte",
+                                    "noClients.text": "Keine Eingabegeräte verfügbar"
+                                },
+                                "resourcePopup": {
+                                    "name.label": "Name",
+                                    "access.title": "Zugang",
+                                    "url.label": "URL"
+                                },
+                                "buttons": {
+                                    "save.button": "Speichern",
+                                    "cancel.button": "Abbrechen",
+                                    "delete.button": "Löschen"
+                                }
+                            }
                         }
                     }
                 }
