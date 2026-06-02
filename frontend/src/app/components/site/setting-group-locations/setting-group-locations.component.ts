@@ -5,7 +5,7 @@ import { GroupService } from '../../../services/group.service';
 import { ActivatedRoute } from '@angular/router';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { LocationResponse } from '../../../dtos/LocationResponse';
+import { LocationResponse } from '../../../dtos/locationResponse';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';

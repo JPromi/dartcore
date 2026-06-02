@@ -12,7 +12,7 @@ import { GroupAdminMember } from '../dtos/groupAdminMember';
 import { GroupMemberAdminRequest } from '../dtos/groupMemberAdminRequest';
 import { GroupSettingsGeneral } from '../entities/groupSettingsGeneral';
 import { LocationResourceResponse } from '../dtos/locationResourceResponse';
-import { LocationResponse } from '../dtos/LocationResponse';
+import { LocationResponse } from '../dtos/locationResponse';
 
 @Injectable({
   providedIn: 'root'
