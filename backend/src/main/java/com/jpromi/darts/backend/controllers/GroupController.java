@@ -415,4 +415,44 @@ public class GroupController {
         }
     }
 
+    // location screen
+    @PostMapping("/{uuid}/location/{locationUuid}/screen")
+    public ResponseEntity<LocationResponse.Screen> addScreenGroupLocation(
+            @CookieValue("dcn.session") String sessionCookie,
+            @PathVariable UUID uuid,
+            @PathVariable UUID locationUuid
+    ) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                return ResponseEntity.status(HttpStatus.OK).body(groupService.createTmpLocationScreen(uuid, session.getAccount(), locationUuid));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    // location client
+    @PostMapping("/{uuid}/location/{locationUuid}/client")
+    public ResponseEntity<LocationResponse.Client> addClientGroupLocation(
+            @CookieValue("dcn.session") String sessionCookie,
+            @PathVariable UUID uuid,
+            @PathVariable UUID locationUuid
+    ) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                return ResponseEntity.status(HttpStatus.OK).body(groupService.createTmpLocationClient(uuid, session.getAccount(), locationUuid));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
 }

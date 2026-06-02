@@ -14,6 +14,22 @@ public class LocationResponse {
     private String description;
     private String address;
     private Boolean isPublic;
-    private List<String> screens;
-    private List<String> inputClients;
+    private List<Screen> screens;
+    private List<Client> clients;
+
+    @Data
+    @Builder
+    public static class Client {
+        private UUID uuid;
+        private String name;
+        private String token;
+    }
+
+    @Data
+    @Builder
+    public static class Screen {
+        private UUID uuid;
+        private String name;
+        private String token;
+    }
 }

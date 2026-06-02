@@ -39,4 +39,7 @@ public interface GroupService {
     LocationResponse createLocation(UUID groupUuid, Account account, LocationRequest location);
     LocationResponse updateLocation(UUID groupUuid, Account account, UUID uuid, LocationRequest location);
     Void deleteLocation(UUID groupUuid, Account account, UUID uuid);
+    LocationResponse.Screen createTmpLocationScreen(UUID groupUuid, Account account, UUID uuid);
+    LocationResponse.Client createTmpLocationClient(UUID groupUuid, Account account, UUID uuid);
+
 }
