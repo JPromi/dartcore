@@ -107,6 +107,10 @@ export class GroupService {
     return this.http.delete<void>(`${environment.baseUrl}/group/${groupUuid}/location/${locationUuid}`, { withCredentials: true });
   }
 
+  public createLocation(groupUuid: string, location: LocationResponse): Observable<LocationResponse> {
+    return this.http.post<LocationResponse>(`${environment.baseUrl}/group/${groupUuid}/location`, location, { withCredentials: true });
+  }
+
   public saveLocation(groupUuid: string, locationUuid: string, location: LocationResponse): Observable<LocationResponse> {
     return this.http.put<LocationResponse>(`${environment.baseUrl}/group/${groupUuid}/location/${locationUuid}`, location, { withCredentials: true });
   }

@@ -519,6 +519,8 @@ public class GroupServiceImpl implements GroupService {
                     .description(location.getDescription())
                     .address(location.getAddress())
                     .group(group)
+                    .clients(new ArrayList<>())
+                    .screens(new ArrayList<>())
                     .build();
 
             try {

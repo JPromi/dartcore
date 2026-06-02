@@ -138,17 +138,33 @@ constructor(
         this.selectedLocation.screens,
         this.selectedLocation.clients
       );
-      this.groupService.saveLocation(this.groupData!.uuid, this.selectedLocation.uuid, updatedLocation).subscribe({
-        next: (response) => {
-          this.closeLocationPopup();
-          this._loadLocations(this.groupData!.uuid);
-          this.selectedLocationUpdating = false;
-        },
-        error: (error) => {
-          console.error(error);
-          this.selectedLocationUpdating = false;
-        }
-      });
+      if (!this.selectedLocation.uuid) {
+        this.groupService.createLocation(this.groupData!.uuid, updatedLocation).subscribe({
+          next: (response) => {
+            this.closeLocationPopup();
+            this._loadLocations(this.groupData!.uuid);
+            this.selectedLocationUpdating = false;
+          },
+          error: (error) => {
+            console.error(error);
+            this.selectedLocationUpdating = false;
+          }
+        });
+
+      } else {
+        this.groupService.saveLocation(this.groupData!.uuid, this.selectedLocation.uuid, updatedLocation).subscribe({
+          next: (response) => {
+            this.closeLocationPopup();
+            this._loadLocations(this.groupData!.uuid);
+            this.selectedLocationUpdating = false;
+          },
+          error: (error) => {
+            console.error(error);
+            this.selectedLocationUpdating = false;
+          }
+        });
+
+      }
     }
   }
 
