@@ -16,6 +16,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GameWsService } from '../../../services/game-ws.service';
 import { ActiveGameThrowRequest } from '../../../dtos/activeGameThrowRequest';
 import { PopupComponent } from '../../assets/popup/popup.component';
+import { GamePlayerTileComponent } from '../../assets/game-player-tile/game-player-tile.component';
 
 @Component({
   selector: 'app-game-input',
@@ -24,7 +25,8 @@ import { PopupComponent } from '../../assets/popup/popup.component';
     FormsModule,
     TranslateModule,
     FontAwesomeModule,
-    PopupComponent
+    PopupComponent,
+    GamePlayerTileComponent
   ],
   templateUrl: './game-input.component.html',
   styleUrl: './game-input.component.scss'
@@ -157,30 +159,6 @@ export class GameInputComponent implements OnInit, OnDestroy {
     }
   }
 
-  public getReadablePoints(gameThrow: GameThrow): string {
-    switch (gameThrow.type) {
-      case GameThrowTypeEnum.THROW:
-        return `${this.loGameCalculationService.getThrowMultiplierChar(gameThrow.multiplier)}${gameThrow.score}`;
-        break;
-
-      case GameThrowTypeEnum.MISS:
-        return this.translate.instant("page.game.active.player.points.miss.text");
-        break;
-
-      default:
-        return "";
-        break;
-    }
-  }
-
-  public toFixedNumber(value: number | null, digits: number): string {
-    if(value === null) {
-      return "-";
-    } else {
-      return parseFloat(value.toFixed(digits)).toString();
-    }
-  }
-
   public endGame(isConfirmed: boolean): void {
     if(isConfirmed) {
       this.gameService.endGame(this.game.uuid).subscribe(
@@ -219,14 +197,24 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   private sortPlayers() {
+    const currentPlayer = this.game.players.find(p => p.isCurrentPlayer);
+    if (!currentPlayer) {
+      return [...this.game.players].sort((a, b) => a.orderIndex - b.orderIndex);
+    }
+
+    const currentIndex = currentPlayer.orderIndex;
+    const total = this.game.players.length;
+
     return [...this.game.players].sort((a, b) => {
-      if (a.isCurrentPlayer && !b.isCurrentPlayer) {
-        return -1;
-      } else if (!a.isCurrentPlayer && b.isCurrentPlayer) {
-        return 1;
-      } else {
-        return a.orderIndex - b.orderIndex;
-      }
+      if (a.isCurrentPlayer) return -1;
+      if (b.isCurrentPlayer) return 1;
+
+      if (a.isEliminated && !b.isEliminated) return 1;
+      if (!a.isEliminated && b.isEliminated) return -1;
+
+      const distA = (a.orderIndex - currentIndex + total) % total;
+      const distB = (b.orderIndex - currentIndex + total) % total;
+      return distA - distB;
     });
   }
 

@@ -1,8 +1,31 @@
-<header>
 
-</header>
 
-<main></main>
+@if (game) {
+    <header>
+
+    </header>
+
+    <main>
+        <!-- Game Classic -->
+        @if (game.gameType === "CLASSIC") {
+            <div class="tiles">
+                @if (currentDisplayPlayer) {
+                    <div #playerTile class="player-tile hero" [attr.data-player-uuid]="currentDisplayPlayer.playerUuid">
+                        <asset-game-player-tile [player]="currentDisplayPlayer" [class.current]="currentDisplayPlayer.isCurrentPlayer" [class.disabled]="currentDisplayPlayer.isEliminated"/>
+                    </div>
+                }
+
+                <div class="queue">
+                    @for (player of queuedDisplayPlayers; track player.playerUuid) {
+                        <div #playerTile class="player-tile" [attr.data-player-uuid]="player.playerUuid">
+                            <asset-game-player-tile [player]="player" [class.current]="player.isCurrentPlayer" [class.disabled]="player.isEliminated"/>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </main>
+}
 
 <footer>
     <p>DartCore.net</p>
