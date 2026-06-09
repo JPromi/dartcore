@@ -52,29 +52,38 @@ export class AppComponent implements AfterViewInit, OnInit {
   }
 
   private redirectTotp() {
-    if(!this.router.url.startsWith('/barrier')) {
-      this.authService.loginSession().subscribe(
-        (response) => {
-          if (response.totpRequired) {
-            this.isLoading = false;
-            this._navigate('/barrier/login/totp', ['/barrier/logout']);
-          } else {
-            this.getSession();
-          }
-        },
-        (error) => {
-          this.isLoading = false;
-          this.loStorageService.setSessionAccount(null);
-          if(error.status.toString().startsWith('4')) {
-            this._navigate('/barrier/login', ['/barrier/logout']);
-          } else {
-            this.loStorageService.setErrorCodeFromResponse(error);
-          }
-        }
-      );
-    } else {
+    if (this._isAuthBypassRoute()) {
       this.isLoading = false;
+      return;
     }
+
+    this.authService.loginSession().subscribe(
+      (response) => {
+        if (response.totpRequired) {
+          this.isLoading = false;
+          this._navigate('/barrier/login/totp', ['/barrier/logout']);
+        } else {
+          this.getSession();
+        }
+      },
+      (error) => {
+        this.isLoading = false;
+        this.loStorageService.setSessionAccount(null);
+        if(error.status.toString().startsWith('4')) {
+          this._navigate('/barrier/login', ['/barrier/logout']);
+        } else {
+          this.loStorageService.setErrorCodeFromResponse(error);
+        }
+      }
+    );
+  }
+
+  private _isAuthBypassRoute(): boolean {
+    const currentPath = window.location.pathname;
+    return currentPath === '/barrier'
+      || currentPath.startsWith('/barrier/')
+      || currentPath === '/ex'
+      || currentPath.startsWith('/ex/');
   }
 
   private getSession() {

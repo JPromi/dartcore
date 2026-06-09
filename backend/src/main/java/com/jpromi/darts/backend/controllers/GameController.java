@@ -2,11 +2,13 @@ package com.jpromi.darts.backend.controllers;
 
 import com.jpromi.darts.backend.entities.DartGame;
 import com.jpromi.darts.backend.entities.DartPlayer;
+import com.jpromi.darts.backend.entities.LocationScreen;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
 import com.jpromi.darts.backend.registry.GameLockRegistry;
+import com.jpromi.darts.backend.repositories.LocationScreenRepository;
 import com.jpromi.darts.backend.services.AuthService;
 import com.jpromi.darts.backend.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,9 @@ public class GameController {
     @Autowired
     private GameLockRegistry gameLockRegistry;
 
+    @Autowired
+    private LocationScreenRepository locationScreenRepository;
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -48,18 +53,24 @@ public class GameController {
     }
 
     @GetMapping("/active")
-    public ResponseEntity<List<GameResponse>> getActiveGamesResponseByAccount(@CookieValue("dcn.session") String sessionCookie) {
-        if(sessionCookie != null) {
-            Session session = this.authService.session(sessionCookie);
-
-            if(session != null) {
-                return ResponseEntity.ok(gameService.getActiveGamesResponseByAccount(session.getAccount()));
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+    public ResponseEntity<List<GameResponse>> getActiveGamesResponseByAccount(
+            @CookieValue(name = "dcn.session", required = false) String sessionCookie,
+            @RequestHeader(value = "X-Screen-Token", required = false) String screenToken) {
+        if (screenToken != null) {
+            LocationScreen screen = locationScreenRepository.findByTokenWithLocation(screenToken).orElse(null);
+            if (screen != null && !Boolean.TRUE.equals(screen.getIsTmp())) {
+                return ResponseEntity.ok(gameService.getActiveGamesResponseByLocation(screen.getLocation()));
             }
-        } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
+        if (sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+            if (session != null) {
+                return ResponseEntity.ok(gameService.getActiveGamesResponseByAccount(session.getAccount()));
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
 
     @PostMapping("")
@@ -79,23 +90,33 @@ public class GameController {
     }
 
     @GetMapping("/{gameUuid}")
-    public ResponseEntity<GameResponse> getGame(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID gameUuid) {
-        if (sessionCookie != null) {
-            Session session = this.authService.session(sessionCookie);
-
-            if (session != null) {
-                GameResponse game = this.gameService.getGameResponseByUuid(gameUuid);
-                if (game != null) {
-                    return ResponseEntity.ok(game);
-                } else {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-                }
-            } else {
+    public ResponseEntity<GameResponse> getGame(
+            @CookieValue(name = "dcn.session", required = false) String sessionCookie,
+            @RequestHeader(name = "X-Screen-Token", required = false) String screenToken,
+            @PathVariable UUID gameUuid) {
+        if (screenToken != null) {
+            LocationScreen screen = locationScreenRepository.findByTokenWithLocation(screenToken).orElse(null);
+            if (screen == null || Boolean.TRUE.equals(screen.getIsTmp())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
-        } else {
+            DartGame dartGame = this.gameService.getGameByUuid(gameUuid);
+            if (dartGame == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            if (dartGame.getLocation() == null || !dartGame.getLocation().getId().equals(screen.getLocation().getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+            return ResponseEntity.ok(this.gameService.getGameResponseByUuid(dartGame));
+        }
+        if (sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+            if (session != null) {
+                GameResponse game = this.gameService.getGameResponseByUuid(gameUuid);
+                return game != null ? ResponseEntity.ok(game) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
     
     @DeleteMapping("/{gameUuid}")

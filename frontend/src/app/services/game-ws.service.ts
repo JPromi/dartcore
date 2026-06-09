@@ -20,7 +20,7 @@ export class GameWsService {
   private gameSubject = new Subject<ActiveGameResponse>();
   public game$ = this.gameSubject.asObservable();
 
-  public connect(gameUuid: string): void {
+  public connect(gameUuid: string, token: string | null = null, type: 'screen' | 'session' | 'client' = 'session'): void {
     if (this.stompClient) {
       this.stompClient.deactivate(); // sauber trennen
     }
@@ -29,6 +29,10 @@ export class GameWsService {
       webSocketFactory: () => new SockJS(`${environment.baseUrl}/../ws`),
       reconnectDelay: 5000,
       debug: str => console.log(str),
+      connectHeaders: {
+        ...(token && type === 'screen' ? { 'X-Screen-Token': token } : {}),
+        ...(token && type === 'client' ? { 'X-Client-Token': token } : {})
+      }
     });
 
     this.stompClient.onConnect = () => {

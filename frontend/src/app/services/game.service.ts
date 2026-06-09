@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { GameNewRequest } from '../dtos/gameNewRequest';
 import { Observable } from 'rxjs';
@@ -14,16 +14,31 @@ export class GameService {
     private http: HttpClient,
   ) { }
 
-  public getActiveGamesAccount(): Observable<ActiveGameResponse[]> {
-    return this.http.get<ActiveGameResponse[]>(`${environment.baseUrl}/game/active`, { withCredentials: true });
+  public getActiveGamesAccount(token: string | null = null, type: 'screen' | 'session' | 'client' = 'session'): Observable<ActiveGameResponse[]> {
+    let headers = new HttpHeaders();
+
+    if (token && type === 'screen') {
+      headers = headers.set('X-Screen-Token', token);;
+    } else if (token && type === 'client') {
+      headers = headers.set('X-Client-Token', token);
+    }
+    return this.http.get<ActiveGameResponse[]>(`${environment.baseUrl}/game/active`, { withCredentials: true, headers });
   }
 
   public createGame(gameData: GameNewRequest): Observable<string> {
     return this.http.post<string>(`${environment.baseUrl}/game`, gameData, { withCredentials: true });
   }
 
-  public getGame(uuid: string): Observable<any> {
-    return this.http.get<any>(`${environment.baseUrl}/game/${uuid}`, { withCredentials: true });
+  public getGame(uuid: string, token: string | null = null, type: 'screen' | 'session' | 'client' = 'session'): Observable<any> {
+    let headers = new HttpHeaders();
+
+    if (token && type === 'screen') {
+      headers = headers.set('X-Screen-Token', token);
+    } else if (token && type === 'client') {
+      headers = headers.set('X-Client-Token', token);
+    }
+
+    return this.http.get<any>(`${environment.baseUrl}/game/${uuid}`, { withCredentials: true, headers });
   }
 
   public endGame(uuid: string): Observable<void> {

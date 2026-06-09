@@ -41,7 +41,7 @@ public class DartGame {
     @Builder.Default
     private List<DartThrow> throwsList = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(nullable = true)
     private Location location;
 

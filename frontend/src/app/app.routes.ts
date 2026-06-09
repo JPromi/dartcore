@@ -14,6 +14,13 @@ export const routes: Routes = [
     },
     { path: "game/active/:uuid", loadComponent: () => import('./components/site/game-input/game-input.component').then(m => m.GameInputComponent), pathMatch: "full" },
     {
+        path: "ex",
+        loadComponent: () => import('./components/routes/guest-router/guest-router.component').then(m => m.GuestRouterComponent),
+        children: [
+            { path: "monitor/:token", loadComponent: () => import('./components/site/monitor-game/monitor-game.component').then(m => m.MonitorGameComponent), pathMatch: "full" },
+        ]
+    },
+    {
         path: "",
         loadComponent: () => import('./components/routes/main-router/main-router.component').then(m => m.MainRouterComponent),
         children: [

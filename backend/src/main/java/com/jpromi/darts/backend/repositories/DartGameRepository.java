@@ -37,4 +37,17 @@ public interface DartGameRepository extends JpaRepository<DartGame, Long> {
             order by g.startTime desc
             """)
     List<DartGame> findActiveGamesByAccountId(@Param("accountId") Long accountId);
+
+    @Query("""
+            select distinct g
+            from DartGame g
+            join fetch g.players p
+            left join fetch p.account a
+            left join fetch a.avatar
+            where g.endTime is null
+              and (g.isCancelled = false or g.isCancelled is null)
+              and g.location.id = :locationId
+            order by g.startTime desc
+            """)
+    List<DartGame> findActiveGamesByLocationId(@Param("locationId") Long locationId);
 }
