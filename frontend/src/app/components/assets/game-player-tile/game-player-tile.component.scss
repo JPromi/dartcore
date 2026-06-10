@@ -124,8 +124,8 @@
     }
 
     .extended-informations {
-        display: flex;
-        justify-content: space-around;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
 
         .block {
             display: flex;
@@ -192,5 +192,71 @@
 
     .extended-informations {
         display: none;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .player {
+        padding: .75rem;
+        gap: .25rem;
+
+        .top {
+            .profile {
+                .avatar {
+                    $size: 3rem;
+                    height: $size;
+                    width: $size;
+                }
+
+                .name {
+                    h1 {
+                        font-size: 1.25rem;
+                        max-width: 8rem;
+                    }
+
+                    h3 {
+                        font-size: .75rem;
+                    }
+                }
+            }
+
+            .score {
+                h2 {
+                    font-size: 2rem;
+                    line-height: 2rem;
+                }
+            }
+        }
+
+        .throws {
+            margin-top: 0rem;
+
+            .throw {
+                width: 4rem;
+
+                p {
+                    font-size: 1.5rem;
+                }
+
+                span.field {
+                    font-size: 3rem;
+                    line-height: 3rem;
+                }
+            }
+        }
+
+        .extended-informations {
+            grid-template-columns: repeat(auto-fit, minmax(4rem, 1fr));
+
+            .block {
+                h3 {
+                    font-size: .75rem;
+                }
+
+                p {
+                    font-size: 1rem;
+                }
+            }
+        }
     }
 }
