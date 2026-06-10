@@ -1,4 +1,5 @@
 import { GameThrow } from "../entities/gameThrow";
+import { GameHintResponse } from "./gameHintResponse";
 
 export class ActiveGamePlayerResponse {
     constructor (
@@ -7,7 +8,7 @@ export class ActiveGamePlayerResponse {
         public orderIndex: number = 0,
         public avatar: string | null = null,
         public throwList: GameThrow[] = [],
-        public hints: GameThrow[] = [],
+        public hints: GameHintResponse[] = [],
         public score: number | null = null,
         public highscore: number | null = null,
         public average: number | null = null,

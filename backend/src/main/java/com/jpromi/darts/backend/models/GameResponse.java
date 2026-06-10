@@ -61,7 +61,7 @@ public class GameResponse {
         private List<GameThrowResponse> throwList = new ArrayList<>();
 
         @Builder.Default
-        private List<GameThrowResponse> hints = new ArrayList<>();
+        private List<GameHintResponse> hints = new ArrayList<>();
 
         @Data
         @Builder
@@ -71,6 +71,13 @@ public class GameResponse {
             private Integer round;
             private ThrowType type;
             private Instant timestamp;
+        }
+
+        @Data
+        @Builder
+        public static class GameHintResponse {
+            private Integer points;
+            private DartThrowMultiplierEnum multiplier;
         }
     }
 }

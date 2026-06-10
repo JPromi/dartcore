@@ -39,6 +39,9 @@ public class GameServiceImpl implements GameService {
     @Autowired
     private TmpGamePlayerStatsRepository tmpGamePlayerStatsRepository;
 
+    @Autowired
+    private DartHintRepository dartHintRepository;
+
     @Override
     public DartGame newGame(NewGameRequest newGameRequest, Account account) {
         if (newGameRequest != null && account != null) {
@@ -215,6 +218,16 @@ public class GameServiceImpl implements GameService {
                 // Highscore and average derived from actual throw history (correct after undos too)
                 playerResponse.setHighscore(computeHighscore(playerThrows));
                 playerResponse.setAverage(computeAverage(playerThrows));
+
+                // get hint
+                if (game.getGameType() == GameTypeEnum.CLASSIC) {
+                    DartHint hint = dartHintRepository.findClassicHint(
+                            game.getGameTypeClassicOutType(),
+                            playerResponse.getScore().intValue()
+                    ).orElse(null);
+
+                    playerResponse.setHints(gamePlayerResponseMapper.hintResponseFromDartHint(hint));
+                }
 
                 response.getPlayers().add(playerResponse);
             }

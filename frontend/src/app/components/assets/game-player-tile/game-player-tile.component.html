@@ -43,7 +43,7 @@
                 <h3>{{ 'page.game.active.player.extendedInformations.hint.label' | translate }}</h3>
                 <span class="hint">
                     @for (hint of player.hints; track $index) {
-                        <p>{{ getReadablePoints(hint) }}</p>
+                        <p>{{ getReadableHintPoints(hint) }}</p>
                     }
                 </span>
             </div>

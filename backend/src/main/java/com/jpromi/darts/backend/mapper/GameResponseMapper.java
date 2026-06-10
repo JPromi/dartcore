@@ -1,10 +1,14 @@
 package com.jpromi.darts.backend.mapper;
 
 import com.jpromi.darts.backend.entities.DartGame;
+import com.jpromi.darts.backend.entities.DartHint;
+import com.jpromi.darts.backend.entities.DartPlayer;
 import com.jpromi.darts.backend.models.GameResponse;
 // ...existing code...
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class GameResponseMapper {

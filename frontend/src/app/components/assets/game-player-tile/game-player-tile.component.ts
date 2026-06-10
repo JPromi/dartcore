@@ -6,6 +6,7 @@ import { GameThrowTypeEnum } from '../../../enums/gameThtowTypeEnum';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { GameThrow } from '../../../entities/gameThrow';
 import { LoGameCalculationService } from '../../../services/local/lo-game-calculation.service';
+import { GameHintResponse } from '../../../dtos/gameHintResponse';
 
 @Component({
   selector: 'asset-game-player-tile',
@@ -41,6 +42,10 @@ export class GamePlayerTileComponent {
         return "";
         break;
     }
+  }
+
+  public getReadableHintPoints(gameThrow: GameHintResponse): string {
+    return `${this.loGameCalculationService.getThrowMultiplierChar(gameThrow.multiplier)}${gameThrow.points}`;
   }
 
   public toFixedNumber(value: number | null, digits: number): string {
