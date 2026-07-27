@@ -242,8 +242,12 @@ constructor(
     }
   }
 
-  public getScreenTokenUlr(screen: LocationResourceResponse): string {
-    return `${window.location.origin}/screen/${screen.token}`;
+  public getScreenTokenURL(screen: LocationResourceResponse): string {
+    return `${window.location.origin}/ex/monitor/${screen.token}`;
+  }
+
+  public getInputTokenURL(client: LocationResourceResponse): string {
+    return `${window.location.origin}/ex/monitor/${client.token}`;
   }
 
   // client

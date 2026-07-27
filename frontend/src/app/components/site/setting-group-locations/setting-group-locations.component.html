@@ -141,8 +141,8 @@
                         <div class="input" [class.disabled]="false">
                             <label for="screenUrl">{{ 'page.group.single.settings.edit.location.edit.resourcePopup.url.label' | translate }}</label>
                             <div class="input-with-btn">
-                                <input type="text" id="screenUrl" name="screenUrl" [readOnly]="true" [value]="getScreenTokenUlr(selectedLocationScreen)"/>
-                                <button class="custom" type="button" (click)="copyToClipboard(getScreenTokenUlr(selectedLocationScreen))">
+                                <input type="text" id="screenUrl" name="screenUrl" [readOnly]="true" [value]="getScreenTokenURL(selectedLocationScreen)"/>
+                                <button class="custom" type="button" (click)="copyToClipboard(getScreenTokenURL(selectedLocationScreen))">
                                     <fa-icon [icon]="fa.faCopy" />
                                 </button>
                             </div>
@@ -181,8 +181,8 @@
                         <div class="input" [class.disabled]="false">
                             <label for="clientUrl">{{ 'page.group.single.settings.edit.location.edit.resourcePopup.url.label' | translate }}</label>
                             <div class="input-with-btn">
-                                <input type="text" id="clientUrl" name="clientUrl" [readOnly]="true" [value]="getScreenTokenUlr(selectedLocationClient)"/>
-                                <button class="custom" type="button" (click)="copyToClipboard(getScreenTokenUlr(selectedLocationClient))">
+                                <input type="text" id="clientUrl" name="clientUrl" [readOnly]="true" [value]="getInputTokenURL(selectedLocationClient)"/>
+                                <button class="custom" type="button" (click)="copyToClipboard(getInputTokenURL(selectedLocationClient))">
                                     <fa-icon [icon]="fa.faCopy" />
                                 </button>
                             </div>
