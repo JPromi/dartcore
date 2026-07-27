@@ -22,6 +22,7 @@ import { max } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { GameService } from '../../../services/game.service';
 import { GameNew } from '../../../entities/gameNew';
+import { NewGameLocationResponse } from '../../../dtos/newGameLocationResponse';
 
 @Component({
   selector: 'app-game-create',
@@ -81,6 +82,9 @@ export class GameCreateComponent implements OnInit {
 
   public creationStep: number = 0; // 0: group, 1: location, 2: game Type, 3: settings
   public groups: GroupLightResponse[] = [];
+  public locations: NewGameLocationResponse[] = [];
+  public locationsLoading: boolean = false;
+  public creationError: boolean = false;
   public profileSearchResults: ProfileLightResponse[] = [];
   public profileSearchLoading: boolean = false;
   public game: GameNew = new GameNew();
@@ -110,7 +114,14 @@ export class GameCreateComponent implements OnInit {
   }
 
   public nextStep(): void {
-    if (this.creationStep < 3) {
+    if (this.creationStep === 0) {
+      if (this.game.groupUuid) {
+        this._loadLocations();
+        this.creationStep = 1;
+      } else {
+        this.creationStep = 2;
+      }
+    } else if (this.creationStep < 3) {
       this.creationStep++;
     }
 
@@ -121,7 +132,9 @@ export class GameCreateComponent implements OnInit {
   }
 
   public previousStep(): void {
-    if (this.creationStep > 0) {
+    if (this.creationStep === 2 && !this.game.groupUuid) {
+      this.creationStep = 0;
+    } else if (this.creationStep > 0) {
       this.creationStep--;
     }
   }
@@ -131,6 +144,14 @@ export class GameCreateComponent implements OnInit {
       this.game.groupUuid = null;
     } else {
       this.game.groupUuid = group?.uuid;
+    }
+    this.game.locationUuid = null;
+    this.locations = [];
+  }
+
+  public selectLocation(location: NewGameLocationResponse): void {
+    if (!location.occupied) {
+      this.game.locationUuid = this.game.locationUuid === location.uuid ? null : location.uuid;
     }
   }
 
@@ -233,11 +254,19 @@ export class GameCreateComponent implements OnInit {
   }
 
   public postForm(): void {
-    this.gameService.createGame(GameNewRequest.fromGameNew(this.game)).subscribe(
-      (response: string) => {
+    this.creationError = false;
+    this.gameService.createGame(GameNewRequest.fromGameNew(this.game)).subscribe({
+      next: (response: string) => {
         this.router.navigate(['/', 'game', 'active', response]);
+      },
+      error: () => {
+        this.creationError = true;
+        if (this.game.groupUuid) {
+          this.creationStep = 1;
+          this._loadLocations();
+        }
       }
-    );
+    });
   }
 
   private _searchProfile() {
@@ -261,17 +290,39 @@ export class GameCreateComponent implements OnInit {
         // Search if selected group exists
         this.game.groupUuid = this._findGroupByUuid(this.paramsValue.group)?.uuid || null;
 
-        // skip step if group is selected or if no group is available
-        if (this.game.groupUuid || this.groups.length === 0) {
-          // if no group there cannot be a location
+        if (this.groups.length === 0) {
           this.creationStep = 2;
+        } else if (this.game.groupUuid) {
+          this._loadLocations();
+          this.creationStep = 1;
         }
       }
     );
   }
 
-  private _loadLocations(): void { // ToDo
+  private _loadLocations(): void {
     this.game.locationUuid = null;
+    this.locations = [];
+    if (!this.game.groupUuid) {
+      return;
+    }
+
+    this.locationsLoading = true;
+    this.gameService.getLocationsForNewGame(this.game.groupUuid).subscribe({
+      next: (locations) => {
+        this.locations = locations;
+        this.game.locationUuid = locations.find(location =>
+          location.uuid === this.paramsValue.location && !location.occupied
+        )?.uuid ?? null;
+        if (this.game.locationUuid && this.paramsValue.location) {
+          this.creationStep = 2;
+        }
+        this.locationsLoading = false;
+      },
+      error: () => {
+        this.locationsLoading = false;
+      }
+    });
   }
 
   private _findGroupByUuid(uuid: string | null): GroupLightResponse | null {

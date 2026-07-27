@@ -4,6 +4,7 @@ import { GameNewRequest } from '../dtos/gameNewRequest';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ActiveGameResponse } from '../dtos/activeGameResponse';
+import { NewGameLocationResponse } from '../dtos/newGameLocationResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +28,13 @@ export class GameService {
 
   public createGame(gameData: GameNewRequest): Observable<string> {
     return this.http.post<string>(`${environment.baseUrl}/game`, gameData, { withCredentials: true });
+  }
+
+  public getLocationsForNewGame(groupUuid: string): Observable<NewGameLocationResponse[]> {
+    return this.http.get<NewGameLocationResponse[]>(`${environment.baseUrl}/game/locations`, {
+      withCredentials: true,
+      params: { groupUuid }
+    });
   }
 
   public getGame(uuid: string, token: string | null = null, type: 'screen' | 'session' | 'client' = 'session'): Observable<any> {

@@ -214,6 +214,7 @@
                 },
                 "settings": {
                     "title": "Einstellungen",
+                    "creationError": "Das Spiel konnte nicht gestartet werden. Bitte prüfe, ob der Standort noch verfügbar ist.",
                     "players": {
                         "title": "Spieler",
                         "search.label": "Spieler suchen...",
@@ -222,6 +223,12 @@
                     },
                     "selectGroup": {
                         "title": "Gruppe auswählen"
+                    },
+                    "selectLocation": {
+                        "title": "Standort auswählen",
+                        "available": "Verfügbar",
+                        "occupied": "Aktives Spiel läuft",
+                        "empty": "Für diese Gruppe sind keine Standorte vorhanden."
                     },
                     "gameMode": {
                         "title": "Spielmodus Auswählen"

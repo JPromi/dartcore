@@ -7,6 +7,7 @@ import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
+import com.jpromi.darts.backend.models.NewGameLocationResponse;
 import com.jpromi.darts.backend.registry.GameLockRegistry;
 import com.jpromi.darts.backend.repositories.LocationScreenRepository;
 import com.jpromi.darts.backend.services.AuthService;
@@ -14,6 +15,7 @@ import com.jpromi.darts.backend.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -52,6 +54,12 @@ public class GameController {
                 .body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Invalid request"));
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", "Location already has an active game"));
+    }
+
     @GetMapping("/active")
     public ResponseEntity<List<GameResponse>> getActiveGamesResponseByAccount(
             @CookieValue(name = "dcn.session", required = false) String sessionCookie,
@@ -87,6 +95,17 @@ public class GameController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
+    }
+
+    @GetMapping("/locations")
+    public ResponseEntity<List<NewGameLocationResponse>> getLocationsForNewGame(
+            @CookieValue("dcn.session") String sessionCookie,
+            @RequestParam UUID groupUuid) {
+        Session session = this.authService.session(sessionCookie);
+        if (session == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(gameService.getLocationsForNewGame(groupUuid, session.getAccount()));
     }
 
     @GetMapping("/{gameUuid}")

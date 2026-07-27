@@ -9,6 +9,7 @@ import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.NewGamePlayerRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
+import com.jpromi.darts.backend.models.NewGameLocationResponse;
 import com.jpromi.darts.backend.repositories.*;
 import com.jpromi.darts.backend.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,12 @@ public class GameServiceImpl implements GameService {
     private AccountRepository accountRepository;
 
     @Autowired
+    private LocationRepository locationRepository;
+
+    @Autowired
+    private AccountGroupMemberRepository accountGroupMemberRepository;
+
+    @Autowired
     private GamePlayerResponseMapper gamePlayerResponseMapper;
 
     @Autowired
@@ -43,6 +50,7 @@ public class GameServiceImpl implements GameService {
     private DartHintRepository dartHintRepository;
 
     @Override
+    @Transactional
     public DartGame newGame(NewGameRequest newGameRequest, Account account) {
         if (newGameRequest != null && account != null) {
             DartGame dartGame = DartGame.builder()
@@ -52,7 +60,23 @@ public class GameServiceImpl implements GameService {
 
             // set group
             if (newGameRequest.getGroupUuid() != null) {
-                dartGame.setGroup(this.accountGroupRepository.findByUuid(newGameRequest.getGroupUuid()));
+                AccountGroup group = this.accountGroupRepository.findByUuid(newGameRequest.getGroupUuid());
+                if (group == null || !accountGroupMemberRepository.existsByAccountAndAccountGroup(account, group)) {
+                    throw new IllegalArgumentException("Group not found or account is not a member");
+                }
+                dartGame.setGroup(group);
+
+                if (newGameRequest.getLocationUuid() != null) {
+                    Location location = locationRepository
+                            .findByUuidAndGroupForUpdate(newGameRequest.getLocationUuid(), group)
+                            .orElseThrow(() -> new IllegalArgumentException("Location not found in selected group"));
+                    if (!dartGameRepository.findActiveGameIdsByLocationId(location.getId()).isEmpty()) {
+                        throw new IllegalArgumentException("Location already has an active game");
+                    }
+                    dartGame.setLocation(location);
+                }
+            } else if (newGameRequest.getLocationUuid() != null) {
+                throw new IllegalArgumentException("A location can only be selected together with its group");
             }
 
             // set game settings based on game type
@@ -98,6 +122,31 @@ public class GameServiceImpl implements GameService {
         } else {
             throw new IllegalArgumentException("New game request or/and account cannot be null");
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<NewGameLocationResponse> getLocationsForNewGame(UUID groupUuid, Account account) {
+        if (groupUuid == null || account == null) {
+            throw new IllegalArgumentException("Group UUID and account are required");
+        }
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        if (group == null || !accountGroupMemberRepository.existsByAccountAndAccountGroup(account, group)) {
+            throw new IllegalArgumentException("Group not found or account is not a member");
+        }
+
+        return locationRepository.findByGroup(group).stream().map(location -> {
+            List<DartGame> activeGames = dartGameRepository.findActiveGameIdsByLocationId(location.getId());
+            DartGame activeGame = activeGames.isEmpty() ? null : activeGames.getFirst();
+            return NewGameLocationResponse.builder()
+                    .uuid(location.getUuid())
+                    .name(location.getName())
+                    .description(location.getDescription())
+                    .address(location.getAddress())
+                    .occupied(activeGame != null)
+                    .activeGameUuid(activeGame != null ? activeGame.getUuid() : null)
+                    .build();
+        }).toList();
     }
 
     @Override

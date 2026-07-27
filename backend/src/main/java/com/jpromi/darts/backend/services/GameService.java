@@ -6,6 +6,7 @@ import com.jpromi.darts.backend.entities.Location;
 import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
+import com.jpromi.darts.backend.models.NewGameLocationResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,4 +20,5 @@ public interface GameService {
     GameResponse getGameResponseByUuid(DartGame game);
     List<GameResponse> getActiveGamesResponseByAccount(Account account);
     List<GameResponse> getActiveGamesResponseByLocation(Location location);
+    List<NewGameLocationResponse> getLocationsForNewGame(UUID groupUuid, Account account);
 }
