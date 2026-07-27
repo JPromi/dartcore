@@ -6,6 +6,7 @@ import { ActiveGameResponse } from '../../../dtos/activeGameResponse';
 import { CommonModule } from '@angular/common';
 import { GamePlayerTileComponent } from '../../assets/game-player-tile/game-player-tile.component';
 import { ActiveGamePlayerResponse } from '../../../dtos/activeGamePlayerResponse';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-monitor-game',
@@ -40,6 +41,7 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
     this.activeRoute.params.subscribe(params => {
       const monitorToken = params['token'];
       this.token = monitorToken;
+      this.setScreenCookie(monitorToken);
 
       this.getActiveGames();
     });
@@ -53,7 +55,19 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.tileAnimationFrame !== null) {
       cancelAnimationFrame(this.tileAnimationFrame);
     }
-    localStorage.removeItem('dcn.screen');
+    this.clearScreenCookie();
+  }
+
+  private setScreenCookie(token: string): void {
+    document.cookie = `dcn.screen=${token};${this.cookieDomain()}path=/;max-age=${60 * 60 * 24};secure=true;SameSite=Lax`;
+  }
+
+  private clearScreenCookie(): void {
+    document.cookie = `dcn.screen=;${this.cookieDomain()}path=/;max-age=0;secure=true;SameSite=Lax`;
+  }
+
+  private cookieDomain(): string {
+    return environment.rootUrl ? `domain=${environment.rootUrl};` : '';
   }
 
   private connectWebSocket(gameUuid: string, token: string): void {
