@@ -25,8 +25,15 @@ export class GameWsService {
       this.stompClient.deactivate(); // sauber trennen
     }
 
+    const wsUrl = new URL(`${environment.baseUrl}/../ws`, window.location.origin);
+    if (token && type === 'screen') {
+      wsUrl.searchParams.set('screenToken', token);
+    } else if (token && type === 'client') {
+      wsUrl.searchParams.set('clientToken', token);
+    }
+
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS(`${environment.baseUrl}/../ws`),
+      webSocketFactory: () => new SockJS(wsUrl.toString()),
       reconnectDelay: 5000,
       debug: str => console.log(str),
       connectHeaders: {

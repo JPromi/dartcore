@@ -59,15 +59,19 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private setScreenCookie(token: string): void {
-    document.cookie = `dcn.screen=${token};${this.cookieDomain()}path=/;max-age=${60 * 60 * 24};secure=true;SameSite=Lax`;
+    document.cookie = `dcn.screen=${encodeURIComponent(token)};${this.cookieDomain()}path=/;max-age=${60 * 60 * 24};${this.secureCookie()}SameSite=Lax`;
   }
 
   private clearScreenCookie(): void {
-    document.cookie = `dcn.screen=;${this.cookieDomain()}path=/;max-age=0;secure=true;SameSite=Lax`;
+    document.cookie = `dcn.screen=;${this.cookieDomain()}path=/;max-age=0;${this.secureCookie()}SameSite=Lax`;
   }
 
   private cookieDomain(): string {
     return environment.rootUrl ? `domain=${environment.rootUrl};` : '';
+  }
+
+  private secureCookie(): string {
+    return window.location.protocol === 'https:' ? 'secure;' : '';
   }
 
   private connectWebSocket(gameUuid: string, token: string): void {

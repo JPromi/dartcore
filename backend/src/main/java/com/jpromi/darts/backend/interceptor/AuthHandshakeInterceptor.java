@@ -4,7 +4,6 @@ import com.jpromi.darts.backend.entities.LocationScreen;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.repositories.LocationScreenRepository;
 import com.jpromi.darts.backend.services.AuthService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -28,7 +27,6 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) {
         if (!(request instanceof ServletServerHttpRequest servletReq)) {
-            response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }
 
@@ -42,28 +40,20 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
             }
         }
 
-        if (sessionCookie != null) {
-            Session session = authService.session(sessionCookie);
-            if (session == null) {
-                response.setStatusCode(HttpStatus.UNAUTHORIZED);
-                return false;
-            }
-            attributes.put("sessionCookie", sessionCookie);
-            return true;
+        String screenTokenParameter = servletReq.getServletRequest().getParameter("screenToken");
+        if (screenTokenParameter != null && !screenTokenParameter.isBlank()) {
+            screenToken = screenTokenParameter;
         }
 
         if (screenToken != null) {
-            LocationScreen screen = locationScreenRepository.findByTokenWithLocation(screenToken).orElse(null);
-            if (screen == null || Boolean.TRUE.equals(screen.getIsTmp())) {
-                response.setStatusCode(HttpStatus.UNAUTHORIZED);
-                return false;
-            }
             attributes.put("screenToken", screenToken);
-            return true;
         }
 
-        response.setStatusCode(HttpStatus.UNAUTHORIZED);
-        return false;
+        if (sessionCookie != null) {
+            attributes.put("sessionCookie", sessionCookie);
+        }
+
+        return true;
     }
 
     @Override
