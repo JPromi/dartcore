@@ -2,6 +2,7 @@ package com.jpromi.darts.backend.controllers;
 
 import com.jpromi.darts.backend.entities.DartGame;
 import com.jpromi.darts.backend.entities.DartPlayer;
+import com.jpromi.darts.backend.entities.Location;
 import com.jpromi.darts.backend.entities.LocationScreen;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.models.GameResponse;
@@ -81,14 +82,31 @@ public class GameController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
 
+    @GetMapping("/location/last")
+    public ResponseEntity<GameResponse> getLastGameResponseByLocation(
+            @RequestHeader(value = "X-Screen-Token", required = false) String screenToken) {
+        if (screenToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        LocationScreen screen = locationScreenRepository.findByTokenWithLocation(screenToken).orElse(null);
+        if (screen == null || Boolean.TRUE.equals(screen.getIsTmp())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        GameResponse game = gameService.getLastGameResponseByLocation(screen.getLocation());
+        return game != null ? ResponseEntity.ok(game) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    }
+
     @PostMapping("")
     public ResponseEntity<UUID> newGame(@CookieValue("dcn.session") String sessionCookie, @RequestBody NewGameRequest gameRequest) {
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
             if(session != null) {
-
-                return ResponseEntity.ok(gameService.newGame(gameRequest, session.getAccount()).getUuid());
+                DartGame game = gameService.newGame(gameRequest, session.getAccount());
+                sendLocationGameCreated(game);
+                return ResponseEntity.ok(game.getUuid());
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
@@ -232,6 +250,20 @@ public class GameController {
     private void sendGameUpdate(UUID gameUuid) {
         GameResponse gameDto = gameService.getGameResponseByUuid(gameUuid);
         messaging.convertAndSend("/response/game/" + gameUuid, gameDto);
+    }
+
+    private void sendLocationGameCreated(DartGame game) {
+        Location location = game.getLocation();
+        if (location == null) {
+            return;
+        }
+
+        GameResponse gameDto = gameService.getGameResponseByUuid(game);
+        for (LocationScreen screen : locationScreenRepository.findByLocation(location)) {
+            if (!Boolean.TRUE.equals(screen.getIsTmp())) {
+                messaging.convertAndSend("/response/location-screen/" + screen.getToken() + "/game-created", gameDto);
+            }
+        }
     }
 
 }

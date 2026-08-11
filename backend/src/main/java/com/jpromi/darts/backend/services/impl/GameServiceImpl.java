@@ -325,6 +325,21 @@ public class GameServiceImpl implements GameService {
         return responses;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public GameResponse getLastGameResponseByLocation(com.jpromi.darts.backend.entities.Location location) {
+        if (location == null || location.getId() == null) {
+            throw new IllegalArgumentException("Location cannot be null");
+        }
+
+        List<DartGame> games = this.dartGameRepository.findGamesByLocationIdOrderByStartTimeDesc(location.getId());
+        if (games == null || games.isEmpty()) {
+            return null;
+        }
+
+        return this.getGameResponseByUuid(games.getFirst());
+    }
+
     /**
      * Builds the throw-response list for a player's most recent round.
      *

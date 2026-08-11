@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { GamePlayerTileComponent } from '../../assets/game-player-tile/game-player-tile.component';
 import { ActiveGamePlayerResponse } from '../../../dtos/activeGamePlayerResponse';
 import { environment } from '../../../../environments/environment';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-monitor-game',
@@ -36,6 +37,9 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
   private token: string | null = null;
   private lastTileRects = new Map<string, DOMRectReadOnly>();
   private tileAnimationFrame: number | null = null;
+  private gameSubscription: Subscription | null = null;
+  private screenGameCreatedSubscription: Subscription | null = null;
+  private connectedGameUuid: string | null = null;
 
   ngOnInit(): void {
     this.activeRoute.params.subscribe(params => {
@@ -55,6 +59,9 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.tileAnimationFrame !== null) {
       cancelAnimationFrame(this.tileAnimationFrame);
     }
+    this.gameSubscription?.unsubscribe();
+    this.screenGameCreatedSubscription?.unsubscribe();
+    this.gameWsService.disconnect();
     this.clearScreenCookie();
   }
 
@@ -75,20 +82,49 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private connectWebSocket(gameUuid: string, token: string): void {
-    this.gameWsService.connect(gameUuid, token, 'screen');
+    if (this.connectedGameUuid === gameUuid) {
+      return;
+    }
 
-    this.gameWsService.game$.subscribe((gameUpdate: ActiveGameResponse) => {
-      this.updateGame(gameUpdate);
-    });
+    this.connectedGameUuid = gameUuid;
+    this.gameWsService.subscribeToGame(gameUuid);
   }
 
   private getActiveGames(): void {
+    this.connectScreenWebSocket();
+
     this.gameService.getActiveGamesAccount(this.token, 'screen').subscribe(games => {
       if (games.length > 0) {
         const activeGame = games[0];
         this.updateGame(activeGame);
         this.connectWebSocket(activeGame.uuid, this.token!);
+      } else if (this.token) {
+        this.gameService.getLastLocationGame(this.token).subscribe({
+          next: game => this.updateGame(game),
+          error: () => {
+            this.game = null;
+          }
+        });
       }
+    });
+  }
+
+  private connectScreenWebSocket(): void {
+    if (!this.token) {
+      return;
+    }
+
+    this.gameWsService.connect(null, this.token, 'screen');
+
+    this.gameSubscription?.unsubscribe();
+    this.gameSubscription = this.gameWsService.game$.subscribe((gameUpdate: ActiveGameResponse) => {
+      this.updateGame(gameUpdate);
+    });
+
+    this.screenGameCreatedSubscription?.unsubscribe();
+    this.screenGameCreatedSubscription = this.gameWsService.screenGameCreated$.subscribe((gameUpdate: ActiveGameResponse) => {
+      this.updateGame(gameUpdate);
+      this.connectWebSocket(gameUpdate.uuid, this.token!);
     });
   }
 

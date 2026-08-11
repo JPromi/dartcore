@@ -37,6 +37,11 @@ export class GameService {
     });
   }
 
+  public getLastLocationGame(token: string): Observable<ActiveGameResponse> {
+    const headers = new HttpHeaders().set('X-Screen-Token', token);
+    return this.http.get<ActiveGameResponse>(`${environment.baseUrl}/game/location/last`, { withCredentials: true, headers });
+  }
+
   public getGame(uuid: string, token: string | null = null, type: 'screen' | 'session' | 'client' = 'session'): Observable<any> {
     let headers = new HttpHeaders();
 

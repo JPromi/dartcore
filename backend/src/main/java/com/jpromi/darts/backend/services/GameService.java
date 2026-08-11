@@ -20,5 +20,6 @@ public interface GameService {
     GameResponse getGameResponseByUuid(DartGame game);
     List<GameResponse> getActiveGamesResponseByAccount(Account account);
     List<GameResponse> getActiveGamesResponseByLocation(Location location);
+    GameResponse getLastGameResponseByLocation(Location location);
     List<NewGameLocationResponse> getLocationsForNewGame(UUID groupUuid, Account account);
 }

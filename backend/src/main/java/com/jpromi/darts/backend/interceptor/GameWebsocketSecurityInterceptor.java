@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 public class GameWebsocketSecurityInterceptor implements ChannelInterceptor {
 
     private static final Pattern GAME_TOPIC_PATTERN = Pattern.compile("^/response/game/([0-9a-fA-F-]{36}).*$");
+    private static final Pattern SCREEN_GAME_CREATED_TOPIC_PATTERN = Pattern.compile("^/response/location-screen/([^/]+)/game-created$");
 
     private final LocationScreenRepository locationScreenRepository;
     private final DartGameRepository dartGameRepository;
@@ -102,6 +103,14 @@ public class GameWebsocketSecurityInterceptor implements ChannelInterceptor {
         if (StompCommand.SUBSCRIBE.equals(command)) {
             String destination = accessor.getDestination();
             if (destination == null) return message;
+
+            Matcher screenMatcher = SCREEN_GAME_CREATED_TOPIC_PATTERN.matcher(destination);
+            if (screenMatcher.matches()) {
+                if (!screenMatcher.group(1).equals(screenToken)) {
+                    throw new MessagingException("Screen not authorized for this location feed");
+                }
+                return message;
+            }
 
             Matcher matcher = GAME_TOPIC_PATTERN.matcher(destination);
             if (!matcher.matches()) return message;
