@@ -1,9 +1,11 @@
 package com.jpromi.darts.backend.interceptor;
 
 import com.jpromi.darts.backend.entities.DartGame;
+import com.jpromi.darts.backend.entities.LocationClient;
 import com.jpromi.darts.backend.entities.LocationScreen;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.repositories.DartGameRepository;
+import com.jpromi.darts.backend.repositories.LocationClientRepository;
 import com.jpromi.darts.backend.repositories.LocationScreenRepository;
 import com.jpromi.darts.backend.services.AuthService;
 import org.springframework.messaging.Message;
@@ -27,13 +29,16 @@ public class GameWebsocketSecurityInterceptor implements ChannelInterceptor {
     private static final Pattern SCREEN_GAME_CREATED_TOPIC_PATTERN = Pattern.compile("^/response/location-screen/([^/]+)/game-created$");
 
     private final LocationScreenRepository locationScreenRepository;
+    private final LocationClientRepository locationClientRepository;
     private final DartGameRepository dartGameRepository;
     private final AuthService authService;
 
     public GameWebsocketSecurityInterceptor(LocationScreenRepository locationScreenRepository,
+                                            LocationClientRepository locationClientRepository,
                                             DartGameRepository dartGameRepository,
                                             AuthService authService) {
         this.locationScreenRepository = locationScreenRepository;
+        this.locationClientRepository = locationClientRepository;
         this.dartGameRepository = dartGameRepository;
         this.authService = authService;
     }
@@ -52,9 +57,13 @@ public class GameWebsocketSecurityInterceptor implements ChannelInterceptor {
         if (StompCommand.CONNECT.equals(command)) {
             Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
             String screenToken = accessor.getFirstNativeHeader("X-Screen-Token");
+            String clientToken = accessor.getFirstNativeHeader("X-Client-Token");
 
             if ((screenToken == null || screenToken.isBlank()) && sessionAttributes != null) {
                 screenToken = (String) sessionAttributes.get("screenToken");
+            }
+            if ((clientToken == null || clientToken.isBlank()) && sessionAttributes != null) {
+                clientToken = (String) sessionAttributes.get("clientToken");
             }
 
             if (screenToken != null && !screenToken.isBlank()) {
@@ -68,6 +77,21 @@ public class GameWebsocketSecurityInterceptor implements ChannelInterceptor {
 
                 sessionAttributes.put("screenToken", screenToken);
                 sessionAttributes.put("screenLocationId", screen.getLocation().getId());
+                sessionAttributes.remove("sessionCookie");
+                return message;
+            }
+
+            if (clientToken != null && !clientToken.isBlank()) {
+                LocationClient client = locationClientRepository
+                        .findByTokenWithLocation(clientToken)
+                        .orElseThrow(() -> new MessagingException("Client not authorized"));
+
+                if (Boolean.TRUE.equals(client.getIsTmp())) {
+                    throw new MessagingException("Temporary clients are not authorized");
+                }
+
+                sessionAttributes.put("clientToken", clientToken);
+                sessionAttributes.put("clientLocationId", client.getLocation().getId());
                 sessionAttributes.remove("sessionCookie");
                 return message;
             }
@@ -92,15 +116,23 @@ public class GameWebsocketSecurityInterceptor implements ChannelInterceptor {
                 ? (Long) accessor.getSessionAttributes().get("screenLocationId")
                 : null;
 
-        if (screenToken == null) {
+        String clientToken = accessor.getSessionAttributes() != null
+                ? (String) accessor.getSessionAttributes().get("clientToken")
+                : null;
+
+        Long clientLocationId = accessor.getSessionAttributes() != null
+                ? (Long) accessor.getSessionAttributes().get("clientLocationId")
+                : null;
+
+        if (screenToken == null && clientToken == null) {
             return message; // normal user session
         }
 
-        if (StompCommand.SEND.equals(command)) {
+        if (screenToken != null && StompCommand.SEND.equals(command)) {
             throw new MessagingException("Screens are not allowed to send messages");
         }
 
-        if (StompCommand.SUBSCRIBE.equals(command)) {
+        if (screenToken != null && StompCommand.SUBSCRIBE.equals(command)) {
             String destination = accessor.getDestination();
             if (destination == null) return message;
 
@@ -127,6 +159,27 @@ public class GameWebsocketSecurityInterceptor implements ChannelInterceptor {
                             !game.getLocation().getId().equals(screenLocationId)
             ) {
                 throw new MessagingException("Screen not authorized for this game");
+            }
+        }
+
+        if (clientToken != null && (StompCommand.SUBSCRIBE.equals(command) || StompCommand.SEND.equals(command))) {
+            String destination = accessor.getDestination();
+            if (destination == null) return message;
+
+            Matcher matcher = GAME_TOPIC_PATTERN.matcher(destination.replaceFirst("^/data", "/response"));
+            if (!matcher.matches()) return message;
+
+            UUID gameUuid = UUID.fromString(matcher.group(1));
+            DartGame game = dartGameRepository
+                    .findByUuidWithPlayersAndAccounts(gameUuid)
+                    .orElseThrow(() -> new MessagingException("Game not found"));
+
+            if (
+                    game.getLocation() == null ||
+                            clientLocationId == null ||
+                            !game.getLocation().getId().equals(clientLocationId)
+            ) {
+                throw new MessagingException("Client not authorized for this game");
             }
         }
 

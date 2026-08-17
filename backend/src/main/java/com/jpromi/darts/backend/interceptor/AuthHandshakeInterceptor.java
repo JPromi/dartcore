@@ -32,11 +32,13 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
         String sessionCookie = null;
         String screenToken = null;
+        String clientToken = null;
         Cookie[] cookies = servletReq.getServletRequest().getCookies();
         if (cookies != null) {
             for (Cookie c : cookies) {
                 if ("dcn.session".equals(c.getName())) sessionCookie = c.getValue();
                 if ("dcn.screen".equals(c.getName())) screenToken = c.getValue();
+                if ("dcn.client".equals(c.getName())) clientToken = c.getValue();
             }
         }
 
@@ -45,8 +47,17 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
             screenToken = screenTokenParameter;
         }
 
+        String clientTokenParameter = servletReq.getServletRequest().getParameter("clientToken");
+        if (clientTokenParameter != null && !clientTokenParameter.isBlank()) {
+            clientToken = clientTokenParameter;
+        }
+
         if (screenToken != null) {
             attributes.put("screenToken", screenToken);
+        }
+
+        if (clientToken != null) {
+            attributes.put("clientToken", clientToken);
         }
 
         if (sessionCookie != null) {

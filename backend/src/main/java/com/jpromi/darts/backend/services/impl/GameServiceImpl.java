@@ -125,6 +125,66 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    @Transactional
+    public DartGame newGameForLocation(NewGameRequest newGameRequest, Location clientLocation) {
+        if (newGameRequest == null || clientLocation == null || clientLocation.getGroup() == null) {
+            throw new IllegalArgumentException("New game request and location are required");
+        }
+
+        newGameRequest.setGroupUuid(clientLocation.getGroup().getUuid());
+        newGameRequest.setLocationUuid(clientLocation.getUuid());
+
+        DartGame dartGame = DartGame.builder()
+                .gameType(newGameRequest.getGameType())
+                .group(clientLocation.getGroup())
+                .build();
+
+        Location location = locationRepository
+                .findByUuidAndGroupForUpdate(clientLocation.getUuid(), clientLocation.getGroup())
+                .orElseThrow(() -> new IllegalArgumentException("Location not found in selected group"));
+        if (!dartGameRepository.findActiveGameIdsByLocationId(location.getId()).isEmpty()) {
+            throw new IllegalArgumentException("Location already has an active game");
+        }
+        dartGame.setLocation(location);
+
+        switch (dartGame.getGameType()) {
+            case CLASSIC:
+                dartGame.setGameTypeClassicPoints(newGameRequest.getGameTypeClassicPoints());
+                dartGame.setGameTypeClassicInType(newGameRequest.getGameTypeClassicIn());
+                dartGame.setGameTypeClassicOutType(newGameRequest.getGameTypeClassicOut());
+                break;
+        }
+
+        if (newGameRequest.getPlayers() != null && !newGameRequest.getPlayers().isEmpty()) {
+            for (int i = 0; i < newGameRequest.getPlayers().size(); i++) {
+                NewGamePlayerRequest playerRequest = newGameRequest.getPlayers().get(i);
+                if (playerRequest.getName() != null) {
+                    DartPlayer player = DartPlayer.builder()
+                            .guestName(playerRequest.getName())
+                            .game(dartGame)
+                            .orderIndex(i)
+                            .build();
+                    dartGame.addPlayer(player);
+                } else if (playerRequest.getAccountUuid() != null) {
+                    Account playerAccount = this.accountRepository.findByUuid(playerRequest.getAccountUuid());
+                    if (playerAccount != null) {
+                        DartPlayer player = DartPlayer.builder()
+                                .account(playerAccount)
+                                .game(dartGame)
+                                .orderIndex(i)
+                                .build();
+                        dartGame.addPlayer(player);
+                    } else {
+                        throw new IllegalArgumentException("Player account not found for UUID: " + playerRequest.getAccountUuid());
+                    }
+                }
+            }
+        }
+
+        return this.dartGameRepository.save(dartGame);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<NewGameLocationResponse> getLocationsForNewGame(UUID groupUuid, Account account) {
         if (groupUuid == null || account == null) {

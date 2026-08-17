@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ActiveGameResponse } from '../dtos/activeGameResponse';
 import { NewGameLocationResponse } from '../dtos/newGameLocationResponse';
+import { ExternalInputContextResponse } from '../dtos/externalInputContextResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +29,16 @@ export class GameService {
 
   public createGame(gameData: GameNewRequest): Observable<string> {
     return this.http.post<string>(`${environment.baseUrl}/game`, gameData, { withCredentials: true });
+  }
+
+  public createGameForClient(gameData: GameNewRequest, token: string): Observable<string> {
+    const headers = new HttpHeaders().set('X-Client-Token', token);
+    return this.http.post<string>(`${environment.baseUrl}/game/client`, gameData, { withCredentials: true, headers });
+  }
+
+  public getExternalInputContext(token: string): Observable<ExternalInputContextResponse> {
+    const headers = new HttpHeaders().set('X-Client-Token', token);
+    return this.http.get<ExternalInputContextResponse>(`${environment.baseUrl}/game/client/context`, { withCredentials: true, headers });
   }
 
   public getLocationsForNewGame(groupUuid: string): Observable<NewGameLocationResponse[]> {

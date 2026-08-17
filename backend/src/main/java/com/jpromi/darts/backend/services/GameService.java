@@ -13,6 +13,7 @@ import java.util.UUID;
 
 public interface GameService {
     DartGame newGame(NewGameRequest newGameRequest, Account account);
+    DartGame newGameForLocation(NewGameRequest newGameRequest, Location location);
     DartGame getGameByUuid(UUID uuid);
     DartGame endGame(UUID gameUuid);
     DartGame addThrow(UUID gameUuid, GameThrowRequest request);

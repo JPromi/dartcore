@@ -3,13 +3,16 @@ package com.jpromi.darts.backend.controllers;
 import com.jpromi.darts.backend.entities.DartGame;
 import com.jpromi.darts.backend.entities.DartPlayer;
 import com.jpromi.darts.backend.entities.Location;
+import com.jpromi.darts.backend.entities.LocationClient;
 import com.jpromi.darts.backend.entities.LocationScreen;
 import com.jpromi.darts.backend.entities.Session;
+import com.jpromi.darts.backend.models.ExternalInputContextResponse;
 import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
 import com.jpromi.darts.backend.models.NewGameLocationResponse;
 import com.jpromi.darts.backend.registry.GameLockRegistry;
+import com.jpromi.darts.backend.repositories.LocationClientRepository;
 import com.jpromi.darts.backend.repositories.LocationScreenRepository;
 import com.jpromi.darts.backend.services.AuthService;
 import com.jpromi.darts.backend.services.GameService;
@@ -49,6 +52,9 @@ public class GameController {
     @Autowired
     private LocationScreenRepository locationScreenRepository;
 
+    @Autowired
+    private LocationClientRepository locationClientRepository;
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -64,11 +70,19 @@ public class GameController {
     @GetMapping("/active")
     public ResponseEntity<List<GameResponse>> getActiveGamesResponseByAccount(
             @CookieValue(name = "dcn.session", required = false) String sessionCookie,
-            @RequestHeader(value = "X-Screen-Token", required = false) String screenToken) {
+            @RequestHeader(value = "X-Screen-Token", required = false) String screenToken,
+            @RequestHeader(value = "X-Client-Token", required = false) String clientToken) {
         if (screenToken != null) {
             LocationScreen screen = locationScreenRepository.findByTokenWithLocation(screenToken).orElse(null);
             if (screen != null && !Boolean.TRUE.equals(screen.getIsTmp())) {
                 return ResponseEntity.ok(gameService.getActiveGamesResponseByLocation(screen.getLocation()));
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        if (clientToken != null) {
+            LocationClient client = locationClientRepository.findByTokenWithLocation(clientToken).orElse(null);
+            if (client != null && !Boolean.TRUE.equals(client.getIsTmp())) {
+                return ResponseEntity.ok(gameService.getActiveGamesResponseByLocation(client.getLocation()));
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
@@ -80,6 +94,27 @@ public class GameController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+    }
+
+    @GetMapping("/client/context")
+    public ResponseEntity<ExternalInputContextResponse> getExternalInputContext(
+            @RequestHeader(value = "X-Client-Token", required = false) String clientToken) {
+        if (clientToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        LocationClient client = locationClientRepository.findByTokenWithLocation(clientToken).orElse(null);
+        if (client == null || Boolean.TRUE.equals(client.getIsTmp())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        List<GameResponse> activeGames = gameService.getActiveGamesResponseByLocation(client.getLocation());
+        UUID activeGameUuid = activeGames.isEmpty() ? null : activeGames.getFirst().getUuid();
+        return ResponseEntity.ok(ExternalInputContextResponse.builder()
+                .groupUuid(client.getLocation().getGroup().getUuid())
+                .locationUuid(client.getLocation().getUuid())
+                .activeGameUuid(activeGameUuid)
+                .build());
     }
 
     @GetMapping("/location/last")
@@ -115,6 +150,24 @@ public class GameController {
         }
     }
 
+    @PostMapping("/client")
+    public ResponseEntity<UUID> newGameForClient(
+            @RequestHeader(value = "X-Client-Token", required = false) String clientToken,
+            @RequestBody NewGameRequest gameRequest) {
+        if (clientToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        LocationClient client = locationClientRepository.findByTokenWithLocation(clientToken).orElse(null);
+        if (client == null || Boolean.TRUE.equals(client.getIsTmp())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        DartGame game = gameService.newGameForLocation(gameRequest, client.getLocation());
+        sendLocationGameCreated(game);
+        return ResponseEntity.ok(game.getUuid());
+    }
+
     @GetMapping("/locations")
     public ResponseEntity<List<NewGameLocationResponse>> getLocationsForNewGame(
             @CookieValue("dcn.session") String sessionCookie,
@@ -130,6 +183,7 @@ public class GameController {
     public ResponseEntity<GameResponse> getGame(
             @CookieValue(name = "dcn.session", required = false) String sessionCookie,
             @RequestHeader(name = "X-Screen-Token", required = false) String screenToken,
+            @RequestHeader(name = "X-Client-Token", required = false) String clientToken,
             @PathVariable UUID gameUuid) {
         if (screenToken != null) {
             LocationScreen screen = locationScreenRepository.findByTokenWithLocation(screenToken).orElse(null);
@@ -141,6 +195,20 @@ public class GameController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
             if (dartGame.getLocation() == null || !dartGame.getLocation().getId().equals(screen.getLocation().getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+            return ResponseEntity.ok(this.gameService.getGameResponseByUuid(dartGame));
+        }
+        if (clientToken != null) {
+            LocationClient client = locationClientRepository.findByTokenWithLocation(clientToken).orElse(null);
+            if (client == null || Boolean.TRUE.equals(client.getIsTmp())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+            DartGame dartGame = this.gameService.getGameByUuid(gameUuid);
+            if (dartGame == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            if (dartGame.getLocation() == null || !dartGame.getLocation().getId().equals(client.getLocation().getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
             }
             return ResponseEntity.ok(this.gameService.getGameResponseByUuid(dartGame));
@@ -200,8 +268,8 @@ public class GameController {
             @Payload GameThrowRequest body
     ) {
         String sessionCookie = (String) attrs.get("sessionCookie");
-        Session session = authService.session(sessionCookie);
-        if (session == null) throw new IllegalArgumentException("Session invalid");
+        String clientToken = (String) attrs.get("clientToken");
+        Session session = sessionCookie != null ? authService.session(sessionCookie) : null;
         System.out.println("GameController.addThrow: " + gameUuid + " - " + body);
 
         // authorization: ensure the session account is a player in this game and the game is active
@@ -216,20 +284,31 @@ public class GameController {
             return;
         }
 
-        boolean isPlayerInGame = false;
-        for (DartPlayer p : game.getPlayers()) {
-            if (p.getAccount() != null && session.getAccount() != null
-                    && p.getAccount().getId() != null && session.getAccount().getId() != null
-                    && p.getAccount().getId().equals(session.getAccount().getId())
-                    && p.getLeftGameAt() == null) {
-                isPlayerInGame = true;
-                break;
+        if (clientToken != null) {
+            LocationClient client = locationClientRepository.findByTokenWithLocation(clientToken).orElse(null);
+            if (client == null || Boolean.TRUE.equals(client.getIsTmp())
+                    || game.getLocation() == null
+                    || !game.getLocation().getId().equals(client.getLocation().getId())) {
+                messaging.convertAndSend("/response/game/" + gameUuid + "/error", Map.of("message", "Client not authorized for this game"));
+                return;
             }
-        }
+        } else {
+            if (session == null) throw new IllegalArgumentException("Session invalid");
+            boolean isPlayerInGame = false;
+            for (DartPlayer p : game.getPlayers()) {
+                if (p.getAccount() != null && session.getAccount() != null
+                        && p.getAccount().getId() != null && session.getAccount().getId() != null
+                        && p.getAccount().getId().equals(session.getAccount().getId())
+                        && p.getLeftGameAt() == null) {
+                    isPlayerInGame = true;
+                    break;
+                }
+            }
 
-        if (!isPlayerInGame) {
-            messaging.convertAndSend("/response/game/" + gameUuid + "/error", Map.of("message", "Not authorized to play in this game"));
-            return;
+            if (!isPlayerInGame) {
+                messaging.convertAndSend("/response/game/" + gameUuid + "/error", Map.of("message", "Not authorized to play in this game"));
+                return;
+            }
         }
 
         // logic

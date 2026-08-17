@@ -52,6 +52,7 @@ export class GameInputComponent implements OnInit, OnDestroy {
   playerDisplayList: ActiveGamePlayerResponse[] = [];
 
   popupEndGameShow: boolean = false;
+  clientToken: string | null = null;
 
   showInput: boolean = true;
 
@@ -90,7 +91,8 @@ export class GameInputComponent implements OnInit, OnDestroy {
     this.activeRoute.params.subscribe(params => {
       const uuid = params['uuid'];
       if (uuid) {
-        this.gameWsService.connect(uuid);
+        this.clientToken = this.activeRoute.snapshot.queryParamMap.get('clientToken');
+        this.gameWsService.connect(uuid, this.clientToken, this.clientToken ? 'client' : 'session');
         this._loadGame(uuid);
 
         // WS Player Update
@@ -290,7 +292,7 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   private _loadGame(uuid: string): void {
-    this.gameService.getGame(uuid).subscribe(
+    this.gameService.getGame(uuid, this.clientToken, this.clientToken ? 'client' : 'session').subscribe(
       (response: ActiveGameResponse) => {
         this.applyGameUpdate(response);
         this.checkIsFullscreen();

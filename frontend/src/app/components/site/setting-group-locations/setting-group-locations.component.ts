@@ -247,7 +247,7 @@ constructor(
   }
 
   public getInputTokenURL(client: LocationResourceResponse): string {
-    return `${window.location.origin}/ex/monitor/${client.token}`;
+    return `${window.location.origin}/ex/input/${client.token}`;
   }
 
   // client

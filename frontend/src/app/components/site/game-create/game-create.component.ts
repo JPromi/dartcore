@@ -91,6 +91,8 @@ export class GameCreateComponent implements OnInit {
   public paramsValue = {
     group: null as string | null,
     location: null as string | null,
+    clientToken: null as string | null,
+    lockedLocation: false,
   }
   public gameModes: GameModes[] = GameModes.list();
 
@@ -108,8 +110,19 @@ export class GameCreateComponent implements OnInit {
       if (params['location']) {
         this.paramsValue.location = params['location'].toString();
       }
-      this._loadGroups();
-      this._addCurrentUserToPlayers();
+      if (params['clientToken']) {
+        this.paramsValue.clientToken = params['clientToken'].toString();
+      }
+      this.paramsValue.lockedLocation = params['lockedLocation'] === 'true';
+
+      if (this.paramsValue.lockedLocation && this.paramsValue.group && this.paramsValue.location) {
+        this.game.groupUuid = this.paramsValue.group;
+        this.game.locationUuid = this.paramsValue.location;
+        this.creationStep = 2;
+      } else {
+        this._loadGroups();
+        this._addCurrentUserToPlayers();
+      }
     });
   }
 
@@ -132,6 +145,9 @@ export class GameCreateComponent implements OnInit {
   }
 
   public previousStep(): void {
+    if (this.paramsValue.lockedLocation && this.creationStep <= 2) {
+      return;
+    }
     if (this.creationStep === 2 && !this.game.groupUuid) {
       this.creationStep = 0;
     } else if (this.creationStep > 0) {
@@ -255,9 +271,18 @@ export class GameCreateComponent implements OnInit {
 
   public postForm(): void {
     this.creationError = false;
-    this.gameService.createGame(GameNewRequest.fromGameNew(this.game)).subscribe({
+    const request = GameNewRequest.fromGameNew(this.game);
+    const createRequest = this.paramsValue.clientToken
+      ? this.gameService.createGameForClient(request, this.paramsValue.clientToken)
+      : this.gameService.createGame(request);
+
+    createRequest.subscribe({
       next: (response: string) => {
-        this.router.navigate(['/', 'game', 'active', response]);
+        if (this.paramsValue.clientToken) {
+          this.router.navigate(['/', 'ex', 'input', this.paramsValue.clientToken]);
+        } else {
+          this.router.navigate(['/', 'game', 'active', response]);
+        }
       },
       error: () => {
         this.creationError = true;
@@ -273,7 +298,7 @@ export class GameCreateComponent implements OnInit {
     this.profileSearchLoading = true;
     // this.profileSearchResults = [];
     // this.profileSearchLoading = false;
-    this.profileService.searchProfile(this.searchQuery, 0, 20, true, this.game.groupUuid || null).subscribe(
+    this.profileService.searchProfile(this.searchQuery, 0, 20, true, this.game.groupUuid || null, null, this.paramsValue.clientToken).subscribe(
       (response: PageResponse<ProfileLightResponse>) => {
         this.profileSearchResults = response.content;
         this.profileSearchLoading = false;
@@ -333,6 +358,9 @@ export class GameCreateComponent implements OnInit {
   }
 
   private _addCurrentUserToPlayers(): void {
+    if (this.paramsValue.clientToken) {
+      return;
+    }
     this.authService.session().subscribe(
       (session) => {
         const currentUserProfile: ProfileLightResponse = {

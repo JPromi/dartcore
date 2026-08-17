@@ -218,7 +218,7 @@
         <p class="creation-error">{{ 'page.game.create.settings.creationError' | translate }}</p>
     }
     <div class="step-controls">
-        @if (creationStep > 0) {
+        @if (creationStep > 0 && !(paramsValue.lockedLocation && creationStep <= 2)) {
             <button class="back" (click)="previousStep()">Zurück</button>
         }
         @if (creationStep < 3) {

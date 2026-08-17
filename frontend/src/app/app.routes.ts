@@ -18,6 +18,8 @@ export const routes: Routes = [
         loadComponent: () => import('./components/routes/guest-router/guest-router.component').then(m => m.GuestRouterComponent),
         children: [
             { path: "monitor/:token", loadComponent: () => import('./components/site/monitor-game/monitor-game.component').then(m => m.MonitorGameComponent), pathMatch: "full" },
+            { path: "input/:token", loadComponent: () => import('./components/routes/external-input-router/external-input-router.component').then(m => m.ExternalInputRouterComponent), pathMatch: "full" },
+            { path: "input/:token/create", loadComponent: () => import('./components/site/game-create/game-create.component').then(m => m.GameCreateComponent), pathMatch: "full" },
         ]
     },
     {

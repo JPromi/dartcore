@@ -78,11 +78,16 @@ WHERE a.username ILIKE CONCAT('%', :q, '%')
     @Query("""
     SELECT a
     FROM AccountGroup g
-    JOIN g.members gmViewer
     JOIN g.members gm
     JOIN gm.account a
     WHERE g.uuid = :groupUuid
-      AND gmViewer.account.id = :viewerId
+      AND (:viewerId IS NULL OR EXISTS (
+          SELECT 1
+          FROM AccountGroup gViewer
+          JOIN gViewer.members gmViewer
+          WHERE gViewer.uuid = :groupUuid
+            AND gmViewer.account.id = :viewerId
+      ))
       AND LOWER(a.username) LIKE LOWER(CONCAT('%', :q, '%'))
       AND a.isDeleted = FALSE AND a.isDisabled = FALSE AND a.isEmailVerified = TRUE
     """)

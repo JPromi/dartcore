@@ -1,6 +1,7 @@
 package com.jpromi.darts.backend.controllers;
 
 import com.jpromi.darts.backend.entities.Account;
+import com.jpromi.darts.backend.entities.LocationClient;
 import com.jpromi.darts.backend.entities.Profile;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.models.PageResponse;
@@ -8,6 +9,7 @@ import com.jpromi.darts.backend.models.ProfileLightResponse;
 import com.jpromi.darts.backend.models.ProfileResponse;
 import com.jpromi.darts.backend.models.SessionAccountResponse;
 import com.jpromi.darts.backend.repositories.AccountRepository;
+import com.jpromi.darts.backend.repositories.LocationClientRepository;
 import com.jpromi.darts.backend.services.AuthService;
 import com.jpromi.darts.backend.services.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,9 @@ public class ProfileController {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Autowired
+    private LocationClientRepository locationClientRepository;
+
     @GetMapping("/{username}")
     public ResponseEntity<ProfileResponse> getProfile(@CookieValue("dcn.session") String sessionCookie, @PathVariable String username) {
 
@@ -58,7 +63,9 @@ public class ProfileController {
 
     @GetMapping("/search")
     public ResponseEntity<PageResponse<ProfileLightResponse>> searchProfiles(
-            @CookieValue("dcn.session") String sessionCookie,
+            @CookieValue(name = "dcn.session", required = false) String sessionCookie,
+            @CookieValue(name = "dcn.client", required = false) String clientCookie,
+            @RequestHeader(value = "X-Client-Token", required = false) String clientToken,
             @RequestParam(value = "q", required = false, defaultValue = "") String query,
             // @RequestParam(value = "isFriend", required = false, defaultValue = "") Boolean isFriend,
             @RequestParam(value = "isPlayable", required = false, defaultValue = "false") Boolean isPlayable,
@@ -68,6 +75,25 @@ public class ProfileController {
             @RequestParam(value = "notInGroup", required = false, defaultValue = "") UUID notInGroup
     ) {
         Pageable pageable = Pageable.ofSize(size).withPage(page);
+        String resolvedClientToken = clientToken != null ? clientToken : clientCookie;
+
+        if (resolvedClientToken != null) {
+            LocationClient client = locationClientRepository.findByTokenWithLocation(resolvedClientToken).orElse(null);
+            if (client == null || Boolean.TRUE.equals(client.getIsTmp())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+
+            PageResponse<ProfileLightResponse> profiles = profileService.searchProfile(
+                    query,
+                    null,
+                    true,
+                    client.getLocation().getGroup().getUuid(),
+                    null,
+                    pageable
+            );
+
+            return ResponseEntity.ok(profiles);
+        }
 
         if(sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
