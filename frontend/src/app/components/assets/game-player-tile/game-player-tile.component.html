@@ -42,8 +42,12 @@
             <div class="block">
                 <h3>{{ 'page.game.active.player.extendedInformations.hint.label' | translate }}</h3>
                 <span class="hint">
-                    @for (hint of player.hints; track $index) {
-                        <p>{{ getReadableHintPoints(hint) }}</p>
+                    @if (player.hints.length === 0) {
+                        <span></span>
+                    } @else {
+                        @for (hint of player.hints; track $index) {
+                            <p>{{ getReadableHintPoints(hint) }}</p>
+                        }
                     }
                 </span>
             </div>

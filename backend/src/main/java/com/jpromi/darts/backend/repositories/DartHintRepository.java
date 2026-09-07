@@ -23,6 +23,6 @@ public interface DartHintRepository extends JpaRepository<DartHint, Long> {
     """)
     Optional<DartHint> findClassicHint(
             @Param("gameTypeClassicOutType") DartThrowMultiplierEnum gameTypeClassicOutType,
-            @Param("points") Integer points
+            @Param("points") Long points
     );
 }

@@ -141,6 +141,8 @@
 
             span.hint {
                 display: flex;
+                align-items: center;
+                justify-content: center;
                 
                 p {
                     padding: 0 .5rem;
@@ -157,6 +159,15 @@
                             left: 0;
                         }
                     }
+                }
+
+                span {
+                    margin-top: 2rem;
+                    position: absolute;
+                    width: 2rem;
+                    height: 2px;
+                    border-radius: 1rem;
+                    background-color: var(--text);
                 }
             }
 

@@ -329,10 +329,12 @@ public class GameServiceImpl implements GameService {
                 playerResponse.setAverage(computeAverage(playerThrows));
 
                 // get hint
-                if (game.getGameType() == GameTypeEnum.CLASSIC) {
+                if (game.getGameType() == GameTypeEnum.CLASSIC && playerResponse.getScore() != null) {
                     DartHint hint = dartHintRepository.findClassicHint(
-                            game.getGameTypeClassicOutType(),
-                            playerResponse.getScore().intValue()
+                            game.getGameTypeClassicOutType() != null
+                                    ? game.getGameTypeClassicOutType()
+                                    : DartThrowMultiplierEnum.SINGLE,
+                            playerResponse.getScore()
                     ).orElse(null);
 
                     playerResponse.setHints(gamePlayerResponseMapper.hintResponseFromDartHint(hint));
