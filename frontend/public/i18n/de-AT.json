@@ -174,7 +174,8 @@
             "active": {
                 "results": {
                     "title": "Spiel beendet",
-                    "winner": "Gewinner"
+                    "winner": "Gewinner",
+                    "back": "Zurück"
                 },
                 "input": {
                     "round.label": "Runde",

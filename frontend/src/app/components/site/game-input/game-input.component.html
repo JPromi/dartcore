@@ -14,6 +14,17 @@
         </div>
     </div>
 </header>
+@if (game.endTime) {
+    <main class="finished-results">
+        <asset-game-results [players]="game.players" />
+    </main>
+    <div class="result-actions">
+        <button type="button" (click)="backFromResults()">
+            <fa-icon [icon]="fa.faArrowLeft" />
+            {{ 'page.game.active.results.back' | translate }}
+        </button>
+    </div>
+} @else {
 <div class="container">
 
     <main>
@@ -223,6 +234,7 @@
 </div>
 
 <!-- [ aside ] - multiplier -->
+}
 <ng-template #pointsAdditional>
     <div class="list additional">
         <button class="large" (click)="pointsInput(0)">

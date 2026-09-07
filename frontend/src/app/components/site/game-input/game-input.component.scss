@@ -13,7 +13,45 @@
     background-color: var(--background);
     overflow: hidden;
 
+    .finished-results {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .result-actions {
+        display: flex;
+        justify-content: center;
+        flex-shrink: 0;
+        padding: 1rem 1rem calc(1rem + var(--device-bottom, 0px));
+        border-top: 1px solid var(--border);
+        background: var(--background-secondary);
+
+        button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .75rem;
+            min-height: 3rem;
+            min-width: 12rem;
+            padding: .75rem 2rem;
+            border: 1px solid var(--primary);
+            border-radius: .5rem;
+            background: var(--background);
+            color: var(--text);
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+
+            &:hover, &:focus-visible {
+                outline: 2px solid var(--primary);
+                outline-offset: 2px;
+            }
+        }
+    }
+
     header {
+        flex-shrink: 0;
         width: 100%;
         height: 4rem;
         border-bottom: 1px solid var(--border);

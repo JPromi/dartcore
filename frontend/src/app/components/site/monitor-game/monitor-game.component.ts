@@ -9,12 +9,14 @@ import { ActiveGamePlayerResponse } from '../../../dtos/activeGamePlayerResponse
 import { environment } from '../../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
+import { GameResultsComponent } from '../../assets/game-results/game-results.component';
 
 @Component({
   selector: 'app-monitor-game',
   imports: [
     CommonModule,
     TranslateModule,
+    GameResultsComponent,
     GamePlayerTileComponent
   ],
   templateUrl: './monitor-game.component.html',
@@ -37,7 +39,6 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
   public displayPlayers: ActiveGamePlayerResponse[] = [];
   public currentDisplayPlayer: ActiveGamePlayerResponse | null = null;
   public queuedDisplayPlayers: ActiveGamePlayerResponse[] = [];
-  public resultPlayers: ActiveGamePlayerResponse[] = [];
 
   private token: string | null = null;
   private lastTileRects = new Map<string, DOMRectReadOnly>();
@@ -141,9 +142,6 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
     const previousRects = this.captureTileRects();
 
     this.game = gameUpdate;
-    this.resultPlayers = [...gameUpdate.players].sort((left, right) =>
-      Number(right.isWinner) - Number(left.isWinner) || left.orderIndex - right.orderIndex
-    );
     this.updateGameTime();
     this.displayPlayers = this.buildDisplayPlayers(gameUpdate.players);
     this.currentDisplayPlayer = this.displayPlayers[0] ?? null;

@@ -17,6 +17,7 @@ import { GameWsService } from '../../../services/game-ws.service';
 import { ActiveGameThrowRequest } from '../../../dtos/activeGameThrowRequest';
 import { PopupComponent } from '../../assets/popup/popup.component';
 import { GamePlayerTileComponent } from '../../assets/game-player-tile/game-player-tile.component';
+import { GameResultsComponent } from '../../assets/game-results/game-results.component';
 
 @Component({
   selector: 'app-game-input',
@@ -26,6 +27,7 @@ import { GamePlayerTileComponent } from '../../assets/game-player-tile/game-play
     TranslateModule,
     FontAwesomeModule,
     PopupComponent,
+    GameResultsComponent,
     GamePlayerTileComponent
   ],
   templateUrl: './game-input.component.html',
@@ -111,6 +113,7 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   public isButtonDisabled(key: number): boolean {
+    if (this.game.endTime) return true;
     if(this.multiplier === GameThrowMultiplierEnum.TRIPLE && key == 25) {
       return true;
     } else {
@@ -119,6 +122,7 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   public pointsInput(keyValue: number): void {
+    if (this.game.endTime) return;
 
     if(keyValue === 25 && this.multiplier === GameThrowMultiplierEnum.TRIPLE) {
       this.multiplier = GameThrowMultiplierEnum.SINGLE;
@@ -140,6 +144,7 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   public undoLastThrow(): void {
+    if (this.game.endTime) return;
     
     const throwRequest = new ActiveGameThrowRequest(
       GameThrowTypeEnum.THROW,
@@ -149,6 +154,11 @@ export class GameInputComponent implements OnInit, OnDestroy {
     )
 
     this.gameWsService.sendThrow(this.game.uuid, throwRequest);
+  }
+
+  public backFromResults(): void {
+    this.gameWsService.disconnect();
+    this.router.navigate(this.clientToken ? ['/ex/input', this.clientToken] : ['/']);
   }
 
   public toggleFullscreen() {
@@ -223,6 +233,8 @@ export class GameInputComponent implements OnInit, OnDestroy {
   private applyGameUpdate(gameUpdate: ActiveGameResponse): void {
     const previousPositions = this.getPlayerTopPositions();
     this.game = gameUpdate;
+    this._setGameTime();
+    if (this.game.endTime) this.popupEndGameShow = false;
     this.playerDisplayList = this.sortPlayers();
     this.changeDetectorRef.detectChanges();
 

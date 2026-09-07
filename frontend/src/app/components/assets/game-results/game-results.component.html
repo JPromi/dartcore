@@ -1,0 +1,28 @@
+<section class="results">
+                <h1>{{ 'page.game.active.results.title' | translate }}</h1>
+                @for (player of resultPlayers; track player.playerUuid) {
+                    <article class="result-player" [class.winner]="player.isWinner">
+                        <div class="result-profile">
+                            @if (player.avatar) {
+                                <img [src]="player.avatar" alt="" />
+                            }
+                            <div class="result-name">
+                                @if (player.isWinner) {
+                                    <p class="winner-label">{{ 'page.game.active.results.winner' | translate }}</p>
+                                }
+                                <h2>{{ player.name }}</h2>
+                            </div>
+                        </div>
+                        <dl class="result-stats">
+                            <div>
+                                <dt>{{ 'page.game.active.player.extendedInformations.average.label' | translate }}</dt>
+                                <dd>{{ player.average === null ? '–' : (player.average | number:'1.0-2') }}</dd>
+                            </div>
+                            <div>
+                                <dt>{{ 'page.game.active.player.extendedInformations.highscore.label' | translate }}</dt>
+                                <dd>{{ player.highscore ?? '–' }}</dd>
+                            </div>
+                        </dl>
+                    </article>
+                }
+            </section>
