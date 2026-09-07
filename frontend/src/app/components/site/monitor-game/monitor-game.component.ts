@@ -8,11 +8,13 @@ import { GamePlayerTileComponent } from '../../assets/game-player-tile/game-play
 import { ActiveGamePlayerResponse } from '../../../dtos/activeGamePlayerResponse';
 import { environment } from '../../../../environments/environment';
 import { Subscription } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-monitor-game',
   imports: [
     CommonModule,
+    TranslateModule,
     GamePlayerTileComponent
   ],
   templateUrl: './monitor-game.component.html',
@@ -29,6 +31,8 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
   ) { }
 
   public game: ActiveGameResponse | null = null;
+  public currentGameTime = '00:00';
+  private gameTimeInterval: ReturnType<typeof setInterval> | null = null;
   public currentPlayer: ActiveGamePlayerResponse | null = null; 
   public displayPlayers: ActiveGamePlayerResponse[] = [];
   public currentDisplayPlayer: ActiveGamePlayerResponse | null = null;
@@ -42,6 +46,7 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
   private connectedGameUuid: string | null = null;
 
   ngOnInit(): void {
+    this.gameTimeInterval = setInterval(() => this.updateGameTime(), 1000);
     this.activeRoute.params.subscribe(params => {
       const monitorToken = params['token'];
       this.token = monitorToken;
@@ -56,6 +61,9 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.gameTimeInterval !== null) {
+      clearInterval(this.gameTimeInterval);
+    }
     if (this.tileAnimationFrame !== null) {
       cancelAnimationFrame(this.tileAnimationFrame);
     }
@@ -132,12 +140,28 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
     const previousRects = this.captureTileRects();
 
     this.game = gameUpdate;
+    this.updateGameTime();
     this.displayPlayers = this.buildDisplayPlayers(gameUpdate.players);
     this.currentDisplayPlayer = this.displayPlayers[0] ?? null;
     this.queuedDisplayPlayers = this.displayPlayers.slice(1);
     this.getActivePlayer();
 
     this.animateTileLayout(previousRects);
+  }
+
+  private updateGameTime(): void {
+    if (!this.game?.startTime) {
+      this.currentGameTime = '00:00';
+      return;
+    }
+
+    const start = new Date(this.game.startTime).getTime();
+    const end = this.game.endTime ? new Date(this.game.endTime).getTime() : Date.now();
+    const seconds = Math.max(0, Math.floor((end - start) / 1000));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const remainingSeconds = (seconds % 60).toString().padStart(2, '0');
+    this.currentGameTime = (hours > 0 ? `${hours}:` : '') + `${minutes}:${remainingSeconds}`;
   }
 
   private getActivePlayer(): void {

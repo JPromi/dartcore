@@ -2,8 +2,21 @@
 
 @if (game) {
     <header>
-
-    </header>
+    <div class="title">
+        <h1>{{ game.gameType }}</h1>
+        <h2>{{ game.gameTypeClassicPoints }}</h2>
+    </div>
+    <div class="information">
+        <div class="block">
+            <h3>{{ 'page.game.active.input.round.label' | translate }}</h3>
+            <p>{{ game.round + 1 }}</p>
+        </div>
+        <div class="block">
+            <h3>{{ 'page.game.active.input.gameTime.label' | translate }}</h3>
+            <p>{{ currentGameTime }}</p>
+        </div>
+    </div>
+</header>
 
     <main>
         <!-- Game Classic -->
