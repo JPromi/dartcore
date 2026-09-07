@@ -271,3 +271,52 @@
         }
     }
 }
+
+:host(.monitor-hero) {
+    container-type: size;
+
+    .player {
+        padding: clamp(.5rem, 3cqh, 1rem);
+        gap: 1cqh;
+
+        .top .profile .avatar {
+            width: clamp(2rem, 20cqh, 4.5rem);
+            height: clamp(2rem, 20cqh, 4.5rem);
+        }
+
+        .throws {
+            flex: 1;
+            min-height: 0;
+            width: min(100%, 48rem);
+            margin: 0 auto;
+            gap: clamp(.5rem, 2cqw, 2rem);
+
+            .throw {
+                flex: 1;
+                min-width: 0;
+                width: auto;
+
+                p {
+                    font-size: clamp(1.5rem, min(6cqw, 20cqh), 5rem);
+                    line-height: 1;
+                }
+
+                span.field {
+                    font-size: clamp(2rem, min(10cqw, 36cqh), 8rem);
+                    line-height: 1;
+                }
+
+                span.abort {
+                    width: clamp(2.5rem, 6cqw, 5rem);
+                    height: 5px;
+                }
+            }
+        }
+
+        .extended-informations {
+            margin-top: auto;
+            flex-shrink: 0;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+}

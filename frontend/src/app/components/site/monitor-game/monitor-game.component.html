@@ -11,7 +11,7 @@
             <div class="tiles">
                 @if (currentDisplayPlayer) {
                     <div #playerTile class="player-tile hero" [attr.data-player-uuid]="currentDisplayPlayer.playerUuid">
-                        <asset-game-player-tile [player]="currentDisplayPlayer" [class.current]="currentDisplayPlayer.isCurrentPlayer" [class.disabled]="currentDisplayPlayer.isEliminated"/>
+                        <asset-game-player-tile class="monitor-hero" [player]="currentDisplayPlayer" [class.current]="currentDisplayPlayer.isCurrentPlayer" [class.disabled]="currentDisplayPlayer.isEliminated"/>
                     </div>
                 }
 
