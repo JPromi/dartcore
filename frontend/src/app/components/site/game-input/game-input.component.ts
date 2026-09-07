@@ -16,6 +16,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GameWsService } from '../../../services/game-ws.service';
 import { ActiveGameThrowRequest } from '../../../dtos/activeGameThrowRequest';
 import { PopupComponent } from '../../assets/popup/popup.component';
+import { GamePlayerTileComponent } from '../../assets/game-player-tile/game-player-tile.component';
+import { GameResultsComponent } from '../../assets/game-results/game-results.component';
 
 @Component({
   selector: 'app-game-input',
@@ -24,7 +26,9 @@ import { PopupComponent } from '../../assets/popup/popup.component';
     FormsModule,
     TranslateModule,
     FontAwesomeModule,
-    PopupComponent
+    PopupComponent,
+    GameResultsComponent,
+    GamePlayerTileComponent
   ],
   templateUrl: './game-input.component.html',
   styleUrl: './game-input.component.scss'
@@ -50,6 +54,9 @@ export class GameInputComponent implements OnInit, OnDestroy {
   playerDisplayList: ActiveGamePlayerResponse[] = [];
 
   popupEndGameShow: boolean = false;
+  clientToken: string | null = null;
+
+  showInput: boolean = true;
 
   currentGameTime = "";
   inputType = "keys"; // keys, board
@@ -86,7 +93,8 @@ export class GameInputComponent implements OnInit, OnDestroy {
     this.activeRoute.params.subscribe(params => {
       const uuid = params['uuid'];
       if (uuid) {
-        this.gameWsService.connect(uuid);
+        this.clientToken = this.activeRoute.snapshot.queryParamMap.get('clientToken');
+        this.gameWsService.connect(uuid, this.clientToken, this.clientToken ? 'client' : 'session');
         this._loadGame(uuid);
 
         // WS Player Update
@@ -105,6 +113,7 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   public isButtonDisabled(key: number): boolean {
+    if (this.game.endTime) return true;
     if(this.multiplier === GameThrowMultiplierEnum.TRIPLE && key == 25) {
       return true;
     } else {
@@ -113,6 +122,7 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   public pointsInput(keyValue: number): void {
+    if (this.game.endTime) return;
 
     if(keyValue === 25 && this.multiplier === GameThrowMultiplierEnum.TRIPLE) {
       this.multiplier = GameThrowMultiplierEnum.SINGLE;
@@ -134,6 +144,7 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   public undoLastThrow(): void {
+    if (this.game.endTime) return;
     
     const throwRequest = new ActiveGameThrowRequest(
       GameThrowTypeEnum.THROW,
@@ -145,6 +156,11 @@ export class GameInputComponent implements OnInit, OnDestroy {
     this.gameWsService.sendThrow(this.game.uuid, throwRequest);
   }
 
+  public backFromResults(): void {
+    this.gameWsService.disconnect();
+    this.router.navigate(this.clientToken ? ['/ex/input', this.clientToken] : ['/']);
+  }
+
   public toggleFullscreen() {
     if (document.fullscreenElement) {
       document.exitFullscreen();
@@ -152,30 +168,6 @@ export class GameInputComponent implements OnInit, OnDestroy {
     } else {
       document.documentElement.requestFullscreen();
       this.isFullscreen = true;
-    }
-  }
-
-  public getReadablePoints(gameThrow: GameThrow): string {
-    switch (gameThrow.type) {
-      case GameThrowTypeEnum.THROW:
-        return `${this.loGameCalculationService.getThrowMultiplierChar(gameThrow.multiplier)}${gameThrow.score}`;
-        break;
-
-      case GameThrowTypeEnum.MISS:
-        return this.translate.instant("page.game.active.player.points.miss.text");
-        break;
-
-      default:
-        return "";
-        break;
-    }
-  }
-
-  public toFixedNumber(value: number | null, digits: number): string {
-    if(value === null) {
-      return "-";
-    } else {
-      return parseFloat(value.toFixed(digits)).toString();
     }
   }
 
@@ -197,35 +189,52 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   private gameTime() {
+    this._setGameTime();
     this.currentGameTimeInterval = setInterval(() => {
-      const now = new Date();
-      if (this.game.startTime) {
-        const startTime = new Date(this.game.startTime);
-        const endTime = this.game.endTime ? new Date(this.game.endTime) : now;
-        const seconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
-        const outputHours = Math.floor(seconds / 3600);
-        const outputMinutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-        const outputSeconds = (seconds % 60).toString().padStart(2, '0');
-        this.currentGameTime = (outputHours > 0 ? outputHours + ':' : '') + outputMinutes + ':' + outputSeconds;
-      }
+      this._setGameTime();
     }, 1000);
   }
 
+  private _setGameTime() {
+    const now = new Date();
+    if (this.game.startTime) {
+      const startTime = new Date(this.game.startTime);
+      const endTime = this.game.endTime ? new Date(this.game.endTime) : now;
+      const seconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+      const outputHours = Math.floor(seconds / 3600);
+      const outputMinutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+      const outputSeconds = (seconds % 60).toString().padStart(2, '0');
+      this.currentGameTime = (outputHours > 0 ? outputHours + ':' : '') + outputMinutes + ':' + outputSeconds;
+    }
+  }
+
   private sortPlayers() {
+    const currentPlayer = this.game.players.find(p => p.isCurrentPlayer);
+    if (!currentPlayer) {
+      return [...this.game.players].sort((a, b) => a.orderIndex - b.orderIndex);
+    }
+
+    const currentIndex = currentPlayer.orderIndex;
+    const total = this.game.players.length;
+
     return [...this.game.players].sort((a, b) => {
-      if (a.isCurrentPlayer && !b.isCurrentPlayer) {
-        return -1;
-      } else if (!a.isCurrentPlayer && b.isCurrentPlayer) {
-        return 1;
-      } else {
-        return a.orderIndex - b.orderIndex;
-      }
+      if (a.isCurrentPlayer) return -1;
+      if (b.isCurrentPlayer) return 1;
+
+      if (a.isEliminated && !b.isEliminated) return 1;
+      if (!a.isEliminated && b.isEliminated) return -1;
+
+      const distA = (a.orderIndex - currentIndex + total) % total;
+      const distB = (b.orderIndex - currentIndex + total) % total;
+      return distA - distB;
     });
   }
 
   private applyGameUpdate(gameUpdate: ActiveGameResponse): void {
     const previousPositions = this.getPlayerTopPositions();
     this.game = gameUpdate;
+    this._setGameTime();
+    if (this.game.endTime) this.popupEndGameShow = false;
     this.playerDisplayList = this.sortPlayers();
     this.changeDetectorRef.detectChanges();
 
@@ -295,7 +304,7 @@ export class GameInputComponent implements OnInit, OnDestroy {
   }
 
   private _loadGame(uuid: string): void {
-    this.gameService.getGame(uuid).subscribe(
+    this.gameService.getGame(uuid, this.clientToken, this.clientToken ? 'client' : 'session').subscribe(
       (response: ActiveGameResponse) => {
         this.applyGameUpdate(response);
         this.checkIsFullscreen();

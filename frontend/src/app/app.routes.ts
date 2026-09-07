@@ -1,76 +1,64 @@
 import { Routes } from '@angular/router';
-import { AuthRouterComponent } from './components/routes/auth-router/auth-router.component';
-import { LoginComponent } from './components/site/login/login.component';
-import { TotpComponent } from './components/site/totp/totp.component';
-import { MainRouterComponent } from './components/routes/main-router/main-router.component';
-import { HomeComponent } from './components/site/home/home.component';
-import { LogoutComponent } from './components/site/logout/logout.component';
-import { ProfileComponent } from './components/site/profile/profile.component';
-import { SettingAccountRouterComponent } from './components/routes/setting-account-router/setting-account-router.component';
-import { SettingAccountProfileComponent } from './components/site/setting-account-profile/setting-account-profile.component';
-import { SettingAccountAccountComponent } from './components/site/setting-account-account/setting-account-account.component';
-import { GameInputComponent } from './components/site/game-input/game-input.component';
-import { GroupListComponent } from './components/site/group-list/group-list.component';
-import { RegisterComponent } from './components/site/register/register.component';
-import { GroupComponent } from './components/site/group/group.component';
-import { GroupOverviewComponent } from './components/site/group-overview/group-overview.component';
-import { GroupGamesComponent } from './components/site/group-games/group-games.component';
-import { SettingGroupRouterComponent } from './components/routes/setting-group-router/setting-group-router.component';
-import { SettingGroupGeneralComponent } from './components/site/setting-group-general/setting-group-general.component';
-import { SettingGroupMembersComponent } from './components/site/setting-group-members/setting-group-members.component';
-import { GameCreateComponent } from './components/site/game-create/game-create.component';
-import { GroupCreateComponent } from './components/site/group-create/group-create.component';
-import { RegisterTokenComponent } from './components/site/register-token/register-token.component';
 
 export const routes: Routes = [
     {
         path: "barrier",
-        component: AuthRouterComponent,
+        loadComponent: () => import('./components/routes/auth-router/auth-router.component').then(m => m.AuthRouterComponent),
         children: [
-            { path: "register", component: RegisterComponent, pathMatch: "full" },
-            { path: "register/:token", component: RegisterTokenComponent, pathMatch: "full" },
-            { path: "login", component: LoginComponent, pathMatch: "full" },
-            { path: "login/totp", component: TotpComponent, pathMatch: "full" },
-            { path: "logout", component: LogoutComponent, pathMatch: "full" },
+            { path: "register", loadComponent: () => import('./components/site/register/register.component').then(m => m.RegisterComponent), pathMatch: "full" },
+            { path: "register/:token", loadComponent: () => import('./components/site/register-token/register-token.component').then(m => m.RegisterTokenComponent), pathMatch: "full" },
+            { path: "login", loadComponent: () => import('./components/site/login/login.component').then(m => m.LoginComponent), pathMatch: "full" },
+            { path: "login/totp", loadComponent: () => import('./components/site/totp/totp.component').then(m => m.TotpComponent), pathMatch: "full" },
+            { path: "logout", loadComponent: () => import('./components/site/logout/logout.component').then(m => m.LogoutComponent), pathMatch: "full" },
         ]
     },
-    { path: "game/active/:uuid", component: GameInputComponent, pathMatch: "full" },
+    { path: "game/active/:uuid", loadComponent: () => import('./components/site/game-input/game-input.component').then(m => m.GameInputComponent), pathMatch: "full" },
+    {
+        path: "ex",
+        loadComponent: () => import('./components/routes/guest-router/guest-router.component').then(m => m.GuestRouterComponent),
+        children: [
+            { path: "monitor/:token", loadComponent: () => import('./components/site/monitor-game/monitor-game.component').then(m => m.MonitorGameComponent), pathMatch: "full" },
+            { path: "input/:token", loadComponent: () => import('./components/routes/external-input-router/external-input-router.component').then(m => m.ExternalInputRouterComponent), pathMatch: "full" },
+            { path: "input/:token/create", loadComponent: () => import('./components/site/game-create/game-create.component').then(m => m.GameCreateComponent), pathMatch: "full" },
+        ]
+    },
     {
         path: "",
-        component: MainRouterComponent,
+        loadComponent: () => import('./components/routes/main-router/main-router.component').then(m => m.MainRouterComponent),
         children: [
-            { path: "", component: HomeComponent, pathMatch: "full" },
-            { path: "profile", component: ProfileComponent, pathMatch: "full" },
-            { path: "profile/:username", component: ProfileComponent, pathMatch: "full" },
+            { path: "", loadComponent: () => import('./components/site/home/home.component').then(m => m.HomeComponent), pathMatch: "full" },
+            { path: "profile", loadComponent: () => import('./components/site/profile/profile.component').then(m => m.ProfileComponent), pathMatch: "full" },
+            { path: "profile/:username", loadComponent: () => import('./components/site/profile/profile.component').then(m => m.ProfileComponent), pathMatch: "full" },
             { 
                 path: "settings",
-                component: SettingAccountRouterComponent,
+                loadComponent: () => import('./components/routes/setting-account-router/setting-account-router.component').then(m => m.SettingAccountRouterComponent),
                 children: [
                     { path: "", redirectTo: "profile", pathMatch: "full" },
-                    { path: "profile", component: SettingAccountProfileComponent, pathMatch: "full" },
-                    { path: "account", component: SettingAccountAccountComponent, pathMatch: "full" },
+                    { path: "profile", loadComponent: () => import('./components/site/setting-account-profile/setting-account-profile.component').then(m => m.SettingAccountProfileComponent), pathMatch: "full" },
+                    { path: "account", loadComponent: () => import('./components/site/setting-account-account/setting-account-account.component').then(m => m.SettingAccountAccountComponent), pathMatch: "full" },
                 ]
             },
-            { path: "group", component: GroupListComponent, pathMatch: "full" },
-            { path: "group/new", component: GroupCreateComponent, pathMatch: "full" },
+            { path: "group", loadComponent: () => import('./components/site/group-list/group-list.component').then(m => m.GroupListComponent), pathMatch: "full" },
+            { path: "group/new", loadComponent: () => import('./components/site/group-create/group-create.component').then(m => m.GroupCreateComponent), pathMatch: "full" },
             {
                 path: "group/:uuid/settings",
-                component: SettingGroupRouterComponent,
+                loadComponent: () => import('./components/routes/setting-group-router/setting-group-router.component').then(m => m.SettingGroupRouterComponent),
                 children: [
                     { path: "", redirectTo: "general", pathMatch: "full" },
-                    { path: "general", component: SettingGroupGeneralComponent, pathMatch: "full" },
-                    { path: "members", component: SettingGroupMembersComponent, pathMatch: "full" }
+                    { path: "general", loadComponent: () => import('./components/site/setting-group-general/setting-group-general.component').then(m => m.SettingGroupGeneralComponent), pathMatch: "full" },
+                    { path: "members", loadComponent: () => import('./components/site/setting-group-members/setting-group-members.component').then(m => m.SettingGroupMembersComponent), pathMatch: "full" },
+                    { path: "locations", loadComponent: () => import('./components/site/setting-group-locations/setting-group-locations.component').then(m => m.SettingGroupLocationsComponent), pathMatch: "full" }
                 ]
             },
             { 
                 path: "group/:uuid",
-                component: GroupComponent,
+                loadComponent: () => import('./components/site/group/group.component').then(m => m.GroupComponent),
                 children: [
-                    { path: "", component: GroupOverviewComponent, pathMatch: "full" },
-                    { path: "games", component: GroupGamesComponent, pathMatch: "full" },
+                    { path: "", loadComponent: () => import('./components/site/group-overview/group-overview.component').then(m => m.GroupOverviewComponent), pathMatch: "full" },
+                    { path: "games", loadComponent: () => import('./components/site/group-games/group-games.component').then(m => m.GroupGamesComponent), pathMatch: "full" },
                 ]
             },
-            { path: "game/new", component: GameCreateComponent, pathMatch: "full" },
+            { path: "game/new", loadComponent: () => import('./components/site/game-create/game-create.component').then(m => m.GameCreateComponent), pathMatch: "full" },
         ]
     },
     { path: "**", redirectTo: "", pathMatch: "full" }

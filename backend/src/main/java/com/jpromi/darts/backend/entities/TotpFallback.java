@@ -3,7 +3,7 @@ package com.jpromi.darts.backend.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Builder
@@ -28,5 +28,5 @@ public class TotpFallback {
     private Boolean isUsed = false;
 
     @Column(nullable = true)
-    private LocalDateTime usedAt;
+    private Instant usedAt;
 }

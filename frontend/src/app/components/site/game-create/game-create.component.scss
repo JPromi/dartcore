@@ -120,6 +120,68 @@
             }
         }
 
+        .location {
+            .location-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+                gap: 1rem;
+                padding: 1rem 0;
+
+                .location-item {
+                    min-height: 7rem;
+                    padding: 1rem;
+                    border: 0;
+                    border-radius: .5rem;
+                    background: var(--background-secondary);
+                    color: var(--text);
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                    text-align: left;
+                    cursor: pointer;
+
+                    &.selected {
+                        outline: 1px solid var(--primary);
+                    }
+
+                    h2, p {
+                        margin: 0;
+                    }
+
+                    p {
+                        margin-top: .35rem;
+                        color: var(--text-secondary);
+                    }
+
+                    > span {
+                        margin-left: auto;
+                        color: var(--primary);
+                        white-space: nowrap;
+                    }
+
+                    &.occupied {
+                        cursor: not-allowed;
+                        opacity: .55;
+
+                        > span {
+                            color: var(--error);
+                        }
+                    }
+                }
+            }
+
+            asset-loading {
+                min-height: 8rem;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .empty {
+                color: var(--text-secondary);
+            }
+        }
+
         .game-mode {
             display: flex;
             flex-direction: column;
@@ -573,6 +635,12 @@
                 }
             }
         }
+    }
+
+    .creation-error {
+        color: var(--error);
+        text-align: center;
+        margin: .5rem 0;
     }
 
     .step-status-box {

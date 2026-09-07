@@ -1,5 +1,6 @@
 package com.jpromi.darts.backend.controllers;
 
+import com.jpromi.darts.backend.entities.Location;
 import com.jpromi.darts.backend.entities.Session;
 import com.jpromi.darts.backend.enums.InvitationStatusAccountEnum;
 import com.jpromi.darts.backend.models.*;
@@ -312,6 +313,140 @@ public class GroupController {
             if(session != null) {
                 this.groupService.responseInvitation(UUID.fromString(uuid), session.getAccount(), status);
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    // Locations
+    @GetMapping("/{uuid}/location")
+    public ResponseEntity<List<LocationResponse>> getGroupLocations(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID uuid) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                return ResponseEntity.ok(groupService.getLocationsInGroup(uuid, session.getAccount()));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @GetMapping("/{uuid}/location/{locationUuid}")
+    public ResponseEntity<LocationResponse> getGroupLocation(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID uuid, @PathVariable UUID locationUuid) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                return ResponseEntity.ok(groupService.getLocation(uuid, session.getAccount(), locationUuid));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @PostMapping("/{uuid}/location")
+    public ResponseEntity<LocationResponse> addGroupLocations(
+        @CookieValue("dcn.session") String sessionCookie,
+        @PathVariable UUID uuid,
+        @RequestBody LocationRequest location
+    ) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                return ResponseEntity.ok(groupService.createLocation(uuid, session.getAccount(), location));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @PutMapping("/{uuid}/location/{locationUuid}")
+    public ResponseEntity<LocationResponse> updateGroupLocations(
+            @CookieValue("dcn.session") String sessionCookie,
+            @PathVariable UUID uuid,
+            @PathVariable UUID locationUuid,
+            @RequestBody LocationRequest location
+    ) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                return ResponseEntity.ok(groupService.updateLocation(uuid, session.getAccount(), locationUuid, location));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    @DeleteMapping("/{uuid}/location/{locationUuid}")
+    public ResponseEntity<Void> deleteGroupLocations(
+            @CookieValue("dcn.session") String sessionCookie,
+            @PathVariable UUID uuid,
+            @PathVariable UUID locationUuid
+    ) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                try {
+                    groupService.deleteLocation(uuid, session.getAccount(), locationUuid);
+                    return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+                } catch (Exception e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    // location screen
+    @PostMapping("/{uuid}/location/{locationUuid}/screen")
+    public ResponseEntity<LocationResponse.Screen> addScreenGroupLocation(
+            @CookieValue("dcn.session") String sessionCookie,
+            @PathVariable UUID uuid,
+            @PathVariable UUID locationUuid
+    ) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                return ResponseEntity.status(HttpStatus.OK).body(groupService.createTmpLocationScreen(uuid, session.getAccount(), locationUuid));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
+
+    // location client
+    @PostMapping("/{uuid}/location/{locationUuid}/client")
+    public ResponseEntity<LocationResponse.Client> addClientGroupLocation(
+            @CookieValue("dcn.session") String sessionCookie,
+            @PathVariable UUID uuid,
+            @PathVariable UUID locationUuid
+    ) {
+        if(sessionCookie != null) {
+            Session session = this.authService.session(sessionCookie);
+
+            if(session != null) {
+                return ResponseEntity.status(HttpStatus.OK).body(groupService.createTmpLocationClient(uuid, session.getAccount(), locationUuid));
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }

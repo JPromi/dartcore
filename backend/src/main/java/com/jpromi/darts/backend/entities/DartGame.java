@@ -5,7 +5,7 @@ import com.jpromi.darts.backend.enums.GameTypeEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -41,7 +41,7 @@ public class DartGame {
     @Builder.Default
     private List<DartThrow> throwsList = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(nullable = true)
     private Location location;
 
@@ -65,11 +65,11 @@ public class DartGame {
     private Account creator;
 
     @Builder.Default
-    private LocalDateTime startTime = LocalDateTime.now();
+    private Instant startTime = Instant.now();
 
     @Column(nullable = true)
     @Builder.Default
-    private LocalDateTime endTime = null;
+    private Instant endTime = null;
 
     @Column(nullable = true)
     @Builder.Default

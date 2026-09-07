@@ -4,7 +4,7 @@ import com.jpromi.darts.backend.enums.ProfileVisibilityEnum;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data

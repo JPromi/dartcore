@@ -14,6 +14,8 @@ import {
   animate,
   transition,
 } from '@angular/animations';
+import { ActiveGameResponse } from '../../../dtos/activeGameResponse';
+import { interval, map, shareReplay, startWith } from 'rxjs';
 
 @Component({
   selector: 'asset-nav-main',
@@ -37,6 +39,18 @@ import {
           animate('150ms', style({ opacity: 0, transform: 'translateY(98%)' }))
         ])
       ]
+    ),
+    trigger(
+      'openGames', [
+        transition(':enter', [
+          style({ opacity: 1, height: '0' }),
+          animate('100ms', style({ opacity: 1, height: '*' }))
+        ]),
+        transition(':leave', [
+          style({ opacity: 1, height: '*' }),
+          animate('150ms', style({ opacity: 1, height: '0' }))
+        ])
+      ]
     )
   ]
 })
@@ -55,9 +69,37 @@ export class NavMainComponent implements OnInit {
   public isMobileMenuOpen = false;
   public isMobile = false;
 
+  public activeGames: ActiveGameResponse[] = [];
+  openActiveGames: boolean = false;
+
+  now$ = interval(1000).pipe(
+    startWith(0),
+    map(() => Date.now()),
+    shareReplay(1)
+  );
+
   ngOnInit(): void {
     this.getAccount();
     this.isMobile = window.innerWidth <= 768;
+  }
+
+  getActiveTime(time: Date | string | null, now: number): string {
+    if (!time) return '';
+
+    const diffSeconds = Math.floor((now - new Date(time).getTime()) / 1000);
+
+    const hours = Math.floor(diffSeconds / 3600);
+    const minutes = Math.floor((diffSeconds % 3600) / 60);
+    const seconds = diffSeconds % 60;
+
+    const mm = minutes.toString().padStart(2, '0');
+    const ss = seconds.toString().padStart(2, '0');
+
+    if (hours > 0) {
+      return `${hours}:${mm}:${ss}`;
+    }
+
+    return `${minutes}:${ss}`;
   }
 
   public toggleUserMenu() {
@@ -70,6 +112,12 @@ export class NavMainComponent implements OnInit {
         this.account = account;
       }
     );
+
+    this.loStorageService.activeGames$.subscribe({
+      next: (games) => {
+        this.activeGames = games;
+      }
+    })
   }
 
   @HostListener('document:click', ['$event'])

@@ -18,8 +18,7 @@ import com.password4j.Password;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -49,7 +48,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .lastName(registerRequest.getLastName())
                 .isEmailVerified(false)
                 .emailVerificationToken(generateValidationToken())
-                .registrationTimestamp(OffsetDateTime.now())
+                .registrationTimestamp(Instant.now())
                 .profile(profile)
                 .build();
 
@@ -86,14 +85,14 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         mailObject.setHtmlBody(
             templateService.generateTemplateFromFile(
-                "src/main/resources/templates/mail/registration.html",
+                "templates/mail/registration.html",
                 templateVariables
             )
         );
 
         mailObject.setBody(
             templateService.generatePlainTextFromFile(
-                "src/main/resources/templates/mail/registration.html",
+                "templates/mail/registration.html",
                 templateVariables
             )
         );
@@ -108,9 +107,9 @@ public class RegistrationServiceImpl implements RegistrationService {
         Optional<Account> accountCheck = accountRepository.findByEmailVerificationTokenAndIsEmailVerifiedFalseAndIsDeletedFalseAndIsDisabledFalse(token);
         if (accountCheck.isPresent()) {
             Account account = accountCheck.get();
-            account.setEmailVerificationToken(null);
+            // account.setEmailVerificationToken(null);
             account.setIsEmailVerified(true);
-            account.setEmailVerificationTimestamp(OffsetDateTime.now());
+            account.setEmailVerificationTimestamp(Instant.now());
 
             accountRepository.save(account);
             return account.getUsername();

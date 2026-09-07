@@ -1,0 +1,60 @@
+@if (player) {
+    <div class="player" [attr.data-player-uuid]="player.playerUuid" [class.current]="player.isCurrentPlayer" [class.disabled]="player.isEliminated">
+        <div class="top">
+            <div class="profile">
+                <div class="avatar">
+                    <img [src]="player.avatar">
+                </div>
+                <div class="name">
+                    <h1>{{ player.name }}</h1>
+                    <h3>{{ player.orderIndex + 1 }}</h3>
+                </div>
+            </div>
+            <div class="score">
+                <h2>{{ player.score }}</h2>
+            </div>
+        </div>
+        <div class="throws">
+            @for (_ of [].constructor(3); track $index) {
+                <div class="throw">
+                    <span class="field">{{ $index + 1 }}</span>
+                    @if (player.throwList && player.throwList.length > $index) {
+                        @switch (player.throwList[$index].type) {
+                            @case (gameThrowTypeEnum.THROW) {
+                                <p>{{ getReadablePoints(player.throwList[$index]) }}</p>
+                            }
+                            @case (gameThrowTypeEnum.MISS) {
+                                <p>{{ 'page.game.active.player.points.miss.text' | translate }}</p>
+                            }
+                            @case (gameThrowTypeEnum.ABORT) {
+                                <span class="abort"></span>
+                            }
+                        }
+                    }
+                </div>
+            }
+        </div>
+        <div class="extended-informations">
+            <div class="block">
+                <h3>{{ 'page.game.active.player.extendedInformations.highscore.label' | translate }}</h3>
+                <p>{{ player.highscore }}</p>
+            </div>
+            <div class="block">
+                <h3>{{ 'page.game.active.player.extendedInformations.hint.label' | translate }}</h3>
+                <span class="hint">
+                    @if (player.hints.length === 0) {
+                        <span></span>
+                    } @else {
+                        @for (hint of player.hints; track $index) {
+                            <p>{{ getReadableHintPoints(hint) }}</p>
+                        }
+                    }
+                </span>
+            </div>
+            <div class="block">
+                <h3>{{ 'page.game.active.player.extendedInformations.average.label' | translate }}</h3>
+                <p>{{ toFixedNumber(player.average, 2) }}</p>
+            </div>
+        </div>
+    </div>
+}

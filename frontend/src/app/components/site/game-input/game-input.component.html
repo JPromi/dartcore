@@ -14,70 +14,28 @@
         </div>
     </div>
 </header>
+@if (game.endTime) {
+    <main class="finished-results">
+        <asset-game-results [players]="game.players" />
+    </main>
+    <div class="result-actions">
+        <button type="button" (click)="backFromResults()">
+            <fa-icon [icon]="fa.faArrowLeft" />
+            {{ 'page.game.active.results.back' | translate }}
+        </button>
+    </div>
+} @else {
 <div class="container">
 
     <main>
         <div class="players">
             @for (player of playerDisplayList; track player.playerUuid) {
-                <div class="player" [attr.data-player-uuid]="player.playerUuid" [class.current]="player.isCurrentPlayer" [class.disabled]="player.isEliminated">
-                    <div class="top">
-                        <div class="profile">
-                            <div class="avatar">
-                                <img [src]="player.avatar">
-                            </div>
-                            <div class="name">
-                                <h1>{{ player.name }}</h1>
-                                <h3>{{ player.orderIndex + 1 }}</h3>
-                            </div>
-                        </div>
-                        <div class="score">
-                            <h2>{{ player.score }}</h2>
-                        </div>
-                    </div>
-                    <div class="throws">
-                        @for (_ of [].constructor(3); track $index) {
-                            <div class="throw">
-                                <span class="field">{{ $index + 1 }}</span>
-                                @if (player.throwList && player.throwList.length > $index) {
-                                    @switch (player.throwList[$index].type) {
-                                        @case (gameThrowTypeEnum.THROW) {
-                                            <p>{{ getReadablePoints(player.throwList[$index]) }}</p>
-                                        }
-                                        @case (gameThrowTypeEnum.MISS) {
-                                            <p>{{ 'page.game.active.player.points.miss.text' | translate }}</p>
-                                        }
-                                        @case (gameThrowTypeEnum.ABORT) {
-                                            <span class="abort"></span>
-                                        }
-                                    }
-                                }
-                            </div>
-                        }
-                    </div>
-                    <div class="extended-informations">
-                        <div class="block">
-                            <h3>{{ 'page.game.active.player.extendedInformations.highscore.label' | translate }}</h3>
-                            <p>{{ player.highscore }}</p>
-                        </div>
-                        <div class="block">
-                            <h3>{{ 'page.game.active.player.extendedInformations.hint.label' | translate }}</h3>
-                            <span class="hint">
-                                @for (hint of player.hints; track $index) {
-                                    <p>{{ getReadablePoints(hint) }}</p>
-                                }
-                            </span>
-                        </div>
-                        <div class="block">
-                            <h3>{{ 'page.game.active.player.extendedInformations.average.label' | translate }}</h3>
-                            <p>{{ toFixedNumber(player.average, 2) }}</p>
-                        </div>
-                    </div>
-                </div>
+                <asset-game-player-tile [player]="player" [class.current]="player.isCurrentPlayer" [class.disabled]="player.isEliminated" />
             }
         </div>
     </main>
 
-    <aside>
+    <aside [class.hidden]="!showInput">
         <div class="content">
             <div class="options">
                 <div>
@@ -93,6 +51,12 @@
                         } @else {
                             <fa-icon [icon]="fa.faUpRightAndDownLeftFromCenter" />
                         }
+                    </button>
+                    <button (click)="showInput = false">
+                        <span class="close">
+                            <fa-icon class="arrow" [icon]="fa.faArrowRight" />
+                            <fa-icon class="minus" [icon]="fa.faMinus" />
+                        </span>
                     </button>
                 </div>
                 <div class="input-toggle">
@@ -261,10 +225,16 @@
             </div>
         </div>
     </aside>
+    <div class="side-options">
+        <button class="extend-input" [class.active]="!showInput" (click)="showInput = true">
+            <fa-icon [icon]="fa.faKeyboard" />
+        </button>
+    </div>
 
 </div>
 
 <!-- [ aside ] - multiplier -->
+}
 <ng-template #pointsAdditional>
     <div class="list additional">
         <button class="large" (click)="pointsInput(0)">

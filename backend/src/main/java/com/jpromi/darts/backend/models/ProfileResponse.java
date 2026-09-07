@@ -4,8 +4,7 @@ import com.jpromi.darts.backend.enums.ProfileVisibilityEnum;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -21,7 +20,7 @@ public class ProfileResponse {
     private String banner;
     private Links links;
     private ProfileVisibilityEnum visibility;
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @Data
     public static class Links {

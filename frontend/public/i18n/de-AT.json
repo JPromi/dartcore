@@ -172,6 +172,11 @@
         },
         "game": {
             "active": {
+                "results": {
+                    "title": "Spiel beendet",
+                    "winner": "Gewinner",
+                    "back": "Zurück"
+                },
                 "input": {
                     "round.label": "Runde",
                     "gameTime.label": "Spielzeit",
@@ -214,6 +219,7 @@
                 },
                 "settings": {
                     "title": "Einstellungen",
+                    "creationError": "Das Spiel konnte nicht gestartet werden. Bitte prüfe, ob der Standort noch verfügbar ist.",
                     "players": {
                         "title": "Spieler",
                         "search.label": "Spieler suchen...",
@@ -222,6 +228,12 @@
                     },
                     "selectGroup": {
                         "title": "Gruppe auswählen"
+                    },
+                    "selectLocation": {
+                        "title": "Standort auswählen",
+                        "available": "Verfügbar",
+                        "occupied": "Aktives Spiel läuft",
+                        "empty": "Für diese Gruppe sind keine Standorte vorhanden."
                     },
                     "gameMode": {
                         "title": "Spielmodus Auswählen"
@@ -284,6 +296,7 @@
                         "title": "Einstellungen",
                         "general.label": "Allgemein",
                         "members.label": "Mitglieder",
+                        "locations.label": "Standorte",
                         "invitations.label": "Einladungen",
                         "back.label": "Zurück",
                         "informations": {
@@ -342,6 +355,36 @@
                                     "save.button": "Speichern",
                                     "cancel.button": "Abbrechen",
                                     "remove.button": "Entfernen"
+                                }
+                            }
+                        },
+                        "location": {
+                            "new.title": "Neuer Standort",
+                            "edit": {
+                                "title": "Bearbeiten",
+                                "details": {
+                                    "title": "Details",
+                                    "name.label": "Name",
+                                    "description.label": "Beschreibung",
+                                    "address.label": "Adresse"
+                                },
+                                "screen": {
+                                    "title": "Anzeigen",
+                                    "noScreens.text": "Keine Bildschirme verfügbar"
+                                },
+                                "clients": {
+                                    "title": "Eingabegeräte",
+                                    "noClients.text": "Keine Eingabegeräte verfügbar"
+                                },
+                                "resourcePopup": {
+                                    "name.label": "Name",
+                                    "access.title": "Zugang",
+                                    "url.label": "URL"
+                                },
+                                "buttons": {
+                                    "save.button": "Speichern",
+                                    "cancel.button": "Abbrechen",
+                                    "delete.button": "Löschen"
                                 }
                             }
                         }

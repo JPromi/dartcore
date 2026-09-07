@@ -4,9 +4,7 @@ import com.jpromi.darts.backend.entities.*;
 import com.jpromi.darts.backend.enums.InvitationStatusAccountEnum;
 import com.jpromi.darts.backend.mapper.*;
 import com.jpromi.darts.backend.models.*;
-import com.jpromi.darts.backend.repositories.AccountGroupInvitationAccountRepository;
-import com.jpromi.darts.backend.repositories.AccountGroupRepository;
-import com.jpromi.darts.backend.repositories.AccountRepository;
+import com.jpromi.darts.backend.repositories.*;
 import com.jpromi.darts.backend.services.FileService;
 import com.jpromi.darts.backend.services.GroupService;
 import com.jpromi.darts.backend.services.UrlService;
@@ -17,8 +15,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.swing.text.html.Option;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.util.*;
 
 @Service
@@ -26,6 +29,15 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private AccountGroupRepository accountGroupRepository;
+
+    @Autowired
+    private LocationRepository locationRepository;
+
+    @Autowired
+    private LocationClientRepository locationClientRepository;
+
+    @Autowired
+    private LocationScreenRepository locationScreenRepository;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -56,6 +68,9 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private GroupGeneralResponseMapper groupGeneralResponseMapper;
+
+    @Autowired
+    private LocationResponseMapper locationResponseMapper;
 
     @Value("${com.jpromi.darts.app.group.max-size}")
     private Integer maxGroupMembers;
@@ -460,6 +475,216 @@ public class GroupServiceImpl implements GroupService {
         return null;
     }
 
+    // Location
+    @Override
+    public LocationResponse getLocation(UUID groupUuid, Account account, UUID uuid) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            Optional<Location> location = locationRepository.findByUuidAndGroup(uuid, group);
+            if (location.isPresent()) {
+                return locationResponseMapper.fromLocation(location.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public List<LocationResponse> getLocationsInGroup(UUID groupUuid, Account account) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            List<Location> location = locationRepository.findByGroup(group);
+            return location.stream().map(locationResponseMapper::fromLocation).toList();
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public LocationResponse createLocation(UUID groupUuid, Account account, LocationRequest location) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        if (group != null) {
+            checkPermission(group, account, "admin");
+
+            Location newLocation = Location.builder()
+                    .name(location.getName())
+                    .description(location.getDescription())
+                    .address(location.getAddress())
+                    .group(group)
+                    .clients(new ArrayList<>())
+                    .screens(new ArrayList<>())
+                    .build();
+
+            try {
+                return locationResponseMapper.fromLocation(locationRepository.save(newLocation));
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            }
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public LocationResponse updateLocation(UUID groupUuid, Account account, UUID uuid, LocationRequest locationRequest) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        Location location = locationRepository.findByUuidAndGroup(uuid, group).orElse(null);
+        if (group != null &&  location != null) {
+            checkPermission(group, account, "admin");
+
+            location.setName(locationRequest.getName());
+            location.setDescription(locationRequest.getDescription());
+            location.setAddress(locationRequest.getAddress());
+            syncLocationScreens(location, locationRequest.getScreens());
+            syncLocationClients(location, locationRequest.getClients());
+
+            try {
+                return locationResponseMapper.fromLocation(locationRepository.save(location));
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            }
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    private void syncLocationScreens(Location location, List<LocationRequest.Screen> requestedScreens) {
+        List<LocationRequest.Screen> screens = requestedScreens != null ? requestedScreens : Collections.emptyList();
+        List<LocationScreen> existingScreens = locationScreenRepository.findByLocation(location);
+
+        for (LocationScreen existingScreen : existingScreens) {
+
+            LocationRequest.Screen requestedScreen = screens.stream()
+                    .filter(screen -> screen != null && Objects.equals(screen.getUuid(), existingScreen.getUuid()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (requestedScreen == null) {
+                locationScreenRepository.delete(existingScreen);
+                continue;
+            }
+
+            existingScreen.setIsTmp(false);
+            existingScreen.setName(requestedScreen.getName());
+            locationScreenRepository.save(existingScreen);
+        }
+    }
+
+    private void syncLocationClients(Location location, List<LocationRequest.Client> requestedClients) {
+        List<LocationRequest.Client> clients = requestedClients != null ? requestedClients : Collections.emptyList();
+        List<LocationClient> existingClients = locationClientRepository.findByLocation(location);
+
+        for (LocationClient existingClient : existingClients) {
+            LocationRequest.Client requestedClient = clients.stream()
+                    .filter(client -> client != null && Objects.equals(client.getUuid(), existingClient.getUuid()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (requestedClient == null) {
+                locationClientRepository.delete(existingClient);
+                continue;
+            }
+
+            existingClient.setIsTmp(false);
+            existingClient.setName(requestedClient.getName());
+            locationClientRepository.save(existingClient);
+        }
+    }
+
+    @Override
+    public Void deleteLocation(UUID groupUuid, Account account, UUID uuid) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        Location location = locationRepository.findByUuidAndGroup(uuid, group).orElse(null);
+        if (group != null &&  location != null) {
+            checkPermission(group, account, "admin");
+
+            try {
+                if (group.getLocations() != null) {
+                    group.getLocations().removeIf(existingLocation -> Objects.equals(existingLocation.getId(), location.getId()));
+                    accountGroupRepository.save(group);
+                }
+
+                locationRepository.delete(location);
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            }
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        return null;
+    }
+
+    // Location Screen
+    @Override
+    public LocationResponse.Screen createTmpLocationScreen(UUID groupUuid, Account account, UUID uuid) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        Location location = locationRepository.findByUuidAndGroup(uuid, group).orElse(null);
+        if (group != null &&  location != null) {
+            checkPermission(group, account, "admin");
+
+            try {
+                LocationScreen screen = LocationScreen.builder()
+                        .location(location)
+                        .token(generateAccessToken(group.getUuid(), location.getUuid()))
+                        .build();
+
+                try {
+                    return locationResponseMapper.screenFromLocationScreen(locationScreenRepository.save(screen));
+                } catch (Exception e) {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+                
+
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            }
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Override
+    public LocationResponse.Client createTmpLocationClient(UUID groupUuid, Account account, UUID uuid) {
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        Location location = locationRepository.findByUuidAndGroup(uuid, group).orElse(null);
+        if (group != null &&  location != null) {
+            checkPermission(group, account, "admin");
+
+            try {
+                LocationClient client = LocationClient.builder()
+                        .location(location)
+                        .token(generateAccessToken(group.getUuid(), location.getUuid()))
+                        .build();
+
+                try {
+                    return locationResponseMapper.clientFromLocationScreen(locationClientRepository.save(client));
+                } catch (Exception e) {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+
+
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            }
+
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
     private void checkPermission(AccountGroup group, Account account, String permission) {
         // permission: "admin", "owner"
 
@@ -495,5 +720,30 @@ public class GroupServiceImpl implements GroupService {
                 )
                 .findFirst()
                 .orElse(null) != null;
+    }
+
+    private String generateAccessToken(UUID groupUuid, UUID locationUuid) {
+        try {
+            byte[] randomBytes = new byte[64];
+            new SecureRandom().nextBytes(randomBytes);
+
+            String input = groupUuid + ":" + locationUuid + ":" +
+                    Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes) + ":" +
+                    System.nanoTime();
+
+            byte[] hash = MessageDigest
+                    .getInstance("SHA-256")
+                    .digest(input.getBytes(StandardCharsets.UTF_8));
+
+            return Base64.getUrlEncoder()
+                    .withoutPadding()
+                    .encodeToString(hash) +
+                    Base64.getUrlEncoder()
+                            .withoutPadding()
+                            .encodeToString(randomBytes);
+
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not generate access token", e);
+        }
     }
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SessionAccountResponse } from '../../dtos/sessionAccountResponse';
+import { ActiveGameResponse } from '../../dtos/activeGameResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -11,9 +12,16 @@ export class LoStorageService {
 
   private sessionAccount = new BehaviorSubject<SessionAccountResponse | null>(null);
   public sessionAccount$ = this.sessionAccount.asObservable();
+
+  private activeGames = new BehaviorSubject<ActiveGameResponse[]>([]);
+  public activeGames$ = this.activeGames.asObservable();
   
   private errorCode = new BehaviorSubject<number | null>(null);
   public errorCode$ = this.errorCode.asObservable();
+
+  public setActiveGames(games: ActiveGameResponse[]): void {
+    this.activeGames.next(games);
+  }
 
   public setSessionAccount(account: SessionAccountResponse | null): void {
     this.sessionAccount.next(account);

@@ -9,13 +9,14 @@ import com.jpromi.darts.backend.models.GameResponse;
 import com.jpromi.darts.backend.models.GameThrowRequest;
 import com.jpromi.darts.backend.models.NewGamePlayerRequest;
 import com.jpromi.darts.backend.models.NewGameRequest;
+import com.jpromi.darts.backend.models.NewGameLocationResponse;
 import com.jpromi.darts.backend.repositories.*;
 import com.jpromi.darts.backend.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -34,12 +35,22 @@ public class GameServiceImpl implements GameService {
     private AccountRepository accountRepository;
 
     @Autowired
+    private LocationRepository locationRepository;
+
+    @Autowired
+    private AccountGroupMemberRepository accountGroupMemberRepository;
+
+    @Autowired
     private GamePlayerResponseMapper gamePlayerResponseMapper;
 
     @Autowired
     private TmpGamePlayerStatsRepository tmpGamePlayerStatsRepository;
 
+    @Autowired
+    private DartHintRepository dartHintRepository;
+
     @Override
+    @Transactional
     public DartGame newGame(NewGameRequest newGameRequest, Account account) {
         if (newGameRequest != null && account != null) {
             DartGame dartGame = DartGame.builder()
@@ -49,7 +60,23 @@ public class GameServiceImpl implements GameService {
 
             // set group
             if (newGameRequest.getGroupUuid() != null) {
-                dartGame.setGroup(this.accountGroupRepository.findByUuid(newGameRequest.getGroupUuid()));
+                AccountGroup group = this.accountGroupRepository.findByUuid(newGameRequest.getGroupUuid());
+                if (group == null || !accountGroupMemberRepository.existsByAccountAndAccountGroup(account, group)) {
+                    throw new IllegalArgumentException("Group not found or account is not a member");
+                }
+                dartGame.setGroup(group);
+
+                if (newGameRequest.getLocationUuid() != null) {
+                    Location location = locationRepository
+                            .findByUuidAndGroupForUpdate(newGameRequest.getLocationUuid(), group)
+                            .orElseThrow(() -> new IllegalArgumentException("Location not found in selected group"));
+                    if (!dartGameRepository.findActiveGameIdsByLocationId(location.getId()).isEmpty()) {
+                        throw new IllegalArgumentException("Location already has an active game");
+                    }
+                    dartGame.setLocation(location);
+                }
+            } else if (newGameRequest.getLocationUuid() != null) {
+                throw new IllegalArgumentException("A location can only be selected together with its group");
             }
 
             // set game settings based on game type
@@ -98,6 +125,91 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    @Transactional
+    public DartGame newGameForLocation(NewGameRequest newGameRequest, Location clientLocation) {
+        if (newGameRequest == null || clientLocation == null || clientLocation.getGroup() == null) {
+            throw new IllegalArgumentException("New game request and location are required");
+        }
+
+        newGameRequest.setGroupUuid(clientLocation.getGroup().getUuid());
+        newGameRequest.setLocationUuid(clientLocation.getUuid());
+
+        DartGame dartGame = DartGame.builder()
+                .gameType(newGameRequest.getGameType())
+                .group(clientLocation.getGroup())
+                .build();
+
+        Location location = locationRepository
+                .findByUuidAndGroupForUpdate(clientLocation.getUuid(), clientLocation.getGroup())
+                .orElseThrow(() -> new IllegalArgumentException("Location not found in selected group"));
+        if (!dartGameRepository.findActiveGameIdsByLocationId(location.getId()).isEmpty()) {
+            throw new IllegalArgumentException("Location already has an active game");
+        }
+        dartGame.setLocation(location);
+
+        switch (dartGame.getGameType()) {
+            case CLASSIC:
+                dartGame.setGameTypeClassicPoints(newGameRequest.getGameTypeClassicPoints());
+                dartGame.setGameTypeClassicInType(newGameRequest.getGameTypeClassicIn());
+                dartGame.setGameTypeClassicOutType(newGameRequest.getGameTypeClassicOut());
+                break;
+        }
+
+        if (newGameRequest.getPlayers() != null && !newGameRequest.getPlayers().isEmpty()) {
+            for (int i = 0; i < newGameRequest.getPlayers().size(); i++) {
+                NewGamePlayerRequest playerRequest = newGameRequest.getPlayers().get(i);
+                if (playerRequest.getName() != null) {
+                    DartPlayer player = DartPlayer.builder()
+                            .guestName(playerRequest.getName())
+                            .game(dartGame)
+                            .orderIndex(i)
+                            .build();
+                    dartGame.addPlayer(player);
+                } else if (playerRequest.getAccountUuid() != null) {
+                    Account playerAccount = this.accountRepository.findByUuid(playerRequest.getAccountUuid());
+                    if (playerAccount != null) {
+                        DartPlayer player = DartPlayer.builder()
+                                .account(playerAccount)
+                                .game(dartGame)
+                                .orderIndex(i)
+                                .build();
+                        dartGame.addPlayer(player);
+                    } else {
+                        throw new IllegalArgumentException("Player account not found for UUID: " + playerRequest.getAccountUuid());
+                    }
+                }
+            }
+        }
+
+        return this.dartGameRepository.save(dartGame);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<NewGameLocationResponse> getLocationsForNewGame(UUID groupUuid, Account account) {
+        if (groupUuid == null || account == null) {
+            throw new IllegalArgumentException("Group UUID and account are required");
+        }
+        AccountGroup group = accountGroupRepository.findByUuid(groupUuid);
+        if (group == null || !accountGroupMemberRepository.existsByAccountAndAccountGroup(account, group)) {
+            throw new IllegalArgumentException("Group not found or account is not a member");
+        }
+
+        return locationRepository.findByGroup(group).stream().map(location -> {
+            List<DartGame> activeGames = dartGameRepository.findActiveGameIdsByLocationId(location.getId());
+            DartGame activeGame = activeGames.isEmpty() ? null : activeGames.getFirst();
+            return NewGameLocationResponse.builder()
+                    .uuid(location.getUuid())
+                    .name(location.getName())
+                    .description(location.getDescription())
+                    .address(location.getAddress())
+                    .occupied(activeGame != null)
+                    .activeGameUuid(activeGame != null ? activeGame.getUuid() : null)
+                    .build();
+        }).toList();
+    }
+
+    @Override
     public DartGame getGameByUuid(UUID gameUuid) {
         if (gameUuid != null) {
             return this.dartGameRepository.findByUuidWithPlayersAndAccounts(gameUuid).orElse(null);
@@ -118,8 +230,8 @@ public class GameServiceImpl implements GameService {
             return null;
         }
 
-        if (game.getEndTime() == null) {
-            game.setEndTime(LocalDateTime.now());
+            if (game.getEndTime() == null) {
+            game.setEndTime(Instant.now());
             game.setIsCancelled(false);
             this.dartGameRepository.save(game);
         }
@@ -171,7 +283,15 @@ public class GameServiceImpl implements GameService {
             // Determine current player once outside the loop
             Long currentPlayerId = null;
             if (game.getEndTime() == null) {
-                currentPlayerId = getCurrentPlayer(game.getPlayers(), allActiveThrows, roundSize).getId();
+                try {
+                    DartPlayer currentPlayer = getCurrentPlayer(game.getPlayers(), allActiveThrows, roundSize);
+                    if (currentPlayer != null) {
+                        currentPlayerId = currentPlayer.getId();
+                    }
+                } catch (IllegalArgumentException ignored) {
+                    // No active player left in an ongoing game: keep response valid without a current player.
+                    currentPlayerId = null;
+                }
             }
 
             for (DartPlayer player : game.getPlayers()) {
@@ -208,6 +328,18 @@ public class GameServiceImpl implements GameService {
                 playerResponse.setHighscore(computeHighscore(playerThrows));
                 playerResponse.setAverage(computeAverage(playerThrows));
 
+                // get hint
+                if (game.getGameType() == GameTypeEnum.CLASSIC && playerResponse.getScore() != null) {
+                    DartHint hint = dartHintRepository.findClassicHint(
+                            game.getGameTypeClassicOutType() != null
+                                    ? game.getGameTypeClassicOutType()
+                                    : DartThrowMultiplierEnum.SINGLE,
+                            playerResponse.getScore()
+                    ).orElse(null);
+
+                    playerResponse.setHints(gamePlayerResponseMapper.hintResponseFromDartHint(hint));
+                }
+
                 response.getPlayers().add(playerResponse);
             }
 
@@ -215,6 +347,59 @@ public class GameServiceImpl implements GameService {
         } else {
             throw new IllegalArgumentException("Game not found for UUID");
         }
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<GameResponse> getActiveGamesResponseByAccount(Account account) {
+        if (account == null || account.getId() == null) {
+            throw new IllegalArgumentException("Account cannot be null");
+        }
+
+        List<DartGame> activeGames = this.dartGameRepository.findActiveGamesByAccountId(account.getId());
+        if (activeGames == null || activeGames.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<GameResponse> responses = new ArrayList<>(activeGames.size());
+        for (DartGame game : activeGames) {
+            responses.add(this.getGameResponseByUuid(game));
+        }
+        return responses;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<GameResponse> getActiveGamesResponseByLocation(com.jpromi.darts.backend.entities.Location location) {
+        if (location == null || location.getId() == null) {
+            throw new IllegalArgumentException("Location cannot be null");
+        }
+
+        List<DartGame> activeGames = this.dartGameRepository.findActiveGamesByLocationId(location.getId());
+        if (activeGames == null || activeGames.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<GameResponse> responses = new ArrayList<>(activeGames.size());
+        for (DartGame game : activeGames) {
+            responses.add(this.getGameResponseByUuid(game));
+        }
+        return responses;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GameResponse getLastGameResponseByLocation(com.jpromi.darts.backend.entities.Location location) {
+        if (location == null || location.getId() == null) {
+            throw new IllegalArgumentException("Location cannot be null");
+        }
+
+        List<DartGame> games = this.dartGameRepository.findGamesByLocationIdOrderByStartTimeDesc(location.getId());
+        if (games == null || games.isEmpty()) {
+            return null;
+        }
+
+        return this.getGameResponseByUuid(games.getFirst());
     }
 
     /**
@@ -423,7 +608,7 @@ public class GameServiceImpl implements GameService {
                             }
                             
                             if (isValidFinish) {
-                                game.setEndTime(LocalDateTime.now());
+                                game.setEndTime(Instant.now());
                                 dartThrow.getPlayer().setIsWinner(true);
                             }
                         }

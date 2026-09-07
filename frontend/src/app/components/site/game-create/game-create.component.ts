@@ -22,6 +22,7 @@ import { max } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { GameService } from '../../../services/game.service';
 import { GameNew } from '../../../entities/gameNew';
+import { NewGameLocationResponse } from '../../../dtos/newGameLocationResponse';
 
 @Component({
   selector: 'app-game-create',
@@ -81,12 +82,17 @@ export class GameCreateComponent implements OnInit {
 
   public creationStep: number = 0; // 0: group, 1: location, 2: game Type, 3: settings
   public groups: GroupLightResponse[] = [];
+  public locations: NewGameLocationResponse[] = [];
+  public locationsLoading: boolean = false;
+  public creationError: boolean = false;
   public profileSearchResults: ProfileLightResponse[] = [];
   public profileSearchLoading: boolean = false;
   public game: GameNew = new GameNew();
   public paramsValue = {
     group: null as string | null,
     location: null as string | null,
+    clientToken: null as string | null,
+    lockedLocation: false,
   }
   public gameModes: GameModes[] = GameModes.list();
 
@@ -104,19 +110,47 @@ export class GameCreateComponent implements OnInit {
       if (params['location']) {
         this.paramsValue.location = params['location'].toString();
       }
-      this._loadGroups();
-      this._addCurrentUserToPlayers();
+      if (params['clientToken']) {
+        this.paramsValue.clientToken = params['clientToken'].toString();
+      }
+      this.paramsValue.lockedLocation = params['lockedLocation'] === 'true';
+
+      if (this.paramsValue.lockedLocation && this.paramsValue.group && this.paramsValue.location) {
+        this.game.groupUuid = this.paramsValue.group;
+        this.game.locationUuid = this.paramsValue.location;
+        this.creationStep = 2;
+      } else {
+        this._loadGroups();
+        this._addCurrentUserToPlayers();
+      }
     });
   }
 
   public nextStep(): void {
-    if (this.creationStep < 3) {
+    if (this.creationStep === 0) {
+      if (this.game.groupUuid) {
+        this._loadLocations();
+        this.creationStep = 1;
+      } else {
+        this.creationStep = 2;
+      }
+    } else if (this.creationStep < 3) {
       this.creationStep++;
+    }
+
+    // load player on last step
+    if (this.creationStep === 3) {
+      this._searchProfile();
     }
   }
 
   public previousStep(): void {
-    if (this.creationStep > 0) {
+    if (this.paramsValue.lockedLocation && this.creationStep <= 2) {
+      return;
+    }
+    if (this.creationStep === 2 && !this.game.groupUuid) {
+      this.creationStep = 0;
+    } else if (this.creationStep > 0) {
       this.creationStep--;
     }
   }
@@ -126,6 +160,14 @@ export class GameCreateComponent implements OnInit {
       this.game.groupUuid = null;
     } else {
       this.game.groupUuid = group?.uuid;
+    }
+    this.game.locationUuid = null;
+    this.locations = [];
+  }
+
+  public selectLocation(location: NewGameLocationResponse): void {
+    if (!location.occupied) {
+      this.game.locationUuid = this.game.locationUuid === location.uuid ? null : location.uuid;
     }
   }
 
@@ -228,27 +270,41 @@ export class GameCreateComponent implements OnInit {
   }
 
   public postForm(): void {
-    this.gameService.createGame(GameNewRequest.fromGameNew(this.game)).subscribe(
-      (response: string) => {
-        this.router.navigate(['/', 'game', 'active', response]);
+    this.creationError = false;
+    const request = GameNewRequest.fromGameNew(this.game);
+    const createRequest = this.paramsValue.clientToken
+      ? this.gameService.createGameForClient(request, this.paramsValue.clientToken)
+      : this.gameService.createGame(request);
+
+    createRequest.subscribe({
+      next: (response: string) => {
+        if (this.paramsValue.clientToken) {
+          this.router.navigate(['/', 'ex', 'input', this.paramsValue.clientToken]);
+        } else {
+          this.router.navigate(['/', 'game', 'active', response]);
+        }
+      },
+      error: () => {
+        this.creationError = true;
+        if (this.game.groupUuid) {
+          this.creationStep = 1;
+          this._loadLocations();
+        }
       }
-    );
+    });
   }
 
   private _searchProfile() {
     this.profileSearchLoading = true;
-    if (this.searchQuery.length == 0) {
-      this.profileSearchResults = [];
-          this.profileSearchLoading = false;
-      return;
-    } else {
-      this.profileService.searchProfile(this.searchQuery, 0, 5, true).subscribe(
-        (response: PageResponse<ProfileLightResponse>) => {
-          this.profileSearchResults = response.content;
-          this.profileSearchLoading = false;
-        }
-      );
-    }
+    // this.profileSearchResults = [];
+    // this.profileSearchLoading = false;
+    this.profileService.searchProfile(this.searchQuery, 0, 20, true, this.game.groupUuid || null, null, this.paramsValue.clientToken).subscribe(
+      (response: PageResponse<ProfileLightResponse>) => {
+        this.profileSearchResults = response.content;
+        this.profileSearchLoading = false;
+      }
+    );
+    return;
   }
 
   private _loadGroups(): void {
@@ -259,17 +315,39 @@ export class GameCreateComponent implements OnInit {
         // Search if selected group exists
         this.game.groupUuid = this._findGroupByUuid(this.paramsValue.group)?.uuid || null;
 
-        // skip step if group is selected or if no group is available
-        if (this.game.groupUuid || this.groups.length === 0) {
-          // if no group there cannot be a location
+        if (this.groups.length === 0) {
           this.creationStep = 2;
+        } else if (this.game.groupUuid) {
+          this._loadLocations();
+          this.creationStep = 1;
         }
       }
     );
   }
 
-  private _loadLocations(): void { // ToDo
+  private _loadLocations(): void {
     this.game.locationUuid = null;
+    this.locations = [];
+    if (!this.game.groupUuid) {
+      return;
+    }
+
+    this.locationsLoading = true;
+    this.gameService.getLocationsForNewGame(this.game.groupUuid).subscribe({
+      next: (locations) => {
+        this.locations = locations;
+        this.game.locationUuid = locations.find(location =>
+          location.uuid === this.paramsValue.location && !location.occupied
+        )?.uuid ?? null;
+        if (this.game.locationUuid && this.paramsValue.location) {
+          this.creationStep = 2;
+        }
+        this.locationsLoading = false;
+      },
+      error: () => {
+        this.locationsLoading = false;
+      }
+    });
   }
 
   private _findGroupByUuid(uuid: string | null): GroupLightResponse | null {
@@ -280,6 +358,9 @@ export class GameCreateComponent implements OnInit {
   }
 
   private _addCurrentUserToPlayers(): void {
+    if (this.paramsValue.clientToken) {
+      return;
+    }
     this.authService.session().subscribe(
       (session) => {
         const currentUserProfile: ProfileLightResponse = {

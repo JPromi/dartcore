@@ -75,6 +75,7 @@
                 margin-left: 5rem;
 
                 .avatar {
+                    min-width: 12rem;
                     width: 12rem;
                     height: 12rem;
                     border-radius: 50%;
@@ -95,11 +96,18 @@
                     display: flex;
                     height: 100%;
                     align-items: center;
+                    max-width: 100%;
+                    overflow: hidden;
+                    padding-right: 1rem;
 
                     h2 {
                         font-size: 2rem;
                         font-weight: 500;
                         color: var(--text);
+                        max-width: 100%;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                        white-space: nowrap;
                     }
                 }
             }
@@ -186,6 +194,7 @@
                                     .avatar {
                                         height: calc(2.5rem - 6px);
                                         min-width: calc(2.5rem - 6px);
+                                        width: calc(2.5rem - 6px);
                                         display: flex;
                                         justify-content: center;
                                         align-items: center;
@@ -303,6 +312,42 @@
 
             .content {
                 border-radius: 0;
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 750px) {
+    :host {
+        .container {
+            .content {
+                .top {
+                    margin-left: 1rem;
+                    height: 3.5rem;
+
+                    .avatar {
+                        min-width: 7rem;
+                        width: 7rem;
+                        height: 7rem;
+                    }
+                }
+
+                & > section {
+                    flex-direction: column-reverse;
+
+                    aside {
+                        width: 100%;
+                        border-left: none;
+                        border-bottom: 1px solid var(--border);
+                        padding: 0 0;
+
+                        & > div {
+                            &:not(:last-child) {
+                                border-bottom: none;
+                            }
+                        }
+                    }
+                }
             }
         }
     }

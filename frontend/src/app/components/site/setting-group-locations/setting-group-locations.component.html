@@ -1,0 +1,210 @@
+@if (groupData) {
+    <main>
+        <div class="options">
+            <button class="primary" (click)="createLocation()">
+                <fa-icon [icon]="fa.faPlus" />
+            </button>
+        </div>
+
+        <div class="list">
+            @for (location of locations; track $index) {
+                <div class="item">
+                    <div class="options">
+                        <button (click)="openLocationPopup(location)">
+                            <fa-icon [icon]="fa.faGear" />
+                        </button>
+                    </div>
+                    <div class="text">
+                        <p class="name">{{ location.name }}</p>
+                        <p class="description">{{ location.description }}</p>
+                        <p class="address">{{ location.address }}</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </main>
+
+    @if (selectedLocation) {
+        <div class="popup" [@fade]>
+            <span class="void" (click)="closeLocationPopup()" ></span>
+
+            <div class="container">
+                <span class="title">{{ (selectedLocation.uuid ? 'page.group.single.settings.edit.location.edit.title' : 'page.group.single.settings.edit.location.new.title') | translate }}</span>
+                <form class="content location" [class.is-new]="!selectedLocation.uuid" [formGroup]="selectedLocationForm" (ngSubmit)="saveLocation()">
+                    <div class="header">
+                        <h2>{{ selectedLocation.name }}</h2>
+                    </div>
+
+                    <div class="main">
+                        <div>
+                            <h3>{{ 'page.group.single.settings.edit.location.edit.details.title' | translate }}</h3>
+                            <ng-container *ngTemplateOutlet="formInput; context: { name: 'name', label: 'page.group.single.settings.edit.location.edit.details.name.label' | translate, type: 'text' }" />
+                            <ng-container *ngTemplateOutlet="formInput; context: { name: 'description', label: 'page.group.single.settings.edit.location.edit.details.description.label' | translate, type: 'textarea' }" />
+                            <ng-container *ngTemplateOutlet="formInput; context: { name: 'address', label: 'page.group.single.settings.edit.location.edit.details.address.label' | translate, type: 'text' }" />
+                        </div>
+                        @if (selectedLocation.uuid) {
+                            <div>
+                                <h3>{{ 'page.group.single.settings.edit.location.edit.screen.title' | translate }}</h3>
+                                <div class="item-list">
+                                    <div class="list-options">
+                                        <button type="button" class="custom" (click)="createTmpScreen(selectedLocation)">
+                                            <fa-icon [icon]="fa.faPlus" />
+                                        </button>
+                                    </div>
+                                    <div class="items">
+                                        @for (screen of selectedLocation.screens; track $index) {
+                                            <button type="button" class="item custom" (click)="openLocationScreenPopup(screen)">
+                                                <p>{{ screen.name }}</p>
+
+                                                <fa-icon [icon]="fa.faPen" />
+                                            </button>
+                                        }
+
+                                        @if (selectedLocation.screens.length === 0) {
+                                            <p class="empty">Keine Anzeigen zugeordnet</p>
+                                        }
+                                    </div>
+                                </div>
+
+                                <h3>{{ 'page.group.single.settings.edit.location.edit.clients.title' | translate }}</h3>
+                                <div class="item-list">
+                                    <div class="list-options">
+                                        <button type="button" class="custom" (click)="createTmpClient(selectedLocation)">
+                                            <fa-icon [icon]="fa.faPlus" />
+                                        </button>
+                                    </div>
+                                    <div class="items">
+                                        @for (client of selectedLocation.clients; track $index) {
+                                            <button type="button" class="item" (click)="openLocationClientPopup(client)">
+                                                <p>{{ client.name }}</p>
+
+                                                <fa-icon [icon]="fa.faPen" />
+                                            </button>
+                                        }
+
+                                        @if (selectedLocation.clients.length === 0) {
+                                            <p class="empty">Keine Eingabegeräte zugeordnet</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="btns">
+                        <button type="button" (click)="closeLocationPopup()">{{ 'page.group.single.settings.edit.location.edit.buttons.cancel.button' | translate }}</button>
+                        <button type="button" class="danger" (click)="showDeletePopup = true">{{ 'page.group.single.settings.edit.location.edit.buttons.delete.button' | translate }}</button>
+                        <button type="submit" class="primary">{{ 'page.group.single.settings.edit.location.edit.buttons.save.button' | translate }}</button>
+                    </div>
+                    
+
+                    <!-- TEMPLATE -->
+                    <ng-template #formInput let-name="name" let-label="label" let-type="type">
+                        <div class="input-container" [class.error]="selectedLocationForm.get(name)?.errors && selectedLocationForm.get(name)?.touched">
+                            <div class="input" [class.disabled]="false">
+                                <label [for]="name">{{ label }}</label>
+                                @if (type !== 'textarea') {
+                                    <input [type]="type ? type : 'text'" [id]="name" [name]="name" [formControlName]="name" autocomplete="off" [disabled]="selectedLocationUpdating"/>
+                                } @else {
+                                    <textarea [id]="name" [name]="name" [formControlName]="name" autocomplete="off" [disabled]="selectedLocationUpdating"></textarea>
+                                }
+                            </div>
+                            <p *ngIf="selectedLocationForm.get(name)?.errors && selectedLocationForm.get(name)?.touched" class="error-msg">
+                            {{ `asset.form.error.${getFirstErrorKey(name, selectedLocationForm)}` | translate }}
+                            </p>
+                        </div>
+                    </ng-template>
+                </form>
+            </div>
+        </div>
+    }
+
+    @if (selectedLocationScreen) {
+        <div class="popup" [@fade]>
+            <span class="void" (click)="closeLocationScreenPopup()" ></span>
+
+            <div class="container">
+                <span class="title">{{ 'page.group.single.settings.edit.location.edit.screen.title' | translate }}</span>
+                <form class="content resource" [formGroup]="selectedLocationScreenForm" (ngSubmit)="saveLocationScreen()">
+                    <div class="input-container" [class.error]="selectedLocationScreenForm.get('name')?.errors && selectedLocationScreenForm.get('name')?.touched">
+                        <div class="input" [class.disabled]="false">
+                            <label for="screenName">{{ 'page.group.single.settings.edit.location.edit.resourcePopup.name.label' | translate }}</label>
+                            <input type="text" id="screenName" name="screenName" formControlName="name" autocomplete="off" [disabled]="selectedLocationUpdating"/>
+                        </div>
+                        <p *ngIf="selectedLocationScreenForm.get('name')?.errors && selectedLocationScreenForm.get('name')?.touched" class="error-msg">
+                        {{ `asset.form.error.${getFirstErrorKey('name', selectedLocationScreenForm)}` | translate }}
+                        </p>
+                    </div>
+
+                    <h3>{{ 'page.group.single.settings.edit.location.edit.resourcePopup.access.title' | translate }}</h3>
+                    <div class="input-container">
+                        <div class="input" [class.disabled]="false">
+                            <label for="screenUrl">{{ 'page.group.single.settings.edit.location.edit.resourcePopup.url.label' | translate }}</label>
+                            <div class="input-with-btn">
+                                <input type="text" id="screenUrl" name="screenUrl" [readOnly]="true" [value]="getScreenTokenURL(selectedLocationScreen)"/>
+                                <button class="custom" type="button" (click)="copyToClipboard(getScreenTokenURL(selectedLocationScreen))">
+                                    <fa-icon [icon]="fa.faCopy" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="btns">
+                        <button type="button" (click)="closeLocationScreenPopup()">{{ 'page.group.single.settings.edit.location.edit.buttons.cancel.button' | translate }}</button>
+                        <button type="button" class="danger" (click)="deleteLocationScreen()">{{ 'page.group.single.settings.edit.location.edit.buttons.delete.button' | translate }}</button>
+                        <button type="submit" class="primary">{{ 'page.group.single.settings.edit.location.edit.buttons.save.button' | translate }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
+    @if (selectedLocationClient) {
+        <div class="popup" [@fade]>
+            <span class="void" (click)="closeLocationClientPopup()" ></span>
+
+            <div class="container">
+                <span class="title">{{ 'page.group.single.settings.edit.location.edit.clients.title' | translate }}</span>
+                <form class="content resource" [formGroup]="selectedLocationClientForm" (ngSubmit)="saveLocationClient()">
+                    <div class="input-container" [class.error]="selectedLocationClientForm.get('name')?.errors && selectedLocationClientForm.get('name')?.touched">
+                        <div class="input" [class.disabled]="false">
+                            <label for="clientName">{{ 'page.group.single.settings.edit.location.edit.resourcePopup.name.label' | translate }}</label>
+                            <input type="text" id="clientName" name="clientName" formControlName="name" autocomplete="off" [disabled]="false"/>
+                        </div>
+                        <p *ngIf="selectedLocationClientForm.get('name')?.errors && selectedLocationClientForm.get('name')?.touched" class="error-msg">
+                        {{ `asset.form.error.${getFirstErrorKey('name', selectedLocationClientForm)}` | translate }}
+                        </p>
+                    </div>
+
+                    <h3>{{ 'page.group.single.settings.edit.location.edit.resourcePopup.access.title' | translate }}</h3>
+                    <div class="input-container">
+                        <div class="input" [class.disabled]="false">
+                            <label for="clientUrl">{{ 'page.group.single.settings.edit.location.edit.resourcePopup.url.label' | translate }}</label>
+                            <div class="input-with-btn">
+                                <input type="text" id="clientUrl" name="clientUrl" [readOnly]="true" [value]="getInputTokenURL(selectedLocationClient)"/>
+                                <button class="custom" type="button" (click)="copyToClipboard(getInputTokenURL(selectedLocationClient))">
+                                    <fa-icon [icon]="fa.faCopy" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="btns">
+                        <button type="button" (click)="closeLocationClientPopup()">{{ 'page.group.single.settings.edit.location.edit.buttons.cancel.button' | translate }}</button>
+                        <button type="button" class="danger" (click)="deleteLocationClient()">{{ 'page.group.single.settings.edit.location.edit.buttons.delete.button' | translate }}</button>
+                        <button type="submit" class="primary">{{ 'page.group.single.settings.edit.location.edit.buttons.save.button' | translate }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+} @else {
+    <p>Loading...</p>
+}
+
+<asset-popup
+    [title]="'Standort Löschen' | translate"
+    [description]="'Willst du diesen Standort wirklich löschen?' | translate"
+    [type]="'delete'"
+    [(show)]="showDeletePopup"
+    (close)="deleteLocation($event)"/>

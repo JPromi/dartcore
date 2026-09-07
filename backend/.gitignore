@@ -36,8 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
-### Java ###
-/src/main/resources/application.properties
-
 ### Darts ###
 /files
+application-development.properties

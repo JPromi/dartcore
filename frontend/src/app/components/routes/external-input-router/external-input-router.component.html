@@ -1,0 +1,7 @@
+<main>
+    @if (hasError) {
+        <p>Input-Link ist ungültig oder nicht mehr aktiv.</p>
+    } @else {
+        <asset-loading [type]="LoadingType.CIRCULAR"/>
+    }
+</main>

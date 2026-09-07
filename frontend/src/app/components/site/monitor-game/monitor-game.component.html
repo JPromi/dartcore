@@ -1,0 +1,49 @@
+
+
+@if (game) {
+    <header>
+    <div class="title">
+        <h1>{{ game.gameType }}</h1>
+        <h2>{{ game.gameTypeClassicPoints }}</h2>
+    </div>
+    <div class="information">
+        <div class="block">
+            <h3>{{ 'page.game.active.input.round.label' | translate }}</h3>
+            <p>{{ game.round + 1 }}</p>
+        </div>
+        <div class="block">
+            <h3>{{ 'page.game.active.input.gameTime.label' | translate }}</h3>
+            <p>{{ currentGameTime }}</p>
+        </div>
+    </div>
+</header>
+
+    <main [class.finished]="game.endTime">
+        @if (game.endTime) {
+            <asset-game-results [players]="game.players" />
+        } @else {
+        <!-- Game Classic -->
+        @if (game.gameType === "CLASSIC") {
+            <div class="tiles">
+                @if (currentDisplayPlayer) {
+                    <div #playerTile class="player-tile hero" [attr.data-player-uuid]="currentDisplayPlayer.playerUuid">
+                        <asset-game-player-tile class="monitor-hero" [player]="currentDisplayPlayer" [class.current]="currentDisplayPlayer.isCurrentPlayer" [class.disabled]="currentDisplayPlayer.isEliminated"/>
+                    </div>
+                }
+
+                <div class="queue">
+                    @for (player of queuedDisplayPlayers; track player.playerUuid) {
+                        <div #playerTile class="player-tile" [attr.data-player-uuid]="player.playerUuid">
+                            <asset-game-player-tile [player]="player" [class.current]="player.isCurrentPlayer" [class.disabled]="player.isEliminated"/>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        }
+    </main>
+}
+
+<footer>
+    <p>DartCore.net</p>
+</footer>

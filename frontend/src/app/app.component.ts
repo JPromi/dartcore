@@ -6,6 +6,7 @@ import { LoStorageService } from './services/local/lo-storage.service';
 import { CommonModule } from '@angular/common';
 import { ErrorPageComponent } from './components/assets/error-page/error-page.component';
 import { SplashScreenComponent } from './components/assets/splash-screen/splash-screen.component';
+import { GameService } from './services/game.service';
 
 @Component({
     selector: 'app-root',
@@ -25,7 +26,8 @@ export class AppComponent implements AfterViewInit, OnInit {
     private translate: TranslateService,
     private router: Router,
     private authService: AuthService,
-    private loStorageService: LoStorageService
+    private loStorageService: LoStorageService,
+    private gameService: GameService
   ) {
     this.translate.addLangs(['de-AT', 'en-US']);
     this.translate.setDefaultLang('de-AT');
@@ -50,29 +52,38 @@ export class AppComponent implements AfterViewInit, OnInit {
   }
 
   private redirectTotp() {
-    if(!this.router.url.startsWith('/barrier')) {
-      this.authService.loginSession().subscribe(
-        (response) => {
-          if (response.totpRequired) {
-            this.isLoading = false;
-            this._navigate('/barrier/login/totp', ['/barrier/logout']);
-          } else {
-            this.getSession();
-          }
-        },
-        (error) => {
-          this.isLoading = false;
-          this.loStorageService.setSessionAccount(null);
-          if(error.status.toString().startsWith('4')) {
-            this._navigate('/barrier/login', ['/barrier/logout']);
-          } else {
-            this.loStorageService.setErrorCodeFromResponse(error);
-          }
-        }
-      );
-    } else {
+    if (this._isAuthBypassRoute()) {
       this.isLoading = false;
+      return;
     }
+
+    this.authService.loginSession().subscribe(
+      (response) => {
+        if (response.totpRequired) {
+          this.isLoading = false;
+          this._navigate('/barrier/login/totp', ['/barrier/logout']);
+        } else {
+          this.getSession();
+        }
+      },
+      (error) => {
+        this.isLoading = false;
+        this.loStorageService.setSessionAccount(null);
+        if(error.status.toString().startsWith('4')) {
+          this._navigate('/barrier/login', ['/barrier/logout']);
+        } else {
+          this.loStorageService.setErrorCodeFromResponse(error);
+        }
+      }
+    );
+  }
+
+  private _isAuthBypassRoute(): boolean {
+    const currentPath = window.location.pathname;
+    return currentPath === '/barrier'
+      || currentPath.startsWith('/barrier/')
+      || currentPath === '/ex'
+      || currentPath.startsWith('/ex/');
   }
 
   private getSession() {
@@ -80,6 +91,10 @@ export class AppComponent implements AfterViewInit, OnInit {
       (response) => {
         this.loStorageService.setSessionAccount(response);
         this.isLoading = false;
+        this._getActiveGames();
+        setInterval(() => {
+          this._getActiveGames();
+        }, 30000);
       },
       (error) => {
         this.loStorageService.setSessionAccount(null);
@@ -94,5 +109,18 @@ export class AppComponent implements AfterViewInit, OnInit {
     }
 
     this.router.navigate([url]);
+  }
+
+  private _getActiveGames() {
+    this.gameService.getActiveGamesAccount().subscribe({
+      next: (response) => {
+        this.loStorageService.setActiveGames(response);
+        this.loStorageService.setErrorCode(null);
+      },
+      error: (error) => {
+        this.loStorageService.setActiveGames([]);
+        this.loStorageService.setErrorCodeFromResponse(error);
+      }
+    })
   }
 }

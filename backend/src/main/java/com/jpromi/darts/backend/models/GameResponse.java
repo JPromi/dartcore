@@ -7,7 +7,7 @@ import com.jpromi.darts.backend.enums.ThrowType;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,9 +33,9 @@ public class GameResponse {
     @Builder.Default
     private Integer round = 0;
     @Builder.Default
-    private LocalDateTime startTime = null;
+    private Instant startTime = null;
     @Builder.Default
-    private LocalDateTime endTime = null;
+    private Instant endTime = null;
     @Builder.Default
     private Boolean isCancelled = false;
 
@@ -61,7 +61,7 @@ public class GameResponse {
         private List<GameThrowResponse> throwList = new ArrayList<>();
 
         @Builder.Default
-        private List<GameThrowResponse> hints = new ArrayList<>();
+        private List<GameHintResponse> hints = new ArrayList<>();
 
         @Data
         @Builder
@@ -70,7 +70,14 @@ public class GameResponse {
             private DartThrowMultiplierEnum multiplier;
             private Integer round;
             private ThrowType type;
-            private LocalDateTime timestamp;
+            private Instant timestamp;
+        }
+
+        @Data
+        @Builder
+        public static class GameHintResponse {
+            private Integer points;
+            private DartThrowMultiplierEnum multiplier;
         }
     }
 }

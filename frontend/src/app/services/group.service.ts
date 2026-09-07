@@ -11,6 +11,8 @@ import { InvitationStatusAccountEnum } from '../enums/invitationStatusAccountEnu
 import { GroupAdminMember } from '../dtos/groupAdminMember';
 import { GroupMemberAdminRequest } from '../dtos/groupMemberAdminRequest';
 import { GroupSettingsGeneral } from '../entities/groupSettingsGeneral';
+import { LocationResourceResponse } from '../dtos/locationResourceResponse';
+import { LocationResponse } from '../dtos/locationResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -94,5 +96,30 @@ export class GroupService {
   // member settings
   public leaveGroup(groupUuid: string): Observable<void> {
     return this.http.delete<void>(`${environment.baseUrl}/group/${groupUuid}/leave`, { withCredentials: true });
+  }
+
+  // locations
+  public getGroupLocations(groupUuid: string): Observable<LocationResponse[]> {
+    return this.http.get<LocationResponse[]>(`${environment.baseUrl}/group/${groupUuid}/location`, { withCredentials: true });
+  }
+
+  public deleteGroupLocation(groupUuid: string, locationUuid: string): Observable<void> {
+    return this.http.delete<void>(`${environment.baseUrl}/group/${groupUuid}/location/${locationUuid}`, { withCredentials: true });
+  }
+
+  public createLocation(groupUuid: string, location: LocationResponse): Observable<LocationResponse> {
+    return this.http.post<LocationResponse>(`${environment.baseUrl}/group/${groupUuid}/location`, location, { withCredentials: true });
+  }
+
+  public saveLocation(groupUuid: string, locationUuid: string, location: LocationResponse): Observable<LocationResponse> {
+    return this.http.put<LocationResponse>(`${environment.baseUrl}/group/${groupUuid}/location/${locationUuid}`, location, { withCredentials: true });
+  }
+
+  public createTmpGroupLocationScreen(groupUuid: string, locationUuid: string): Observable<LocationResourceResponse> {
+    return this.http.post<LocationResourceResponse>(`${environment.baseUrl}/group/${groupUuid}/location/${locationUuid}/screen`, {}, { withCredentials: true });
+  }
+
+  public createTmpGroupLocationClient(groupUuid: string, locationUuid: string): Observable<LocationResourceResponse> {
+    return this.http.post<LocationResourceResponse>(`${environment.baseUrl}/group/${groupUuid}/location/${locationUuid}/client`, {}, { withCredentials: true });
   }
 }
