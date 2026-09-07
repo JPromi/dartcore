@@ -172,6 +172,10 @@
         },
         "game": {
             "active": {
+                "results": {
+                    "title": "Spiel beendet",
+                    "winner": "Gewinner"
+                },
                 "input": {
                     "round.label": "Runde",
                     "gameTime.label": "Spielzeit",

@@ -37,6 +37,7 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
   public displayPlayers: ActiveGamePlayerResponse[] = [];
   public currentDisplayPlayer: ActiveGamePlayerResponse | null = null;
   public queuedDisplayPlayers: ActiveGamePlayerResponse[] = [];
+  public resultPlayers: ActiveGamePlayerResponse[] = [];
 
   private token: string | null = null;
   private lastTileRects = new Map<string, DOMRectReadOnly>();
@@ -140,6 +141,9 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
     const previousRects = this.captureTileRects();
 
     this.game = gameUpdate;
+    this.resultPlayers = [...gameUpdate.players].sort((left, right) =>
+      Number(right.isWinner) - Number(left.isWinner) || left.orderIndex - right.orderIndex
+    );
     this.updateGameTime();
     this.displayPlayers = this.buildDisplayPlayers(gameUpdate.players);
     this.currentDisplayPlayer = this.displayPlayers[0] ?? null;
