@@ -225,24 +225,36 @@ public class GameController {
     }
     
     @DeleteMapping("/{gameUuid}")
-    public ResponseEntity<Void> endGame(@CookieValue("dcn.session") String sessionCookie, @PathVariable UUID gameUuid) {
+    public ResponseEntity<Void> endGame(
+            @CookieValue(name = "dcn.session", required = false) String sessionCookie,
+            @RequestHeader(value = "X-Client-Token", required = false) String clientToken,
+            @PathVariable UUID gameUuid) {
+        if (clientToken != null) {
+            LocationClient client = locationClientRepository.findByTokenWithLocation(clientToken).orElse(null);
+            if (client == null || Boolean.TRUE.equals(client.getIsTmp())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+
+            DartGame dartGame = this.gameService.getGameByUuid(gameUuid);
+            if (dartGame == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            if (dartGame.getLocation() == null || !dartGame.getLocation().getId().equals(client.getLocation().getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+
+            boolean success = endGameWithLock(gameUuid);
+            if (success) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
         if (sessionCookie != null) {
             Session session = this.authService.session(sessionCookie);
 
             if (session != null) {
-                ReentrantLock lock = gameLockRegistry.get(gameUuid);
-                lock.lock();
-                boolean success = false;
-                try {
-                    success = this.gameService.endGame(gameUuid) != null;
-                } finally {
-                    lock.unlock();
-                    gameLockRegistry.cleanup(gameUuid, lock);
-                    if (success) {
-                        sendGameUpdate(gameUuid);
-                    }
-                }
-
+                boolean success = endGameWithLock(gameUuid);
                 if (success) {
                     return ResponseEntity.noContent().build();
                 } else {
@@ -329,6 +341,22 @@ public class GameController {
     private void sendGameUpdate(UUID gameUuid) {
         GameResponse gameDto = gameService.getGameResponseByUuid(gameUuid);
         messaging.convertAndSend("/response/game/" + gameUuid, gameDto);
+    }
+
+    private boolean endGameWithLock(UUID gameUuid) {
+        ReentrantLock lock = gameLockRegistry.get(gameUuid);
+        lock.lock();
+        boolean success = false;
+        try {
+            success = this.gameService.endGame(gameUuid) != null;
+        } finally {
+            lock.unlock();
+            gameLockRegistry.cleanup(gameUuid, lock);
+            if (success) {
+                sendGameUpdate(gameUuid);
+            }
+        }
+        return success;
     }
 
     private void sendLocationGameCreated(DartGame game) {

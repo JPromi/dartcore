@@ -173,15 +173,15 @@ export class GameInputComponent implements OnInit, OnDestroy {
 
   public endGame(isConfirmed: boolean): void {
     if(isConfirmed) {
-      this.gameService.endGame(this.game.uuid).subscribe(
+      this.gameService.endGame(this.game.uuid, this.clientToken, this.clientToken ? 'client' : 'session').subscribe(
         {
           next: () => {
             this.gameWsService.disconnect();
-            this.router.navigate(['/']);
+            this.router.navigate(this.clientToken ? ['/ex/input', this.clientToken] : ['/']);
           },
           error: () => {
             this.gameWsService.disconnect();
-            this.router.navigate(['/']);
+            this.router.navigate(this.clientToken ? ['/ex/input', this.clientToken] : ['/']);
           }
         }
       );
