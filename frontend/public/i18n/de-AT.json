@@ -57,7 +57,8 @@
             "ok": "OK",
             "cancel": "Abbrechen",
             "delete": "Löschen",
-            "leave": "Verlassen"
+            "leave": "Verlassen",
+            "endGame": "Beenden"
         }
     },
     "page": {

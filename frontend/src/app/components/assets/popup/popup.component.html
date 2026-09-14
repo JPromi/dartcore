@@ -17,6 +17,10 @@
                     <button type="button" (click)="submit(false)">{{ 'asset.popup.cancel' | translate }}</button>
                     <button type="button" class="danger" (click)="submit(true)">{{ 'asset.popup.leave' | translate }}</button>
                 }
+                @case ('end') {
+                    <button type="button" (click)="submit(false)">{{ 'asset.popup.cancel' | translate }}</button>
+                    <button type="button" class="danger" (click)="submit(true)">{{ 'asset.popup.endGame' | translate }}</button>
+                }
             }
         </div>
 </div>
