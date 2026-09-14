@@ -44,6 +44,9 @@ export class LoginComponent implements OnInit {
   public isPasswordVisible: boolean = false;
   public isSavedUser: boolean = false;
   public lastUsers: PastUser[] = [];
+  public showClientLogin: boolean = false;
+  public clientLink: string = '';
+  public clientLinkError: boolean = false;
 
   public sessionAccount?: SessionAccountResponse
 
@@ -83,6 +86,40 @@ export class LoginComponent implements OnInit {
     this.isSavedUser = false;
   }
 
+  public openClientLogin(): void {
+    this.showClientLogin = true;
+    this.isSavedUser = false;
+    this.clientLinkError = false;
+  }
+
+  public backToLogin(): void {
+    this.showClientLogin = false;
+    this.clientLinkError = false;
+  }
+
+  public loginClient(): void {
+    const parsedLink = this.parseClientLink(this.clientLink);
+    if (!parsedLink) {
+      this.clientLinkError = true;
+      return;
+    }
+
+    this.clientLinkError = false;
+    this.clearUserSession();
+
+    if (parsedLink.type === 'monitor') {
+      localStorage.setItem('dcn.clientSessionType', 'monitor');
+      localStorage.setItem('dcn.monitorToken', parsedLink.token);
+      localStorage.removeItem('dcn.inputToken');
+      this.router.navigate(['/', 'ex', 'monitor', parsedLink.token]);
+    } else {
+      localStorage.setItem('dcn.clientSessionType', 'input');
+      localStorage.setItem('dcn.inputToken', parsedLink.token);
+      localStorage.removeItem('dcn.monitorToken');
+      this.router.navigate(['/', 'ex', 'input', parsedLink.token]);
+    }
+  }
+
   private getLastUsers() {
     const lastUsers = this.loAuthService.getLastUsers();
     if (lastUsers) {
@@ -102,8 +139,38 @@ export class LoginComponent implements OnInit {
   }
 
   private setSession(loginResponse: LoginResponse) {
+    this.clearClientSession();
     document.cookie = `dcn.session=${loginResponse.token};domain=${environment.rootUrl};path=/;max-age=${60*60*24*365};secure=true;SameSite=Lax`;
     localStorage.setItem('dcn.session', loginResponse.token);
+  }
+
+  private parseClientLink(value: string): { type: 'monitor' | 'input', token: string } | null {
+    const input = value.trim();
+    const match = input.match(/(?:^|\/)ex\/(monitor|input)\/([^/?#\s]+)/i);
+    if (!match) {
+      return null;
+    }
+
+    return {
+      type: match[1].toLowerCase() as 'monitor' | 'input',
+      token: decodeURIComponent(match[2])
+    };
+  }
+
+  private clearUserSession(): void {
+    localStorage.removeItem('dcn.session');
+    document.cookie = `dcn.session=;domain=${environment.rootUrl};path=/;max-age=0;secure=true;SameSite=Lax`;
+    document.cookie = `dcn.session=;path=/;max-age=0;SameSite=Lax`;
+  }
+
+  private clearClientSession(): void {
+    localStorage.removeItem('dcn.clientSessionType');
+    localStorage.removeItem('dcn.monitorToken');
+    localStorage.removeItem('dcn.inputToken');
+    document.cookie = `dcn.screen=;domain=${environment.rootUrl};path=/;max-age=0;secure=true;SameSite=Lax`;
+    document.cookie = `dcn.client=;domain=${environment.rootUrl};path=/;max-age=0;secure=true;SameSite=Lax`;
+    document.cookie = `dcn.screen=;path=/;max-age=0;SameSite=Lax`;
+    document.cookie = `dcn.client=;path=/;max-age=0;SameSite=Lax`;
   }
 
   private getSession() {

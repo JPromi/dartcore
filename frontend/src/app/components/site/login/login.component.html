@@ -1,6 +1,22 @@
 @if (!sessionAccount) {
 
-    @if (isSavedUser) {
+    @if (showClientLogin) {
+        <h1>{{ 'page.auth.clientLogin.title' | translate }}</h1>
+
+        <form>
+            <div>
+                <label for="clientLink">{{ 'page.auth.clientLogin.link.label' | translate }}</label>
+                <input type="text" class="input" id="clientLink" name="clientLink" autocomplete="off" [(ngModel)]="clientLink" placeholder="https://..." required>
+            </div>
+
+            <span class="error" *ngIf="clientLinkError">
+                <p>{{ 'page.auth.clientLogin.link.error' | translate }}</p>
+            </span>
+
+            <button type="button" (click)="loginClient()">{{ 'page.auth.clientLogin.connect.button' | translate }}</button>
+            <a tabindex="0" (click)="backToLogin()">{{ 'page.auth.clientLogin.backToLogin.label' | translate }}</a>
+        </form>
+    } @else if (isSavedUser) {
         <h1>{{ 'page.auth.lastUsers.title' | translate }}</h1>
     
         <div class="past-user-list">
@@ -57,8 +73,12 @@
             </span>
             <button (click)="login()">{{ 'page.auth.login.login.button' | translate }}</button>
 
-            <a routerLink="/barrier/register">Noch keinen Account?</a>
+            <a routerLink="/barrier/register">{{ 'page.auth.login.register.label' | translate }}</a>
         </form>
+
+        <hr />
+
+        <a tabindex="0" (click)="openClientLogin()" (keydown.enter)="openClientLogin()" (keydown.space)="openClientLogin()" class="button">{{ 'page.auth.clientLogin.open.label' | translate }}</a>
     }
 
 }

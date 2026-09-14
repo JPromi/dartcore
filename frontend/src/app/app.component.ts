@@ -52,6 +52,11 @@ export class AppComponent implements AfterViewInit, OnInit {
   }
 
   private redirectTotp() {
+    if (this._redirectStoredClientSession()) {
+      this.isLoading = false;
+      return;
+    }
+
     if (this._isAuthBypassRoute()) {
       this.isLoading = false;
       return;
@@ -63,6 +68,7 @@ export class AppComponent implements AfterViewInit, OnInit {
           this.isLoading = false;
           this._navigate('/barrier/login/totp', ['/barrier/logout']);
         } else {
+          this._clearStoredClientSession();
           this.getSession();
         }
       },
@@ -84,6 +90,40 @@ export class AppComponent implements AfterViewInit, OnInit {
       || currentPath.startsWith('/barrier/')
       || currentPath === '/ex'
       || currentPath.startsWith('/ex/');
+  }
+
+  private _redirectStoredClientSession(): boolean {
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/ex/') || currentPath.startsWith('/barrier/')) {
+      return false;
+    }
+
+    const sessionType = localStorage.getItem('dcn.clientSessionType');
+    if (sessionType === 'monitor') {
+      const token = localStorage.getItem('dcn.monitorToken');
+      if (token) {
+        this.router.navigate(['/', 'ex', 'monitor', token]);
+        return true;
+      }
+    }
+
+    if (sessionType === 'input') {
+      const token = localStorage.getItem('dcn.inputToken');
+      if (token) {
+        this.router.navigate(['/', 'ex', 'input', token]);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private _clearStoredClientSession(): void {
+    localStorage.removeItem('dcn.clientSessionType');
+    localStorage.removeItem('dcn.monitorToken');
+    localStorage.removeItem('dcn.inputToken');
+    document.cookie = `dcn.screen=;path=/;max-age=0;SameSite=Lax`;
+    document.cookie = `dcn.client=;path=/;max-age=0;SameSite=Lax`;
   }
 
   private getSession() {

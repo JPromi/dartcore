@@ -65,7 +65,13 @@ export class GameService {
     return this.http.get<any>(`${environment.baseUrl}/game/${uuid}`, { withCredentials: true, headers });
   }
 
-  public endGame(uuid: string): Observable<void> {
-    return this.http.delete<void>(`${environment.baseUrl}/game/${uuid}`, { withCredentials: true });
+  public endGame(uuid: string, token: string | null = null, type: 'session' | 'client' = 'session'): Observable<void> {
+    let headers = new HttpHeaders();
+
+    if (token && type === 'client') {
+      headers = headers.set('X-Client-Token', token);
+    }
+
+    return this.http.delete<void>(`${environment.baseUrl}/game/${uuid}`, { withCredentials: true, headers });
   }
 }

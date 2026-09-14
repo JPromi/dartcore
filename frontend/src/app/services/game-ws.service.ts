@@ -66,6 +66,14 @@ export class GameWsService {
             this.screenGameCreatedSubject.next(body);
           }
         );
+      } else if (token && type === 'client') {
+        this.stompClient?.subscribe(
+          `/response/location-client/${token}/game-created`,
+          (message: IMessage) => {
+            const body: ActiveGameResponse = JSON.parse(message.body);
+            this.screenGameCreatedSubject.next(body);
+          }
+        );
       }
     };
 
