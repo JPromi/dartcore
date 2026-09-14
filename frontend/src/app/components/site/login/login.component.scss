@@ -190,6 +190,33 @@
             box-sizing: border-box;
         }
     }
+
+    hr {
+        margin: 1rem 0;
+        border: none;
+        height: 1px;
+        background-color: var(--border);
+    }
+
+    a.button {
+        width: 100%;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: .25rem;
+        background-color: transparent;
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all .2s ease-in-out;
+
+        &:hover {
+            opacity: .8;
+        }
+    }
 }
 
 @media screen and (max-width: 768px) {

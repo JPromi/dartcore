@@ -52,6 +52,7 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
     this.activeRoute.params.subscribe(params => {
       const monitorToken = params['token'];
       this.token = monitorToken;
+      this.saveClientSession(monitorToken);
       this.setScreenCookie(monitorToken);
 
       this.getActiveGames();
@@ -77,6 +78,15 @@ export class MonitorGameComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private setScreenCookie(token: string): void {
     document.cookie = `dcn.screen=${encodeURIComponent(token)};${this.cookieDomain()}path=/;max-age=${60 * 60 * 24};${this.secureCookie()}SameSite=Lax`;
+  }
+
+  private saveClientSession(token: string): void {
+    localStorage.setItem('dcn.clientSessionType', 'monitor');
+    localStorage.setItem('dcn.monitorToken', token);
+    localStorage.removeItem('dcn.inputToken');
+    localStorage.removeItem('dcn.session');
+    document.cookie = `dcn.session=;${this.cookieDomain()}path=/;max-age=0;${this.secureCookie()}SameSite=Lax`;
+    document.cookie = `dcn.client=;${this.cookieDomain()}path=/;max-age=0;${this.secureCookie()}SameSite=Lax`;
   }
 
   private clearScreenCookie(): void {

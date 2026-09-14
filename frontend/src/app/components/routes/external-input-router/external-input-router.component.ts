@@ -30,6 +30,7 @@ export class ExternalInputRouterComponent implements OnInit {
         return;
       }
 
+      this.saveClientSession(token);
       this.setClientCookie(token);
       this.gameService.getExternalInputContext(token).subscribe({
         next: context => {
@@ -59,6 +60,15 @@ export class ExternalInputRouterComponent implements OnInit {
 
   private setClientCookie(token: string): void {
     document.cookie = `dcn.client=${encodeURIComponent(token)};${this.cookieDomain()}path=/;max-age=${60 * 60 * 24};${this.secureCookie()}SameSite=Lax`;
+  }
+
+  private saveClientSession(token: string): void {
+    localStorage.setItem('dcn.clientSessionType', 'input');
+    localStorage.setItem('dcn.inputToken', token);
+    localStorage.removeItem('dcn.monitorToken');
+    localStorage.removeItem('dcn.session');
+    document.cookie = `dcn.session=;${this.cookieDomain()}path=/;max-age=0;${this.secureCookie()}SameSite=Lax`;
+    document.cookie = `dcn.screen=;${this.cookieDomain()}path=/;max-age=0;${this.secureCookie()}SameSite=Lax`;
   }
 
   private cookieDomain(): string {

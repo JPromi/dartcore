@@ -73,7 +73,16 @@
                 "password.label": "Password",
                 "forgotPassword.label": "Passwort vergessen?",
                 "rememberMe.label": "Benutzer speichern?",
-                "login.button": "Login"
+                "login.button": "Login",
+                "register.label": "Noch keinen Account?"
+            },
+            "clientLogin": {
+                "title": "Client verbinden",
+                "link.label": "Monitor oder Input Link",
+                "link.error": "Bitte fuege einen vollstaendigen Monitor- oder Input-Link ein.",
+                "connect.button": "Verbinden",
+                "backToLogin.label": "Zurück zum Login",
+                "open.label": "Als Monitor/Eingabegerät Anmelden"
             },
             "totp": {
                 "title": "TOTP",
