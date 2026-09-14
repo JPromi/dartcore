@@ -27,6 +27,7 @@ public class GameWebsocketSecurityInterceptor implements ChannelInterceptor {
 
     private static final Pattern GAME_TOPIC_PATTERN = Pattern.compile("^/response/game/([0-9a-fA-F-]{36}).*$");
     private static final Pattern SCREEN_GAME_CREATED_TOPIC_PATTERN = Pattern.compile("^/response/location-screen/([^/]+)/game-created$");
+    private static final Pattern CLIENT_GAME_CREATED_TOPIC_PATTERN = Pattern.compile("^/response/location-client/([^/]+)/game-created$");
 
     private final LocationScreenRepository locationScreenRepository;
     private final LocationClientRepository locationClientRepository;
@@ -165,6 +166,16 @@ public class GameWebsocketSecurityInterceptor implements ChannelInterceptor {
         if (clientToken != null && (StompCommand.SUBSCRIBE.equals(command) || StompCommand.SEND.equals(command))) {
             String destination = accessor.getDestination();
             if (destination == null) return message;
+
+            if (StompCommand.SUBSCRIBE.equals(command)) {
+                Matcher clientGameCreatedMatcher = CLIENT_GAME_CREATED_TOPIC_PATTERN.matcher(destination);
+                if (clientGameCreatedMatcher.matches()) {
+                    if (!clientGameCreatedMatcher.group(1).equals(clientToken)) {
+                        throw new MessagingException("Client not authorized for this location feed");
+                    }
+                    return message;
+                }
+            }
 
             Matcher matcher = GAME_TOPIC_PATTERN.matcher(destination.replaceFirst("^/data", "/response"));
             if (!matcher.matches()) return message;

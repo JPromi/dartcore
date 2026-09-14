@@ -371,6 +371,11 @@ public class GameController {
                 messaging.convertAndSend("/response/location-screen/" + screen.getToken() + "/game-created", gameDto);
             }
         }
+        for (LocationClient client : locationClientRepository.findByLocation(location)) {
+            if (!Boolean.TRUE.equals(client.getIsTmp())) {
+                messaging.convertAndSend("/response/location-client/" + client.getToken() + "/game-created", gameDto);
+            }
+        }
     }
 
 }

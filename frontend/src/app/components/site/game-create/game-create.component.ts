@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Host, HostListener, OnInit } from '@angular/core';
+import { Component, Host, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { GroupService } from '../../../services/group.service';
 import { GroupLightResponse } from '../../../dtos/groupLightResponse';
@@ -18,11 +18,13 @@ import * as fa from '@fortawesome/free-solid-svg-icons';
 import { LoadingComponent } from '../../assets/loading/loading.component';
 import { LoadingType } from '../../../enums/loadingType';
 import { GameThrowMultiplierEnum } from '../../../enums/gameThrowMultiplierEnum';
-import { max } from 'rxjs';
+import { max, Subscription } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { GameService } from '../../../services/game.service';
 import { GameNew } from '../../../entities/gameNew';
 import { NewGameLocationResponse } from '../../../dtos/newGameLocationResponse';
+import { GameWsService } from '../../../services/game-ws.service';
+import { ActiveGameResponse } from '../../../dtos/activeGameResponse';
 
 @Component({
   selector: 'app-game-create',
@@ -63,13 +65,14 @@ import { NewGameLocationResponse } from '../../../dtos/newGameLocationResponse';
     ])
   ]
 })
-export class GameCreateComponent implements OnInit {
+export class GameCreateComponent implements OnInit, OnDestroy {
 
   constructor(
     private groupService: GroupService,
     private profileService: ProfileService,
     private authService: AuthService,
     private gameService: GameService,
+    private gameWsService: GameWsService,
     private activatedRoute: ActivatedRoute,
     private router: Router
   ) { }
@@ -99,6 +102,8 @@ export class GameCreateComponent implements OnInit {
   private lastKeyPress: Date = new Date();
   private lastUpdateIntervall: number = .5; // seconds
   private lastUpdateTimeout: any = null;
+  private gameCreatedSubscription: Subscription | null = null;
+  private websocketClientToken: string | null = null;
   public searchQuery: string = '';
   public userUuid: string | null = null;
 
@@ -113,8 +118,75 @@ export class GameCreateComponent implements OnInit {
       if (params['clientToken']) {
         this.paramsValue.clientToken = params['clientToken'].toString();
       }
+      if (!this.paramsValue.clientToken) {
+        this.paramsValue.clientToken = this.activatedRoute.snapshot.paramMap.get('token');
+      }
       this.paramsValue.lockedLocation = params['lockedLocation'] === 'true';
 
+      if (this.paramsValue.clientToken) {
+        this.redirectClientToActiveGameOrInitialize(this.paramsValue.clientToken);
+        return;
+      }
+
+      this.initializeCreateFlow();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.gameCreatedSubscription?.unsubscribe();
+    if (this.websocketClientToken) {
+      this.gameWsService.disconnect();
+    }
+  }
+
+  private redirectClientToActiveGameOrInitialize(clientToken: string): void {
+    this.gameService.getExternalInputContext(clientToken).subscribe({
+      next: context => {
+        if (context.activeGameUuid) {
+          this.router.navigate(['/', 'game', 'active', context.activeGameUuid], {
+            queryParams: { clientToken },
+            replaceUrl: true
+          });
+          return;
+        }
+
+        this.connectClientGameCreatedSocket(clientToken);
+        if (!this.paramsValue.group) {
+          this.paramsValue.group = context.groupUuid;
+        }
+        if (!this.paramsValue.location) {
+          this.paramsValue.location = context.locationUuid;
+        }
+        this.initializeCreateFlow();
+      },
+      error: () => {
+        this.connectClientGameCreatedSocket(clientToken);
+        this.initializeCreateFlow();
+      }
+    });
+  }
+
+  private connectClientGameCreatedSocket(clientToken: string): void {
+    if (this.websocketClientToken === clientToken) {
+      return;
+    }
+
+    this.websocketClientToken = clientToken;
+    this.gameWsService.connect(null, clientToken, 'client');
+    this.gameCreatedSubscription?.unsubscribe();
+    this.gameCreatedSubscription = this.gameWsService.screenGameCreated$.subscribe((game: ActiveGameResponse) => {
+      if (!game.uuid) {
+        return;
+      }
+
+      this.router.navigate(['/', 'game', 'active', game.uuid], {
+        queryParams: { clientToken },
+        replaceUrl: true
+      });
+    });
+  }
+
+  private initializeCreateFlow(): void {
       if (this.paramsValue.lockedLocation && this.paramsValue.group && this.paramsValue.location) {
         this.game.groupUuid = this.paramsValue.group;
         this.game.locationUuid = this.paramsValue.location;
@@ -123,7 +195,6 @@ export class GameCreateComponent implements OnInit {
         this._loadGroups();
         this._addCurrentUserToPlayers();
       }
-    });
   }
 
   public nextStep(): void {
